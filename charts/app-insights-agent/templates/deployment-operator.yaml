@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app-insights-agent.fullname" . }}
+  namespace: {{ include "app-insights-agent.namespace" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "app-insights-agent.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: app-insights-agent
+    {{- include "labels" . | nindent 4 }}
+  {{- with .Values.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "labels" . | nindent 8 }}
+    spec:
+      volumes:
+        - name: tls-certs
+          secret:
+            secretName: {{ .Values.secrets.cert }}
+            items:
+              - key: client-cert.pem
+                path: client-cert.pem
+              - key: client-key.pem
+                path: client-key.pem
+            defaultMode: 420
+      containers:
+        - name: app-insights-agent
+          {{- with .Values.image }}
+          image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{ .digest }}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.secrets.config }}
+            - configMapRef:
+                name: {{ include "app-insights-agent.fullname" . }}-config
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: tls-certs
+              mountPath: /app/certs
+      serviceAccountName: {{ template "app-insights-agent.serviceAccountName" . }}
+      serviceAccount: {{ template "app-insights-agent.serviceAccountName" . }}

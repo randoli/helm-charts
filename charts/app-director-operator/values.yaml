@@ -1,0 +1,63 @@
+image:
+  registry: docker.io
+  repository: randoli/app-director-operator
+  tag: 1.1.0
+  digest: ""
+  ## Specify a imagePullPolicy
+  ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+  ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  ##
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 150Mi
+  requests:
+    cpu: 100m
+    memory: 20Mi
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8081
+  initialDelaySeconds: 15
+  periodSeconds: 20
+
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: 8081
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+securityContext: {}
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+
+labels: {}
+
+deploymentAnnotations: {}
+
+serviceAccount:
+  create: true
+  # If not set and create is true, a name is generated using the fullname template
+  # name: ""
+  automountServiceAccountToken: true
+  annotations: {}
+  labels: {}
+
+kubeRbacProxy:
+  image:
+    registry: gcr.io
+    repository: kubebuilder/kube-rbac-proxy
+    tag: v0.5.0
+    digest: ""
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: IfNotPresent

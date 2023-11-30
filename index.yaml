@@ -1,0 +1,47 @@
+apiVersion: v1
+entries:
+  app-director-agent-operator:
+  - apiVersion: v2
+    appVersion: 1.1.0
+    created: "2023-11-30T14:51:13.775061264-03:00"
+    description: Randoli App Director Agent Operator
+    digest: c6e57eb1edeac757dab0733fb8ba7d7179cc9a67132240a48f9690bcd36b4c20
+    home: https://randoli.ca
+    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
+    keywords:
+    - app-director
+    - app-director-operator
+    - randoli
+    maintainers:
+    - email: support@randoli.ca
+      name: Randoli
+      url: https://randoli.ca
+    name: app-director-agent-operator
+    sources:
+    - https://github.com/randoli/app-director-operator
+    urls:
+    - app-director-agent-operator-1.1.0.tgz
+    version: 1.1.0
+  app-insights-agent:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2023-11-30T14:51:13.775338319-03:00"
+    description: Randoli App Insights Agent
+    digest: 884998351eacf287b154c4fd74a1331768ed2ce22b112b7a7d10aaf8dbd2e4d3
+    home: https://randoli.ca
+    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
+    keywords:
+    - app-insights
+    - app-insights-agent
+    - randoli
+    maintainers:
+    - email: support@randoli.ca
+      name: Randoli
+      url: https://randoli.ca
+    name: app-insights-agent
+    sources:
+    - https://github.com/randoli/helm-charts
+    urls:
+    - app-insights-agent-1.0.0.tgz
+    version: 1.0.0
+generated: "2023-11-30T14:51:13.77451145-03:00"

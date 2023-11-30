@@ -1,0 +1,45 @@
+image:
+  registry: docker.io
+  repository: randoli/insights-agent
+  tag: dev2
+  digest: ""
+  ## Specify a imagePullPolicy
+  ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+  ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  ##
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 100Mi
+  requests:
+    cpu: 100m
+    memory: 100Mi
+
+securityContext: {}
+
+labels:
+  app: app-insights-agent
+
+deploymentAnnotations: {}
+
+serviceAccount:
+  create: true
+  # If not set and create is true, a name is generated using the fullname template
+  # name: ""
+  automountServiceAccountToken: true
+  annotations: {}
+  labels: {}
+
+openCost:
+  url: http://opencost.opencost.svc.cluster.local:9003
+
+prometheus:
+  url: http://prometheus-operated.prometheus.svc.cluster.local:9090
+
+secrets:
+  cert: insights-agent-cert
+  config: insights-agent-secret

@@ -1,0 +1,42 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "app-insights-agent.fullname" . }}-role
+  labels:
+    {{- include "labels" . | nindent 4 }}
+rules:
+  - verbs:
+      - list
+    apiGroups:
+      - '*'
+    resources:
+      - nodes
+      - namespaces
+      - services
+      - persistentvolumes
+      - storageclasses
+  - verbs:
+      - list
+      - watch
+    apiGroups:
+      - '*'
+    resources:
+      - events
+      - pods
+      - deployments
+      - replicasets
+      - statefulsets
+      - daemonsets
+  - verbs:
+      - get
+    apiGroups:
+      - metrics.k8s.io
+    resources:
+      - nodes
+  - verbs:
+      - get
+    apiGroups:
+      - ''
+    resources:
+      - pods
+      - pods/log
