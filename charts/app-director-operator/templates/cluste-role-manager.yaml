@@ -195,6 +195,7 @@ rules:
   - list
   - patch
   - update
+  - watch
 - apiGroups:
   - autoscaling
   resources:
@@ -445,3 +446,10 @@ rules:
   - patch
   - update
   - watch
+- verbs:
+    - list
+    - watch
+  apiGroups:
+    - apps
+  resources:
+    - daemonsets

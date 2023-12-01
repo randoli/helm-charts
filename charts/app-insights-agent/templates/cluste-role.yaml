@@ -8,20 +8,31 @@ rules:
   - verbs:
       - list
     apiGroups:
-      - '*'
+      - ''
     resources:
       - nodes
       - namespaces
       - services
       - persistentvolumes
+  - verbs:
+      - list
+    apiGroups:
+      - storage.k8s.io
+    resources:
       - storageclasses
   - verbs:
       - list
       - watch
     apiGroups:
-      - '*'
+      - ''
     resources:
       - events
+  - verbs:
+      - list
+      - watch
+    apiGroups:
+      - 'apps'
+    resources:
       - pods
       - deployments
       - replicasets
@@ -35,8 +46,15 @@ rules:
       - nodes
   - verbs:
       - get
+      - list
+      - watch
     apiGroups:
       - ''
     resources:
       - pods
+  - verbs:
+      - get
+    apiGroups:
+      - ''
+    resources:
       - pods/log
