@@ -14,8 +14,12 @@ data:
   DEBUG: 'false'
   HTTP_SERVICE_PORT: '8080'
   KEYCLOAK_TIMEOUT: 1m0s
-  OPENCOST_BACKEND_URL: {{ .Values.openCost.url }}
-  PROMETHEUS_URL: {{ .Values.prometheus.url }}
+  {{ if .Values.opencost.url }}
+  OPENCOST_BACKEND_URL: {{ .Values.opencost.url }}
+  {{ else }}
+  OPENCOST_BACKEND_URL: http://{{ .Release.Name }}-opencost.{{ .Release.Namespace }}.svc.cluster.local:9003
+  {{ end }}
+  PROMETHEUS_URL: {{ .Values.global.prometheus.url }}
   TLS_ENABLED: 'true'
   VENDOR_MAJOR_VERSION: ''
   VENDOR_MINOR_VERSION: ''

@@ -1,3 +1,7 @@
+global:
+  prometheus:
+    url: http://my-prometheus-server.prometheus.svc.cluster.local:80
+
 image:
   registry: docker.io
   repository: randoli/insights-agent
@@ -34,12 +38,19 @@ serviceAccount:
   annotations: {}
   labels: {}
 
-openCost:
-  url: http://opencost.opencost.svc.cluster.local:9003
-
-prometheus:
-  url: http://prometheus-operated.prometheus.svc.cluster.local:9090
-
 secrets:
   cert: insights-agent-cert
   config: insights-agent-secret
+
+opencost:
+  # If enabled, OpenCost will be deployed and does not need the URL
+  enabled: true
+  # If this URL is provided then it will replace the generated one
+  url:
+
+  opencost:
+    ui:
+      enabled: false
+    metrics:
+      serviceMonitor:
+        enabled: true

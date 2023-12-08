@@ -3,7 +3,7 @@ entries:
   app-director-agent-operator:
   - apiVersion: v2
     appVersion: 1.1.0
-    created: "2023-12-08T18:01:00.641896687-03:00"
+    created: "2023-12-08T18:04:20.307903793-03:00"
     description: Randoli App Director Agent Operator
     digest: c6e57eb1edeac757dab0733fb8ba7d7179cc9a67132240a48f9690bcd36b4c20
     home: https://randoli.ca
@@ -25,9 +25,14 @@ entries:
   app-insights-agent:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2023-12-08T18:01:00.642132991-03:00"
+    created: "2023-12-08T18:04:20.309561318-03:00"
+    dependencies:
+    - condition: opencost.enabled
+      name: opencost
+      repository: https://randoli.github.io/helm-charts
+      version: 1.27.0
     description: Randoli App Insights Agent
-    digest: 884998351eacf287b154c4fd74a1331768ed2ce22b112b7a7d10aaf8dbd2e4d3
+    digest: b03034f440cfcf3a4b4bf634961824f10b39184cdf7bf70e300e840218596071
     home: https://randoli.ca
     icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
     keywords:
@@ -47,7 +52,7 @@ entries:
   opencost:
   - apiVersion: v2
     appVersion: 1.107.1
-    created: "2023-12-08T18:01:00.643395283-03:00"
+    created: "2023-12-08T18:04:20.310409941-03:00"
     description: OpenCost and OpenCost UI
     digest: 426916e316e3f0a2723b0bd7ebc2e0c703bd264e83f920922d2652028a1f47ef
     home: https://github.com/opencost/opencost-helm-chart
@@ -66,4 +71,4 @@ entries:
     urls:
     - opencost-1.27.0.tgz
     version: 1.27.0
-generated: "2023-12-08T18:01:00.64114617-03:00"
+generated: "2023-12-08T18:04:20.307454346-03:00"

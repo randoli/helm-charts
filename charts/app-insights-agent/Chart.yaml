@@ -15,3 +15,8 @@ name: app-insights-agent
 sources:
 - https://github.com/randoli/helm-charts
 version: 1.0.0
+dependencies:
+  - name: opencost
+    repository: https://randoli.github.io/helm-charts
+    version: 1.27.0
+    condition: opencost.enabled
