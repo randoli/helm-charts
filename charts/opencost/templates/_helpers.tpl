@@ -82,8 +82,8 @@ Define the endpoint for Prometheus
 Only change done by Randoli
 */}}
 {{- define "opencost.prometheusServerEndpoint" -}}
-  {{- if .Values.prometheus.url -}}
-    {{ tpl .Values.prometheus.url . }}
+  {{- if .Values.global.prometheus.url -}}
+    {{ tpl .Values.global.prometheus.url . }}
   {{- else if .Values.opencost.prometheus.external.enabled -}}
     {{ tpl .Values.opencost.prometheus.external.url . }}
   {{- else if (and .Values.opencost.prometheus.amp.enabled .Values.opencost.sigV4Proxy) -}}
