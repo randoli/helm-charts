@@ -21,7 +21,3 @@ data:
   {{ end }}
   PROMETHEUS_URL: {{ .Values.global.prometheus.url }}
   TLS_ENABLED: 'true'
-  VENDOR_MAJOR_VERSION: ''
-  VENDOR_MINOR_VERSION: ''
-  VENDOR_NAME: ''
-  VENDOR_VERSION: ''
