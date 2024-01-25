@@ -56,3 +56,15 @@ spec:
               mountPath: /app/certs
       serviceAccountName: {{ template "app-insights-agent.serviceAccountName" . }}
       serviceAccount: {{ template "app-insights-agent.serviceAccountName" . }}
+      {{- with .Values.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with.Values.topologySpreadConstraints }}
+      topologySpreadConstraints: {{- toYaml . | nindent 8 }}
+      {{- end }}

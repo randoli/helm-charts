@@ -3,7 +3,7 @@ entries:
   app-director-agent-operator:
   - apiVersion: v2
     appVersion: 1.1.0
-    created: "2023-12-15T17:43:55.360197223-03:00"
+    created: "2024-01-25T13:49:39.740061252-03:00"
     description: Randoli App Director Agent Operator
     digest: c6e57eb1edeac757dab0733fb8ba7d7179cc9a67132240a48f9690bcd36b4c20
     home: https://randoli.ca
@@ -24,8 +24,34 @@ entries:
     version: 1.1.0
   app-insights-agent:
   - apiVersion: v2
+    appVersion: "1.5"
+    created: "2024-01-25T13:49:39.743025388-03:00"
+    dependencies:
+    - condition: opencost.enabled
+      name: opencost
+      repository: https://randoli.github.io/helm-charts
+      version: 1.27.0
+    description: Randoli App Insights Agent
+    digest: b3912a8bd66997e8dd53148d62acd5b686da4e6b3adcc7c1da5dad1d769c4346
+    home: https://randoli.ca
+    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
+    keywords:
+    - app-insights
+    - app-insights-agent
+    - randoli
+    maintainers:
+    - email: support@randoli.ca
+      name: Randoli
+      url: https://randoli.ca
+    name: app-insights-agent
+    sources:
+    - https://github.com/randoli/helm-charts
+    urls:
+    - app-insights-agent-1.5.0.tgz
+    version: 1.5.0
+  - apiVersion: v2
     appVersion: 1.4.0
-    created: "2023-12-15T17:43:55.362197125-03:00"
+    created: "2024-01-25T13:49:39.742050436-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -51,7 +77,7 @@ entries:
     version: 1.0.1
   - apiVersion: v2
     appVersion: 1.4.0
-    created: "2023-12-15T17:43:55.361230409-03:00"
+    created: "2024-01-25T13:49:39.741056366-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -78,7 +104,7 @@ entries:
   opencost:
   - apiVersion: v2
     appVersion: 1.107.1
-    created: "2023-12-15T17:43:55.362917802-03:00"
+    created: "2024-01-25T13:49:39.743727077-03:00"
     description: OpenCost and OpenCost UI
     digest: 426916e316e3f0a2723b0bd7ebc2e0c703bd264e83f920922d2652028a1f47ef
     home: https://github.com/opencost/opencost-helm-chart
@@ -97,4 +123,4 @@ entries:
     urls:
     - opencost-1.27.0.tgz
     version: 1.27.0
-generated: "2023-12-15T17:43:55.359744179-03:00"
+generated: "2024-01-25T13:49:39.73964183-03:00"

@@ -58,3 +58,10 @@ rules:
       - ''
     resources:
       - pods/log
+  - verbs:
+      - list
+    apiGroups:
+      - batch
+    resources:
+      - cronjobs
+      - jobs
