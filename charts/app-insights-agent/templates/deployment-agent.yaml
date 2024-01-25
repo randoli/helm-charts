@@ -16,11 +16,15 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "labels" . | nindent 6 }}
+      app.kubernetes.io/name: {{ include "app-insights-agent.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: app-insights-agent
   template:
     metadata:
       labels:
-        {{- include "labels" . | nindent 8 }}
+        app.kubernetes.io/name: {{ include "app-insights-agent.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: app-insights-agent
     spec:
       volumes:
         - name: tls-certs
