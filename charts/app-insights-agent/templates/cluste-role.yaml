@@ -30,6 +30,7 @@ rules:
   - verbs:
       - list
       - watch
+      - get
     apiGroups:
       - 'apps'
     resources:
@@ -65,3 +66,9 @@ rules:
     resources:
       - cronjobs
       - jobs
+  - verbs:
+      - get
+    apiGroups:
+      - autoscaling
+    resources:
+      - horizontalpodautoscalers

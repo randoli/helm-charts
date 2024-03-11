@@ -5,7 +5,7 @@ global:
 image:
   registry: docker.io
   repository: randoli/insights-agent
-  tag: "1.5"
+  tag: "1.6"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -58,6 +58,11 @@ opencost:
   url:
 
   opencost:
+    exporter:
+      extraEnv:
+        # To avoid duplicate metrics from v2 KubeStateMetrics running in your cluster and v1 KubestateMetrics from OpenCost
+        EMIT_KSM_V1_METRICS: "false"
+        EMIT_KSM_V1_METRICS_ONLY: "true"
     ui:
       enabled: false
     metrics:
