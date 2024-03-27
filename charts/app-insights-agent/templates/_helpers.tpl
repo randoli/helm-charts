@@ -47,3 +47,11 @@ Create the name of the service account to use
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
+
+{{- define "app-insights-satellite-agent.name" -}}
+{{- printf "%s-%s" "satellite" (include "app-insights-agent.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "app-insights-agent-grpc-address.name" -}}
+{{- (include "app-insights-agent.fullname" .) -}}.{{- (include "app-insights-agent.namespace" .) -}}:9090
+{{- end -}}

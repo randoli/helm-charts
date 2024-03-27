@@ -14,10 +14,16 @@ data:
   DEBUG: 'false'
   HTTP_SERVICE_PORT: '8080'
   KEYCLOAK_TIMEOUT: 1m0s
-  {{ if .Values.opencost.url }}
+{{ if .Values.opencost.url }}
   OPENCOST_BACKEND_URL: {{ .Values.opencost.url }}
-  {{ else }}
+{{ else }}
   OPENCOST_BACKEND_URL: http://{{ .Release.Name }}-opencost.{{ .Release.Namespace }}.svc.cluster.local:9003
-  {{ end }}
+{{ end }}
   PROMETHEUS_URL: {{ .Values.global.prometheus.url }}
   TLS_ENABLED: 'true'
+  SATELLITE_AGENTS_ENABLED: {{ quote .Values.enableSatelliteAgents }}
+  AWS_MARKETPLACE: {{ quote .Values.awsMarketplace }}
+  ENABLE_CIS_BENCHMARK: {{ quote .Values.enableCisBenchmark }}
+  {{- with .Values.satelliteImage }}
+  SATELLITE_IMAGE: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{ .digest }}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
+  {{- end }}

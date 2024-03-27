@@ -7,6 +7,7 @@ metadata:
 rules:
   - verbs:
       - list
+      - get
     apiGroups:
       - ''
     resources:
@@ -72,3 +73,13 @@ rules:
       - autoscaling
     resources:
       - horizontalpodautoscalers
+{{ if or .Values.enableSatelliteAgents .Values.awsMarketplace }}
+  - verbs:
+      - create
+      - delete
+      - watch
+    apiGroups:
+      - batch
+    resources:
+      - jobs
+{{ end }}

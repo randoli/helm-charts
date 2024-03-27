@@ -5,7 +5,18 @@ global:
 image:
   registry: docker.io
   repository: randoli/insights-agent
-  tag: "1.6"
+  tag: "dev"
+  digest: ""
+  ## Specify a imagePullPolicy
+  ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+  ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  ##
+  pullPolicy: Always
+
+satelliteImage:
+  registry: docker.io
+  repository: randoli/insights-satellite-agent
+  tag: "dev"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -50,6 +61,10 @@ serviceAccount:
 secrets:
   cert: insights-agent-cert
   config: insights-agent-secret
+
+enableSatelliteAgents: false
+awsMarketplace: false
+enableCisBenchmark: true
 
 opencost:
   # If enabled, OpenCost will be deployed and does not need the URL
