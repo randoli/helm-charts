@@ -2,6 +2,36 @@
 nameOverride: ""
 # -- Overwrite all resources name created by the chart
 fullnameOverride: ""
+# -- Override the deployment namespace
+namespaceOverride: ""
+
+loglevel: info
+
+plugins:
+  enabled: false
+  install:
+    enabled: true
+    fullImageName: curlimages/curl:latest
+    securityContext:
+      allowPrivilegeEscalation: false
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop:
+        - ALL
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      runAsUser: 1000
+  folder: /opt/opencost/plugin
+  # leave this commented to always download most recent version of plugins
+  # version: <INSERT_SPECIFIC_PLUGINS_VERSION>
+  configs:
+    # datadog: |
+    #   {
+    #   "datadog_site": "<INSERT_DATADOG_SITE>",
+    #   "datadog_api_key": "<INSERT_DATADOG_API_KEY>",
+    #   "datadog_app_key": "<INSERT_DATADOG_APP_KEY>"
+    #   }
 
 # -- List of secret names to use for pulling the images
 imagePullSecrets: []
@@ -32,6 +62,9 @@ networkPolicies:
     # -- Labels applied to the Prometheus server pod(s)
     labels:
       app.kubernetes.io/name: prometheus
+
+  # -- Extra egress rule
+  extraEgress: []
 
 # --  Strategy to be used for the Deployment
 updateStrategy:
@@ -76,19 +109,25 @@ rbac:
   enabled: true
 
 opencost:
+  # -- <SECRET_NAME> for the secret containing the Cloud Costs cloud-integration.json https://www.opencost.io/docs/configuration/#cloud-costs
+  # -- kubectl create secret generic <SECRET_NAME> --from-file=cloud-integration.json -n opencost
+  cloudIntegrationSecret: ""
   exporter:
+    # API_PORT for the cost-model to listen on
+    apiPort: 9003
+    # debugPort: 40000 # for development purposes (debugging with delve) and not for production.
     # -- The GCP Pricing API requires a key. This is supplied just for evaluation.
     cloudProviderApiKey: ""
     # -- Default cluster ID to use if cluster_id is not set in Prometheus metrics.
     defaultClusterId: 'default-cluster'
     image:
       # -- Exporter container image registry
-      registry: quay.io
+      registry: ghcr.io
       # -- Exporter container image name
-      repository: kubecost1/kubecost-cost-model
+      repository: opencost/opencost
       # -- Exporter container image tag
       # @default -- `""` (use appVersion in Chart.yaml)
-      tag: "latest"
+      tag: ""
       # -- Exporter container image pull policy
       pullPolicy: IfNotPresent
       # -- Override the full image name for development purposes
@@ -106,22 +145,38 @@ opencost:
       limits:
         cpu: '999m'
         memory: '1Gi'
+    # Startup probe configuration
+    startupProbe:
+      # -- Whether probe is enabled
+      enabled: true
+      # -- Probe path
+      path: /healthz
+      # -- Number of seconds before probe is initiated
+      initialDelaySeconds: 10
+      # -- Probe frequency in seconds
+      periodSeconds: 5
+      # -- Number of failures for probe to be considered failed
+      failureThreshold: 30
     # Liveness probe configuration
     livenessProbe:
       # -- Whether probe is enabled
       enabled: true
+      # -- Probe path
+      path: /healthz
       # -- Number of seconds before probe is initiated
-      initialDelaySeconds: 120
+      initialDelaySeconds: 10
       # -- Probe frequency in seconds
-      periodSeconds: 10
+      periodSeconds: 20
       # -- Number of failures for probe to be considered failed
       failureThreshold: 3
     # Readiness probe configuration
     readinessProbe:
       # -- Whether probe is enabled
       enabled: true
+      # -- Probe path
+      path: /healthz
       # -- Number of seconds before probe is initiated
-      initialDelaySeconds: 120
+      initialDelaySeconds: 10
       # -- Probe frequency in seconds
       periodSeconds: 10
       # -- Number of failures for probe to be considered failed
@@ -203,6 +258,16 @@ opencost:
 
 
   metrics:
+    kubeStateMetrics:
+      # -- Enable emission of pod annotations
+      emitPodAnnotations: ""
+      # -- Enable emission of namespace annotations
+      emitNamespaceAnnotations: ""
+      # -- Enable emission of KSM v1 metrics
+      emitKsmV1Metrics: ""
+      # -- Enable only emission of KSM v1 metrics that do not exist in KSM 2 by default
+      emitKsmV1MetricsOnly: ""
+
     serviceMonitor:
       # -- Create ServiceMonitor resource for scraping metrics using PrometheusOperator
       enabled: false
@@ -232,6 +297,14 @@ opencost:
         # certFile: /etc/prom-certs/cert-chain.pem
         # insecureSkipVerify: true
         # keyFile: /etc/prom-certs/key.pem
+
+    config:
+      # -- Enables creating the metrics.json configuration as a ConfigMap
+      enabled: false
+      # -- List of metrics to be disabled
+      disabledMetrics: []
+      # - <metric-to-be-disabled>
+      # - <metric-to-be-disabled>
 
   prometheus:
     # -- Secret name that contains credentials for Prometheus
@@ -284,12 +357,12 @@ opencost:
     enabled: true
     image:
       # -- UI container image registry
-      registry: quay.io
+      registry: ghcr.io
       # -- UI container image name
-      repository: kubecost1/opencost-ui
+      repository: opencost/opencost-ui
       # -- UI container image tag
       # @default -- `""` (use appVersion in Chart.yaml)
-      tag: "latest"
+      tag: ""
       # -- UI container image pull policy
       pullPolicy: IfNotPresent
       # -- Override the full image name for development purposes
@@ -303,10 +376,15 @@ opencost:
       limits:
         cpu: '999m'
         memory: '1Gi'
+    # used in the default.nginx.conf if you want to switch for using with Docker
+    # apiServer: 0.0.0.0
+    uiPort: 9090
     # Liveness probe configuration
     livenessProbe:
       # -- Whether probe is enabled
       enabled: true
+      # -- Probe path
+      path: /healthz
       # -- Number of seconds before probe is initiated
       initialDelaySeconds: 30
       # -- Probe frequency in seconds
@@ -317,6 +395,8 @@ opencost:
     readinessProbe:
       # -- Whether probe is enabled
       enabled: true
+      # -- Probe path
+      path: /healthz
       # -- Number of seconds before probe is initiated
       initialDelaySeconds: 30
       # -- Probe frequency in seconds
