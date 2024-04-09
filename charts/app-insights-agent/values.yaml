@@ -58,13 +58,11 @@ opencost:
   url:
 
   opencost:
-    exporter:
-      extraEnv:
-        # To avoid duplicate metrics from v2 KubeStateMetrics running in your cluster and v1 KubestateMetrics from OpenCost
-        EMIT_KSM_V1_METRICS: "false"
-        EMIT_KSM_V1_METRICS_ONLY: "true"
     ui:
       enabled: false
     metrics:
+      kubeStateMetrics:
+        emitKsmV1Metrics: false
+        emitKsmV1MetricsOnly: true
       serviceMonitor:
         enabled: true
