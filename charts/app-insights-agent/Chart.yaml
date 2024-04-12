@@ -18,5 +18,5 @@ version: 1.6.0
 dependencies:
   - name: opencost
     repository: https://randoli.github.io/helm-charts
-    version: 1.27.0
+    version: 1.33.1
     condition: opencost.enabled
