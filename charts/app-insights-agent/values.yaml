@@ -5,7 +5,7 @@ global:
 image:
   registry: docker.io
   repository: randoli/insights-agent
-  tag: "1.6"
+  tag: "1.7"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -26,11 +26,11 @@ deploymentAnnotations: {}
 
 resources:
   limits:
-    cpu: 100m
-    memory: 300Mi
+    cpu: 150m
+    memory: 512Mi
   requests:
-    cpu: 100m
-    memory: 300Mi
+    cpu: 50m
+    memory: 256Mi
 
 # -- Toleration labels for pod assignment
 tolerations: []
