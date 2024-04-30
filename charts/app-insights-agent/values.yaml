@@ -15,14 +15,14 @@ image:
 
 imagePullSecrets: []
 
-# -- Toleration labels for pod assignment
-tolerations: []
-# -- Node labels for pod assignment
-nodeSelector: {}
-# -- Affinity settings for pod assignment
-affinity: {}
-# -- Assign custom TopologySpreadConstraints rules
-topologySpreadConstraints: []
+secrets:
+  cert: insights-agent-cert
+  config: insights-agent-secret
+
+labels:
+  app: app-insights-agent
+
+deploymentAnnotations: {}
 
 resources:
   limits:
@@ -32,12 +32,22 @@ resources:
     cpu: 100m
     memory: 300Mi
 
+# -- Toleration labels for pod assignment
+tolerations: []
+# -- Node labels for pod assignment
+nodeSelector: {}
+# -- Affinity settings for pod assignment
+affinity: {}
+# -- Assign custom TopologySpreadConstraints rules
+topologySpreadConstraints: []
+
+extraEnv: []
+extraEnvFrom: []
+
+extraVolumes: []
+extraVolumeMounts: []
+
 securityContext: {}
-
-labels:
-  app: app-insights-agent
-
-deploymentAnnotations: {}
 
 serviceAccount:
   create: true
@@ -46,10 +56,6 @@ serviceAccount:
   automountServiceAccountToken: true
   annotations: {}
   labels: {}
-
-secrets:
-  cert: insights-agent-cert
-  config: insights-agent-secret
 
 opencost:
   # If enabled, OpenCost will be deployed and does not need the URL
@@ -63,6 +69,6 @@ opencost:
     metrics:
       kubeStateMetrics:
         emitKsmV1Metrics: false
-        emitKsmV1MetricsOnly: true
+        emitKsmV1MetricsOnly: false
       serviceMonitor:
         enabled: true
