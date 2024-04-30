@@ -36,6 +36,9 @@ spec:
               - key: client-key.pem
                 path: client-key.pem
             defaultMode: 420
+        {{- if .Values.extraVolumes }}
+          {{- toYaml .Values.extraVolumes | nindent 8}}
+        {{- end }}
       containers:
         - name: app-insights-agent
           {{- with .Values.image }}
@@ -47,6 +50,9 @@ spec:
                 name: {{ .Values.secrets.config }}
             - configMapRef:
                 name: {{ include "app-insights-agent.fullname" . }}-config
+            {{- if .Values.extraEnvFrom }}
+              {{- toYaml .Values.extraEnvFrom | nindent 12 }} 
+            {{- end }}
           {{- with .Values.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -58,6 +64,13 @@ spec:
           volumeMounts:
             - name: tls-certs
               mountPath: /app/certs
+            {{- if .Values.extraVolumeMounts }}
+              {{- toYaml .Values.extraVolumeMounts | nindent 12 }} 
+            {{- end }}
+          {{- if .Values.extraEnv }}
+          env:
+            {{- toYaml .Values.extraEnv | nindent 12 }} 
+          {{- end }}
       serviceAccountName: {{ template "app-insights-agent.serviceAccountName" . }}
       serviceAccount: {{ template "app-insights-agent.serviceAccountName" . }}
       {{- with .Values.tolerations }}

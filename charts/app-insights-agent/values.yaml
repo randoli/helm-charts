@@ -15,14 +15,14 @@ image:
 
 imagePullSecrets: []
 
-# -- Toleration labels for pod assignment
-tolerations: []
-# -- Node labels for pod assignment
-nodeSelector: {}
-# -- Affinity settings for pod assignment
-affinity: {}
-# -- Assign custom TopologySpreadConstraints rules
-topologySpreadConstraints: []
+secrets:
+  cert: insights-agent-cert
+  config: insights-agent-secret
+
+labels:
+  app: app-insights-agent
+
+deploymentAnnotations: {}
 
 resources:
   limits:
@@ -32,12 +32,22 @@ resources:
     cpu: 100m
     memory: 300Mi
 
+# -- Toleration labels for pod assignment
+tolerations: []
+# -- Node labels for pod assignment
+nodeSelector: {}
+# -- Affinity settings for pod assignment
+affinity: {}
+# -- Assign custom TopologySpreadConstraints rules
+topologySpreadConstraints: []
+
+extraEnv: []
+extraEnvFrom: []
+
+extraVolumes: []
+extraVolumeMounts: []
+
 securityContext: {}
-
-labels:
-  app: app-insights-agent
-
-deploymentAnnotations: {}
 
 serviceAccount:
   create: true
@@ -47,10 +57,6 @@ serviceAccount:
   annotations: {}
   labels: {}
 
-secrets:
-  cert: insights-agent-cert
-  config: insights-agent-secret
-
 opencost:
   # If enabled, OpenCost will be deployed and does not need the URL
   enabled: true
@@ -58,13 +64,11 @@ opencost:
   url:
 
   opencost:
-    exporter:
-      extraEnv:
-        # To avoid duplicate metrics from v2 KubeStateMetrics running in your cluster and v1 KubestateMetrics from OpenCost
-        EMIT_KSM_V1_METRICS: "false"
-        EMIT_KSM_V1_METRICS_ONLY: "true"
     ui:
       enabled: false
     metrics:
+      kubeStateMetrics:
+        emitKsmV1Metrics: false
+        emitKsmV1MetricsOnly: false
       serviceMonitor:
         enabled: true

@@ -72,3 +72,11 @@ rules:
       - autoscaling
     resources:
       - horizontalpodautoscalers
+  - verbs:
+      - create
+      - delete
+      - list
+    apiGroups:
+      - autoscaling.k8s.io
+    resources:
+      - verticalpodautoscalers
