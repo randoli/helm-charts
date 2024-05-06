@@ -80,3 +80,14 @@ rules:
       - autoscaling.k8s.io
     resources:
       - verticalpodautoscalers
+  - verbs:
+      - get
+      - list
+    apiGroups:
+      - spdx.softwarecomposition.kubescape.io
+    resources:
+      - workloadconfigurationscans
+			- workloadconfigurationscansummaries
+			- vulnerabilitymanifestsummaries
+			- vulnerabilitymanifests
+			- vulnerabilitysummaries
