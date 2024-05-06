@@ -87,7 +87,7 @@ rules:
       - spdx.softwarecomposition.kubescape.io
     resources:
       - workloadconfigurationscans
-			- workloadconfigurationscansummaries
-			- vulnerabilitymanifestsummaries
-			- vulnerabilitymanifests
-			- vulnerabilitysummaries
+      - workloadconfigurationscansummaries
+      - vulnerabilitymanifestsummaries
+      - vulnerabilitymanifests
+      - vulnerabilitysummaries
