@@ -24,6 +24,8 @@ labels:
 
 deploymentAnnotations: {}
 
+enableRightSizingRecommendations: true
+
 resources:
   limits:
     cpu: 150m
