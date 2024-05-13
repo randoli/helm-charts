@@ -24,7 +24,7 @@ labels:
 
 deploymentAnnotations: {}
 
-enableRightSizingRecommendations: true
+enableRightSizingRecommendations: false
 
 resources:
   limits:
