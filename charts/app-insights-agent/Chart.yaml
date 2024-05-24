@@ -23,4 +23,4 @@ dependencies:
   - name: vertical-pod-autoscaler
     repository: https://randoli.github.io/helm-charts
     version: 1.0.0
-    condition: rightsizing.install.enabled
+    condition: rightsizingRecommendations.installVpa

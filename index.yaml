@@ -3,7 +3,7 @@ entries:
   app-director-agent-operator:
   - apiVersion: v2
     appVersion: 1.1.0
-    created: "2024-05-24T13:40:14.485132415-04:00"
+    created: "2024-05-24T19:51:23.878434259-03:00"
     description: Randoli App Director Agent Operator
     digest: c6e57eb1edeac757dab0733fb8ba7d7179cc9a67132240a48f9690bcd36b4c20
     home: https://randoli.ca
@@ -25,18 +25,18 @@ entries:
   app-insights-agent:
   - apiVersion: v2
     appVersion: 1.7.3
-    created: "2024-05-24T13:40:14.500777305-04:00"
+    created: "2024-05-24T19:51:23.888107513-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
       repository: https://randoli.github.io/helm-charts
       version: 1.33.1
-    - condition: rightsizing.install.enabled
+    - condition: rightsizingRecommendations.installVpa
       name: vertical-pod-autoscaler
       repository: https://randoli.github.io/helm-charts
       version: 1.0.0
     description: Randoli App Insights Agent
-    digest: 8ac76898d54fb791ef37aa39e8dd64d9d89587876fa8918437729e416d2a0c51
+    digest: 771032cf7264d0b05d86b7070c879cc43f27ba1d1326c19edb091b0f175d1976
     home: https://randoli.ca
     icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
     keywords:
@@ -55,7 +55,7 @@ entries:
     version: 1.7.3
   - apiVersion: v2
     appVersion: "1.7"
-    created: "2024-05-24T13:40:14.496278739-04:00"
+    created: "2024-05-24T19:51:23.885427504-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -81,7 +81,7 @@ entries:
     version: 1.7.1
   - apiVersion: v2
     appVersion: "1.7"
-    created: "2024-05-09T16:10:25.570960758-03:00"
+    created: "2024-05-24T19:51:23.884298462-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -107,7 +107,7 @@ entries:
     version: 1.7.0
   - apiVersion: v2
     appVersion: "1.6"
-    created: "2024-05-24T13:40:14.493076973-04:00"
+    created: "2024-05-24T19:51:23.882731967-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -133,7 +133,7 @@ entries:
     version: 1.6.0
   - apiVersion: v2
     appVersion: "1.5"
-    created: "2024-05-24T13:40:14.491085962-04:00"
+    created: "2024-05-24T19:51:23.881568675-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -159,7 +159,7 @@ entries:
     version: 1.5.0
   - apiVersion: v2
     appVersion: 1.4.0
-    created: "2024-05-24T13:40:14.48890576-04:00"
+    created: "2024-05-24T19:51:23.880523741-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -185,7 +185,7 @@ entries:
     version: 1.0.1
   - apiVersion: v2
     appVersion: 1.4.0
-    created: "2024-05-24T13:40:14.487045923-04:00"
+    created: "2024-05-24T19:51:23.879419582-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -212,7 +212,7 @@ entries:
   opencost:
   - apiVersion: v2
     appVersion: 1.109.0
-    created: "2024-05-24T13:40:14.503916734-04:00"
+    created: "2024-05-24T19:51:23.890154949-03:00"
     description: OpenCost and OpenCost UI
     digest: 71d991db437fbd424450fe3b4c9e8889a6bf5b57ef9e3d9fb23bbc0012d1c1b6
     home: https://github.com/opencost/opencost-helm-chart
@@ -235,7 +235,7 @@ entries:
     version: 1.33.1
   - apiVersion: v2
     appVersion: 1.107.1
-    created: "2024-05-24T13:40:14.502270826-04:00"
+    created: "2024-05-24T19:51:23.888829789-03:00"
     description: OpenCost and OpenCost UI
     digest: 426916e316e3f0a2723b0bd7ebc2e0c703bd264e83f920922d2652028a1f47ef
     home: https://github.com/opencost/opencost-helm-chart
@@ -254,13 +254,12 @@ entries:
     urls:
     - opencost-1.27.0.tgz
     version: 1.27.0
-
   vertical-pod-autoscaler:
   - annotations:
       kubeVersion: '>=1.24'
     apiVersion: v2
     appVersion: 1.1.2
-    created: "2024-05-24T13:40:14.50658324-04:00"
+    created: "2024-05-24T19:51:23.891556825-03:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami/
@@ -274,4 +273,4 @@ entries:
     urls:
     - vertical-pod-autoscaler-1.0.0.tgz
     version: 1.0.0
-generated: "2024-05-24T13:40:14.484303911-04:00"
+generated: "2024-05-24T19:51:23.877984412-03:00"

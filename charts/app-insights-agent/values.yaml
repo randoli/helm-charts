@@ -24,8 +24,6 @@ labels:
 
 deploymentAnnotations: {}
 
-enableRightSizingRecommendations: false
-
 resources:
   limits:
     cpu: 150m
@@ -75,7 +73,7 @@ opencost:
       serviceMonitor:
         enabled: true
 
-rightsizing:
-  install:
-    # If enabled, VerticalPodAutoscaler will be installed
-    enabled: false
+rightsizingRecommendations:
+  enabled: true
+  # If enabled, VerticalPodAutoscaler will be installed
+  installVpa: false
