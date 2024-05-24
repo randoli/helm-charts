@@ -3,7 +3,7 @@ entries:
   app-director-agent-operator:
   - apiVersion: v2
     appVersion: 1.1.0
-    created: "2024-04-30T18:24:25.817141812-03:00"
+    created: "2024-05-09T16:10:25.56545794-03:00"
     description: Randoli App Director Agent Operator
     digest: c6e57eb1edeac757dab0733fb8ba7d7179cc9a67132240a48f9690bcd36b4c20
     home: https://randoli.ca
@@ -25,7 +25,33 @@ entries:
   app-insights-agent:
   - apiVersion: v2
     appVersion: "1.7"
-    created: "2024-04-30T18:24:25.823124958-03:00"
+    created: "2024-05-09T16:10:25.57261844-03:00"
+    dependencies:
+    - condition: opencost.enabled
+      name: opencost
+      repository: https://randoli.github.io/helm-charts
+      version: 1.33.1
+    description: Randoli App Insights Agent
+    digest: 12ad4e7790e02e6a0c446d17db3d247559295d8394388bfc30ab1a67a3586ab8
+    home: https://randoli.ca
+    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
+    keywords:
+    - app-insights
+    - app-insights-agent
+    - randoli
+    maintainers:
+    - email: support@randoli.ca
+      name: Randoli
+      url: https://randoli.ca
+    name: app-insights-agent
+    sources:
+    - https://github.com/randoli/helm-charts
+    urls:
+    - app-insights-agent-1.7.1.tgz
+    version: 1.7.1
+  - apiVersion: v2
+    appVersion: "1.7"
+    created: "2024-05-09T16:10:25.570960758-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -51,7 +77,7 @@ entries:
     version: 1.7.0
   - apiVersion: v2
     appVersion: "1.6"
-    created: "2024-04-30T18:24:25.822059464-03:00"
+    created: "2024-05-09T16:10:25.569872843-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -77,7 +103,7 @@ entries:
     version: 1.6.0
   - apiVersion: v2
     appVersion: "1.5"
-    created: "2024-04-30T18:24:25.820999756-03:00"
+    created: "2024-05-09T16:10:25.568824637-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -103,7 +129,7 @@ entries:
     version: 1.5.0
   - apiVersion: v2
     appVersion: 1.4.0
-    created: "2024-04-30T18:24:25.819279309-03:00"
+    created: "2024-05-09T16:10:25.567785888-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -129,7 +155,7 @@ entries:
     version: 1.0.1
   - apiVersion: v2
     appVersion: 1.4.0
-    created: "2024-04-30T18:24:25.818236665-03:00"
+    created: "2024-05-09T16:10:25.566818763-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -156,7 +182,7 @@ entries:
   opencost:
   - apiVersion: v2
     appVersion: 1.109.0
-    created: "2024-04-30T18:24:25.82465069-03:00"
+    created: "2024-05-09T16:10:25.574248934-03:00"
     description: OpenCost and OpenCost UI
     digest: 71d991db437fbd424450fe3b4c9e8889a6bf5b57ef9e3d9fb23bbc0012d1c1b6
     home: https://github.com/opencost/opencost-helm-chart
@@ -179,7 +205,7 @@ entries:
     version: 1.33.1
   - apiVersion: v2
     appVersion: 1.107.1
-    created: "2024-04-30T18:24:25.823842865-03:00"
+    created: "2024-05-09T16:10:25.573414548-03:00"
     description: OpenCost and OpenCost UI
     digest: 426916e316e3f0a2723b0bd7ebc2e0c703bd264e83f920922d2652028a1f47ef
     home: https://github.com/opencost/opencost-helm-chart
@@ -198,4 +224,4 @@ entries:
     urls:
     - opencost-1.27.0.tgz
     version: 1.27.0
-generated: "2024-04-30T18:24:25.816692504-03:00"
+generated: "2024-05-09T16:10:25.56483421-03:00"
