@@ -24,8 +24,6 @@ labels:
 
 deploymentAnnotations: {}
 
-enableRightSizingRecommendations: false
-
 resources:
   limits:
     cpu: 150m
@@ -74,3 +72,8 @@ opencost:
         emitKsmV1MetricsOnly: false
       serviceMonitor:
         enabled: true
+
+rightsizingRecommendations:
+  enabled: true
+  # If enabled, VerticalPodAutoscaler will be installed
+  installVpa: false

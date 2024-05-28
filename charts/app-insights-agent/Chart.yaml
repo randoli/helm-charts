@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: '1.7'
+appVersion: '1.7.3'
 description: Randoli App Insights Agent
 home: https://randoli.ca
 icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
@@ -14,9 +14,13 @@ maintainers:
 name: app-insights-agent
 sources:
 - https://github.com/randoli/helm-charts
-version: 1.7.1
+version: 1.7.3
 dependencies:
   - name: opencost
     repository: https://randoli.github.io/helm-charts
     version: 1.33.1
     condition: opencost.enabled
+  - name: vertical-pod-autoscaler
+    repository: https://randoli.github.io/helm-charts
+    version: 1.0.0
+    condition: rightsizingRecommendations.installVpa
