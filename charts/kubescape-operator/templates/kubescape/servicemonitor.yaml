@@ -1,0 +1,26 @@
+{{- $components := fromYaml (include "components" .) }}
+{{ if and .Values.kubescape.serviceMonitor.enabled $components.kubescape.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.kubescape.name }}-monitor
+  namespace: {{ .Values.kubescape.serviceMonitor.namespace | default (include "app-insights-agent.namespace" .) }}
+  labels:
+    app: {{ .Values.kubescape.name }}
+    kubescape.io/ignore: "true"
+    {{- with .Values.kubescape.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  namespaceSelector:
+    matchNames:
+      -  {{ include "app-insights-agent.namespace" . }}
+  selector:
+    matchLabels:
+      app: {{ .Values.kubescape.name }}
+  endpoints:
+    - port: http
+      path: /v1/metrics
+      interval: {{ .Values.kubescape.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.kubescape.serviceMonitor.scrapeTimeout }}
+{{ end }}

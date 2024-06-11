@@ -59,7 +59,7 @@ serviceAccount:
 
 opencost:
   # If enabled, OpenCost will be deployed and does not need the URL
-  enabled: true
+  enabled: false
   # If this URL is provided then it will replace the generated one
   url:
 
@@ -77,3 +77,17 @@ rightsizingRecommendations:
   enabled: true
   # If enabled, VerticalPodAutoscaler will be installed
   installVpa: false
+
+securityScans:
+  # Install kubescape-operator
+  installKubescape: false
+ 
+  # Default value is OFF
+  # OFF|CONTINUOUS_SCANNING|INTERVAL_SCANNING
+  mode: 'OFF'
+  # Optional, only required if INTERVAL_SCANNING is set as mode
+  cronSpec: '0 0 * * *'
+
+  kubescape-operator:
+    capabilities:
+      continuousScan: enable

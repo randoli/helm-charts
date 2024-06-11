@@ -22,3 +22,5 @@ data:
   PROMETHEUS_URL: {{ .Values.global.prometheus.url }}
   TLS_ENABLED: 'true'
   RIGHTSIZING_RECOMMENDATIONS_ENABLED: '{{ .Values.rightsizingRecommendations.enabled }}'
+  SECURITY_SCANS_MODE: '{{ .Values.securityScans.mode }}'
+  SECURITY_SCANS_CRON_SPEC: '{{ .Values.securityScans.cronSpec }}'
