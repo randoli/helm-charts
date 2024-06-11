@@ -88,6 +88,7 @@ securityScans:
   # Optional, only required if INTERVAL_SCANNING is set as mode
   cronSpec: '0 0 * * *'
 
-  kubescape-operator:
-    capabilities:
-      continuousScan: enable
+  # -- set the image pull secrets for private registry support
+  imagePullSecrets: ""
+  capabilities:
+    continuousScan: enable
