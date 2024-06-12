@@ -80,6 +80,7 @@ rightsizingRecommendations:
 
 securityScans:
   # Install kubescape-operator
+	# Kubescape-operator is required to run security scans in the cluster
   installKubescape: false
  
   # Default value is OFF
