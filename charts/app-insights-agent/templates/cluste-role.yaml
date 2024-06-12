@@ -80,6 +80,7 @@ rules:
       - autoscaling.k8s.io
     resources:
       - verticalpodautoscalers
+{{- if ne .Values.securityScans.mode "OFF" }}
   - verbs:
       - get
       - list
@@ -92,3 +93,4 @@ rules:
       - vulnerabilitymanifestsummaries
       - vulnerabilitymanifests
       - vulnerabilitysummaries
+{{ end }}

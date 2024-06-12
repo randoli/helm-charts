@@ -14,11 +14,11 @@ data:
   DEBUG: 'false'
   HTTP_SERVICE_PORT: '8080'
   KEYCLOAK_TIMEOUT: 1m0s
-  {{ if .Values.opencost.url }}
+  {{- if .Values.opencost.url }}
   OPENCOST_BACKEND_URL: {{ .Values.opencost.url }}
   {{ else }}
   OPENCOST_BACKEND_URL: http://{{ .Release.Name }}-opencost.{{ .Release.Namespace }}.svc.cluster.local:9003
-  {{ end }}
+  {{ end -}}
   PROMETHEUS_URL: {{ .Values.global.prometheus.url }}
   TLS_ENABLED: 'true'
   RIGHTSIZING_RECOMMENDATIONS_ENABLED: '{{ .Values.rightsizingRecommendations.enabled }}'
