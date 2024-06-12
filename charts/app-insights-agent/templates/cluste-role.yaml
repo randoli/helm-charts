@@ -27,6 +27,7 @@ rules:
       - ''
     resources:
       - events
+      - configmaps
   - verbs:
       - list
       - watch
