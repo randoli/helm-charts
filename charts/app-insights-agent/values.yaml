@@ -59,7 +59,7 @@ serviceAccount:
 
 opencost:
   # If enabled, OpenCost will be deployed and does not need the URL
-  enabled: false
+  enabled: true
   # If this URL is provided then it will replace the generated one
   url:
 
