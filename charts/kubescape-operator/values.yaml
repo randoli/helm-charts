@@ -9,9 +9,12 @@
 # --set clusterName=`kubectl config current-context`
 clusterName: "cluster"
 
+
+# Randoli App Insights Change: changed where ksNamespace is used in all templates to the global value .Values.namespace or .Release.Namespace
+# is most cases the .Release.Namespace is the one applied
 # The namespace for running the chart
 # If you wish to run the chart in a different namespace, make sure to update this value
-ksNamespace: kubescape
+# ksNamespace: kubescape # DEPRECATED
 ksLabel: kubescape
 
 # global logger name and level
@@ -936,5 +939,6 @@ continuousScanning:
     match:
       - apiGroups: ["apps"]
         apiVersions: ["v1"]
+        # Randoli App Insights Change: added statefulsets and daemonsets
         resources: ["deployments","statefulsets","daemonsets"]
     namespaces:
