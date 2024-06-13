@@ -77,3 +77,19 @@ rightsizingRecommendations:
   enabled: true
   # If enabled, VerticalPodAutoscaler will be installed
   installVpa: false
+
+securityScans:
+  # Install kubescape-operator
+  # Kubescape-operator is required to run security scans in the cluster
+  installKubescape: false
+ 
+  # Default value is OFF
+  # OFF|CONTINUOUS_SCANNING|INTERVAL_SCANNING
+  mode: 'OFF'
+  # Optional, only required if INTERVAL_SCANNING is set as mode
+  cronSpec: '0 0 * * *'
+
+  # -- set the image pull secrets for private registry support
+  imagePullSecrets: ""
+  capabilities:
+    continuousScan: enable

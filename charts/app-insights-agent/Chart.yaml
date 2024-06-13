@@ -24,3 +24,8 @@ dependencies:
     repository: https://randoli.github.io/helm-charts
     version: 1.0.0
     condition: rightsizingRecommendations.installVpa
+  - name: kubescape-operator
+    alias: securityScans
+    repository: https://randoli.github.io/helm-charts
+    version: 1.18.16
+    condition: securityScans.installKubescape

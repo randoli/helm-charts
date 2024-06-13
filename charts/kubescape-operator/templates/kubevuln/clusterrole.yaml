@@ -1,0 +1,16 @@
+{{- $components := fromYaml (include "components" .) }}
+{{- if $components.kubevuln.enabled }}
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Values.kubevuln.name }}
+  labels:
+    kubescape.io/ignore: "true"
+rules:
+  - apiGroups: ["spdx.softwarecomposition.kubescape.io"]
+    resources: ["vulnerabilitymanifests", "vulnerabilitymanifestsummaries", "openvulnerabilityexchangecontainers", "sbomsyfts"]
+    verbs: ["create", "get", "update", "watch", "list", "patch"]
+  - apiGroups: ["spdx.softwarecomposition.kubescape.io"]
+    resources: ["sbomsyftfiltereds"]
+    verbs: ["get", "watch", "list"]
+{{- end }}
