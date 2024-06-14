@@ -73,6 +73,9 @@ opencost:
       serviceMonitor:
         enabled: true
 
+# If enabled, the agent will query for container logs to augment events
+collectLogs: true
+
 rightsizingRecommendations:
   enabled: true
   # If enabled, VerticalPodAutoscaler will be installed
@@ -84,10 +87,10 @@ securityScans:
   installKubescape: false
  
   # Default value is OFF
-  # OFF|CONTINUOUS_SCANNING|INTERVAL_SCANNING
+  # OFF|INTERVAL_SCANNING
   mode: 'OFF'
-  # Optional, only required if INTERVAL_SCANNING is set as mode
-  cronSpec: '0 0 * * *'
+  # Only required if INTERVAL_SCANNING is set as mode
+  cronSpec: '0 9,20 * * *'
 
   # -- set the image pull secrets for private registry support
   imagePullSecrets: ""
