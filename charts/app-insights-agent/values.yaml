@@ -1,7 +1,10 @@
 global:
   prometheus:
     url: http://my-prometheus-server.prometheus.svc.cluster.local:80
-
+    secretName: ""
+    usernameKey: ""
+    passwordKey: ""
+    bearerTokenKey: token
 image:
   registry: docker.io
   repository: randoli/insights-agent
