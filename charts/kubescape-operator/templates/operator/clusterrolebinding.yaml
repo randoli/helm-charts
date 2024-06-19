@@ -1,0 +1,17 @@
+{{- $components := fromYaml (include "components" .) }}
+{{- if $components.operator.enabled }}
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Values.operator.name }}
+  labels:
+    kubescape.io/ignore: "true"
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.operator.name }}
+  namespace: {{ include "app-insights-agent.namespace" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Values.operator.name }}
+{{- end }}

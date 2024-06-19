@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ .Values.storage.name }}-test-connection"
+  labels:
+    {{- include "kubescape-storage.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: docker.io/busybox
+      command: ['wget']
+      args: ['{{ .Values.storage.name }}:80']
+  restartPolicy: Never

@@ -1,0 +1,19 @@
+{{- $components := fromYaml (include "components" .) }}
+{{- if $components.operator.enabled }}
+{{- if not (.Capabilities.APIVersions.Has "batch/v1") }}
+  {{- fail "`batch/v1 not supported`" }}
+{{- end }}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kubevuln-cronjob-template # TODO: update template name
+  namespace: {{ include "app-insights-agent.namespace" . }}
+  labels:
+    app: {{ .Values.global.cloudConfig }}
+    tier: {{ .Values.global.namespaceTier }}
+    kubescape.io/ignore: "true"
+    kubescape.io/tier: "core"
+data:
+  cronjobTemplate: |-
+    {{ tpl (.Files.Get "assets/kubevuln-cronjob-full.yaml") . }}
+{{- end }}
