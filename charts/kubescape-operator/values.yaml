@@ -68,19 +68,19 @@ capabilities:
   configurationScan: enable
   # Continuous Scanning continuously evaluates the security posture of your cluster.
   continuousScan: disable
-  nodeScan: enable
+  nodeScan: disable
 
   # ====== Image vulnerabilities scanning related capabilities ======
   #
   vulnerabilityScan: enable
-  relevancy: enable
+  relevancy: disable
   # Generate VEX documents alongside the image vulnerabilities report (experimental)
   vexGeneration: disable
 
   # ====== Runtime related capabilities ======
   #
-  runtimeObservability: enable
-  networkPolicyService: enable
+  runtimeObservability: disable
+  networkPolicyService: disable
   runtimeDetection: disable
   malwareDetection: disable
   nodeProfileService: disable

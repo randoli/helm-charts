@@ -94,4 +94,5 @@ rules:
       - vulnerabilitymanifestsummaries
       - vulnerabilitymanifests
       - vulnerabilitysummaries
+      - auth
 {{ end }}
