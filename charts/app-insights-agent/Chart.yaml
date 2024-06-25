@@ -14,16 +14,17 @@ maintainers:
 name: app-insights-agent
 sources:
 - https://github.com/randoli/helm-charts
-version: 1.7.3
+version: 1.8.0
 dependencies:
   - name: opencost
     repository: https://randoli.github.io/helm-charts
     version: 1.33.1
-    condition: opencost.enabled
+    alias: costManagement
+    condition: costManagement.opencost.install
   - name: vertical-pod-autoscaler
     repository: https://randoli.github.io/helm-charts
     version: 1.0.0
-    condition: rightsizingRecommendations.installVpa
+    condition: costManagement.rightsizingRecommendations.installVpa
   - name: kubescape-operator
     alias: securityScans
     repository: https://randoli.github.io/helm-charts

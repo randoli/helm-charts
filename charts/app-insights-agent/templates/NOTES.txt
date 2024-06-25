@@ -1,0 +1,41 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}
+
+{{ if .Values.costManagement.opencost.metrics.serviceMonitor.enabled }}
+{{- if .Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor" }}
+Prometheus ServiceMonitor was created for OpenCost
+  {{- else }}
+
+
+                                ██                                          
+                              ██░░██                                        
+                            ██░░░░░░██                              
+                          ██░░░░░░░░░░██                                    
+                          ██░░░░░░░░░░██                                    
+                        ██░░░░░░░░░░░░░░██                                  
+                      ██░░░░░░██████░░░░░░██                                
+                      ██░░░░░░██████░░░░░░██                                
+                    ██░░░░░░░░██████░░░░░░░░██                              
+                    ██░░░░░░░░██████░░░░░░░░██                              
+                  ██░░░░░░░░░░██████░░░░░░░░░░██                            
+                ██░░░░░░░░░░░░██████░░░░░░░░░░░░██                          
+                ██░░░░░░░░░░░░██████░░░░░░░░░░░░██                          
+              ██░░░░░░░░░░░░░░██████░░░░░░░░░░░░░░██                        
+              ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██                        
+            ██░░░░░░░░░░░░░░░░██████░░░░░░░░░░░░░░░░██                      
+            ██░░░░░░░░░░░░░░░░██████░░░░░░░░░░░░░░░░██                      
+          ██░░░░░░░░░░░░░░░░░░██████░░░░░░░░░░░░░░░░░░██                    
+          ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██                    
+            ██████████████████████████████████████████                                                                                       
+
+
+OpenCost ServiceMonitor is enabled but Prometheus operator is not present in the cluster,
+please follow instructions on how to add an extra scrape config in Prometheus here: https://app-insights-doc.dev.eng.randolicloud.ca/agent/prometheus#installed-without-prometheus-operator-if-yes
+  {{- end }}
+{{- end }}
