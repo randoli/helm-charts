@@ -3,7 +3,7 @@ entries:
   app-director-agent-operator:
   - apiVersion: v2
     appVersion: 1.1.0
-    created: "2024-06-21T16:08:35.350195773-03:00"
+    created: "2024-06-25T21:37:21.45787365-03:00"
     description: Randoli App Director Agent Operator
     digest: c6e57eb1edeac757dab0733fb8ba7d7179cc9a67132240a48f9690bcd36b4c20
     home: https://randoli.ca
@@ -24,8 +24,8 @@ entries:
     version: 1.1.0
   app-insights-agent:
   - apiVersion: v2
-    appVersion: 1.7.3
-    created: "2024-06-21T16:08:35.365173702-03:00"
+    appVersion: 1.8.0
+    created: "2024-06-25T21:37:21.473277763-03:00"
     dependencies:
     - alias: costManagement
       condition: costManagement.opencost.install
@@ -42,7 +42,7 @@ entries:
       repository: https://randoli.github.io/helm-charts
       version: 1.18.16
     description: Randoli App Insights Agent
-    digest: e0aed85f49e9d2cbf4981654b39846aacaf003edde765669fb8428bb45f52aaa
+    digest: 0959db77d0f5f8bf55a9fb90a423203dc7a6ebeaa8c4cdc5fa8fa6f5e7596cf8
     home: https://randoli.ca
     icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
     keywords:
@@ -61,7 +61,7 @@ entries:
     version: 1.8.0
   - apiVersion: v2
     appVersion: 1.7.3
-    created: "2024-06-21T16:08:35.359492085-03:00"
+    created: "2024-06-25T21:37:21.467293317-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -91,7 +91,7 @@ entries:
     version: 1.7.3
   - apiVersion: v2
     appVersion: "1.7"
-    created: "2024-06-21T16:08:35.356820607-03:00"
+    created: "2024-06-25T21:37:21.464630883-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -117,7 +117,7 @@ entries:
     version: 1.7.1
   - apiVersion: v2
     appVersion: "1.7"
-    created: "2024-06-21T16:08:35.355720288-03:00"
+    created: "2024-06-25T21:37:21.463451053-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -143,7 +143,7 @@ entries:
     version: 1.7.0
   - apiVersion: v2
     appVersion: "1.6"
-    created: "2024-06-21T16:08:35.354169707-03:00"
+    created: "2024-06-25T21:37:21.461896384-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -169,7 +169,7 @@ entries:
     version: 1.6.0
   - apiVersion: v2
     appVersion: "1.5"
-    created: "2024-06-21T16:08:35.353167655-03:00"
+    created: "2024-06-25T21:37:21.460783559-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -195,7 +195,7 @@ entries:
     version: 1.5.0
   - apiVersion: v2
     appVersion: 1.4.0
-    created: "2024-06-21T16:08:35.352159815-03:00"
+    created: "2024-06-25T21:37:21.459812358-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -221,7 +221,7 @@ entries:
     version: 1.0.1
   - apiVersion: v2
     appVersion: 1.4.0
-    created: "2024-06-21T16:08:35.35119802-03:00"
+    created: "2024-06-25T21:37:21.458858629-03:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -248,7 +248,7 @@ entries:
   kubescape-operator:
   - apiVersion: v2
     appVersion: 1.18.16
-    created: "2024-06-21T16:08:35.367865599-03:00"
+    created: "2024-06-25T21:37:21.4754266-03:00"
     dependencies:
     - condition: alertCRD.scopeClustered
       name: kubescape-alert-crd
@@ -285,7 +285,7 @@ entries:
   opencost:
   - apiVersion: v2
     appVersion: 1.109.0
-    created: "2024-06-21T16:08:35.369465275-03:00"
+    created: "2024-06-25T21:37:21.477430991-03:00"
     description: OpenCost and OpenCost UI
     digest: e013511b2ea9412d4d69c701f75914213f5fb2891217fe431aa025e28061efbc
     home: https://github.com/opencost/opencost-helm-chart
@@ -308,7 +308,7 @@ entries:
     version: 1.33.1
   - apiVersion: v2
     appVersion: 1.107.1
-    created: "2024-06-21T16:08:35.368603197-03:00"
+    created: "2024-06-25T21:37:21.476179277-03:00"
     description: OpenCost and OpenCost UI
     digest: 426916e316e3f0a2723b0bd7ebc2e0c703bd264e83f920922d2652028a1f47ef
     home: https://github.com/opencost/opencost-helm-chart
@@ -332,7 +332,7 @@ entries:
       kubeVersion: '>=1.24'
     apiVersion: v2
     appVersion: 1.1.2
-    created: "2024-06-21T16:08:35.370922306-03:00"
+    created: "2024-06-25T21:37:21.478928036-03:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami/
@@ -346,4 +346,4 @@ entries:
     urls:
     - vertical-pod-autoscaler-1.0.0.tgz
     version: 1.0.0
-generated: "2024-06-21T16:08:35.349002097-03:00"
+generated: "2024-06-25T21:37:21.457443145-03:00"
