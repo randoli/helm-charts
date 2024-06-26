@@ -264,9 +264,9 @@ opencost:
       # -- Enable emission of namespace annotations
       emitNamespaceAnnotations: ""
       # -- Enable emission of KSM v1 metrics
-      emitKsmV1Metrics: ""
+      emitKsmV1Metrics: false
       # -- Enable only emission of KSM v1 metrics that do not exist in KSM 2 by default
-      emitKsmV1MetricsOnly: ""
+      emitKsmV1MetricsOnly: false
 
     serviceMonitor:
       # -- Create ServiceMonitor resource for scraping metrics using PrometheusOperator
@@ -354,7 +354,7 @@ opencost:
 
   ui:
     # -- Enable OpenCost UI
-    enabled: true
+    enabled: false
     image:
       # -- UI container image registry
       registry: ghcr.io

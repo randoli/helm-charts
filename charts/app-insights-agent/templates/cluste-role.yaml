@@ -27,6 +27,7 @@ rules:
       - ''
     resources:
       - events
+      - configmaps
   - verbs:
       - list
       - watch
@@ -80,3 +81,17 @@ rules:
       - autoscaling.k8s.io
     resources:
       - verticalpodautoscalers
+{{- if ne .Values.securityScans.mode "OFF" }}
+  - verbs:
+      - get
+      - list
+      - watch
+    apiGroups:
+      - spdx.softwarecomposition.kubescape.io
+    resources:
+      - workloadconfigurationscans
+      - workloadconfigurationscansummaries
+      - vulnerabilitymanifestsummaries
+      - vulnerabilitymanifests
+      - vulnerabilitysummaries
+{{ end }}

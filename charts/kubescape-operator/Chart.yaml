@@ -1,0 +1,48 @@
+apiVersion: v2
+name: kubescape-operator
+description:
+  Kubescape is an E2E Kubernetes cluster security platform
+
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+
+version: 1.18.16
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
+
+appVersion: 1.18.16
+
+maintainers:
+- name: Ben Hirschberg
+  email: ben@armosec.io
+  url: https://www.linkedin.com/in/benyamin-ben-hirschberg-66141890
+- name: David Wertenteil
+  email: dw@armosec.io
+  url: https://www.linkedin.com/in/david-wertenteil-0ba277b9
+- name: Bezalel Brandwine
+  email: bez@armosec.io
+  url: https://www.linkedin.com/in/bezalel-brandwine
+- name: Matthias Bertschy
+  email: matthiasb@armosec.io
+  url: https://www.linkedin.com/in/matthias-bertschy-b427b815/
+- name: Amir Malka
+  email: amirm@armosec.io
+  url: https://www.linkedin.com/in/amirmalka
+
+home: https://kubescape.io/
+
+dependencies:
+  - name: kubescape-alert-crd
+    version: 0.0.2
+    repository: "file://./charts/clustered-crds"
+    condition: alertCRD.scopeClustered
+  - name: kubescape-alert-crd-ns
+    version: 0.0.2
+    repository: "file://./charts/namespaced-crds"
+    condition: alertCRD.scopeNamespaced

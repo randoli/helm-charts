@@ -1,0 +1,17 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: ks-capabilities
+  namespace: {{ include "app-insights-agent.namespace" . }}
+  labels:
+    app: ks-capabilities
+    tier: {{ .Values.global.namespaceTier }}
+    kubescape.io/ignore: "true"
+    kubescape.io/tier: "core"
+data:
+  capabilities: |
+    {
+      "capabilities": {{- .Values.capabilities | toJson }},
+      "components": {{- include "components" . | fromYaml | toJson }},
+      "configurations": {{- .Values.configurations | toJson }}
+    }

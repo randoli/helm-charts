@@ -1,0 +1,18 @@
+{{- $components := fromYaml (include "components" .) }}
+{{- if $components.serviceDiscovery.enabled }}
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Values.serviceDiscovery.name }}
+  namespace: {{ include "app-insights-agent.namespace" . }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "0"
+  labels:
+    kubescape.io/ignore: "true"
+rules:
+- apiGroups: [""]
+  resources: [ "configmaps"]
+  verbs: ["update", "create", "patch", "get", "list"]
+{{- end }}
