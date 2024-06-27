@@ -1,5 +1,5 @@
 # -- Overwrite the default name of the chart
-nameOverride: ""
+nameOverride: "opencost"
 # -- Overwrite all resources name created by the chart
 fullnameOverride: ""
 # -- Override the deployment namespace
