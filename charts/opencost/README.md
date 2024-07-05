@@ -36,6 +36,7 @@ $ helm install opencost opencost/opencost
 | networkPolicies.prometheus.namespace | string | `"prometheus-system"` | Namespace where internal Prometheus is installed |
 | networkPolicies.prometheus.port | int | `9090` | Pod port of in-cluster Prometheus |
 | opencost.affinity | object | `{}` | Affinity settings for pod assignment |
+| opencost.carbonCost.enabled | bool | `false` | Enable carbon cost exposed in the API |
 | opencost.cloudCost.enabled | bool | `false` | Enable cloud cost ingestion and querying, dependant on valid integration credentials |
 | opencost.cloudCost.monthToDateInterval | int | `6` | The number of standard runs before a Month-to-Date run occurs |
 | opencost.cloudCost.queryWindowDays | int | `7` | The max number of days that any single query will be made to construct Cloud Costs |
@@ -80,6 +81,7 @@ $ helm install opencost opencost/opencost
 | opencost.exporter.resources.requests | object | `{"cpu":"10m","memory":"55Mi"}` | CPU/Memory resource requests |
 | opencost.exporter.securityContext | object | `{}` | The security options the container should be run with |
 | opencost.extraContainers | list | `[]` | extra sidecars to add to the pod.  Useful for things like oauth-proxy for the UI |
+| opencost.metrics.config.configmapName | string | `"custom-metrics"` | Customize the configmap name used for metrics |
 | opencost.metrics.serviceMonitor.additionalLabels | object | `{}` | Additional labels to add to the ServiceMonitor |
 | opencost.metrics.serviceMonitor.enabled | bool | `false` | Create ServiceMonitor resource for scraping metrics using PrometheusOperator |
 | opencost.metrics.serviceMonitor.extraEndpoints | list | `[]` | extra Endpoints to add to the ServiceMonitor.  Useful for scraping sidecars |
