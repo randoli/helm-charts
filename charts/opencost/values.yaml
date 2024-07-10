@@ -127,7 +127,7 @@ opencost:
       repository: opencost/opencost
       # -- Exporter container image tag
       # @default -- `""` (use appVersion in Chart.yaml)
-      tag: "1.109.0"
+      tag: "1.111.0"
       # -- Exporter container image pull policy
       pullPolicy: IfNotPresent
       # -- Override the full image name for development purposes
@@ -243,6 +243,10 @@ opencost:
 
   dataRetention:
     dailyResolutionDays: 15
+
+  carbonCost:
+    # -- Enable carbon cost exposed in the API
+    enabled: false
 
   cloudCost:
     # -- Enable cloud cost ingestion and querying, dependant on valid integration credentials
@@ -362,7 +366,7 @@ opencost:
       repository: opencost/opencost-ui
       # -- UI container image tag
       # @default -- `""` (use appVersion in Chart.yaml)
-      tag: "1.109.0"
+      tag: "1.111.0"
       # -- UI container image pull policy
       pullPolicy: IfNotPresent
       # -- Override the full image name for development purposes
