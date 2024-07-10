@@ -14,11 +14,11 @@ maintainers:
 name: app-insights-agent
 sources:
 - https://github.com/randoli/helm-charts
-version: 1.8.0
+version: 1.8.1
 dependencies:
   - name: opencost
     repository: https://randoli.github.io/helm-charts
-    version: 1.33.1
+    version: 1.41.0
     alias: costManagement
     condition: costManagement.opencost.install
   - name: vertical-pod-autoscaler
