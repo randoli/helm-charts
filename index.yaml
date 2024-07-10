@@ -284,7 +284,7 @@ entries:
     version: 1.18.16
   opencost:
   - apiVersion: v2
-    appVersion: 1.109.0
+    appVersion: 1.111.0
     created: "2024-06-27T14:13:24.277716575-03:00"
     description: OpenCost and OpenCost UI
     digest: e013511b2ea9412d4d69c701f75914213f5fb2891217fe431aa025e28061efbc

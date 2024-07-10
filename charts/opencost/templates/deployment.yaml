@@ -85,6 +85,10 @@ spec:
           env:
             - name: PROMETHEUS_SERVER_ENDPOINT
               value: {{ include "opencost.prometheusServerEndpoint" . | quote }}
+            {{- if .Values.opencost.carbonCost.enabled }}
+            - name: CARBON_ESTIMATES_ENABLED
+              value: {{ .Values.opencost.carbonCost.enabled | quote }}
+            {{- end }}
             {{- if .Values.opencost.exporter.cloudProviderApiKey }}
             - name: CLOUD_PROVIDER_API_KEY
               valueFrom:
