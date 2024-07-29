@@ -34,12 +34,14 @@ rules:
       - get
     apiGroups:
       - 'apps'
+      - core.strimzi.io
     resources:
       - pods
       - deployments
       - replicasets
       - statefulsets
       - daemonsets
+      - strimzipodsets
   - verbs:
       - get
     apiGroups:
