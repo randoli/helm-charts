@@ -1,5 +1,5 @@
 # -- Overwrite the default name of the chart
-nameOverride: ""
+nameOverride: "opencost"
 # -- Overwrite all resources name created by the chart
 fullnameOverride: ""
 # -- Override the deployment namespace
@@ -127,7 +127,7 @@ opencost:
       repository: opencost/opencost
       # -- Exporter container image tag
       # @default -- `""` (use appVersion in Chart.yaml)
-      tag: "1.109.0"
+      tag: "1.111.0"
       # -- Exporter container image pull policy
       pullPolicy: IfNotPresent
       # -- Override the full image name for development purposes
@@ -244,6 +244,10 @@ opencost:
   dataRetention:
     dailyResolutionDays: 15
 
+  carbonCost:
+    # -- Enable carbon cost exposed in the API
+    enabled: false
+
   cloudCost:
     # -- Enable cloud cost ingestion and querying, dependant on valid integration credentials
     enabled: false
@@ -264,9 +268,9 @@ opencost:
       # -- Enable emission of namespace annotations
       emitNamespaceAnnotations: ""
       # -- Enable emission of KSM v1 metrics
-      emitKsmV1Metrics: ""
+      emitKsmV1Metrics: false
       # -- Enable only emission of KSM v1 metrics that do not exist in KSM 2 by default
-      emitKsmV1MetricsOnly: ""
+      emitKsmV1MetricsOnly: false
 
     serviceMonitor:
       # -- Create ServiceMonitor resource for scraping metrics using PrometheusOperator
@@ -354,7 +358,7 @@ opencost:
 
   ui:
     # -- Enable OpenCost UI
-    enabled: true
+    enabled: false
     image:
       # -- UI container image registry
       registry: ghcr.io
@@ -362,7 +366,7 @@ opencost:
       repository: opencost/opencost-ui
       # -- UI container image tag
       # @default -- `""` (use appVersion in Chart.yaml)
-      tag: "1.109.0"
+      tag: "1.111.0"
       # -- UI container image pull policy
       pullPolicy: IfNotPresent
       # -- Override the full image name for development purposes

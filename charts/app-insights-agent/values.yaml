@@ -1,11 +1,14 @@
 global:
   prometheus:
     url: http://my-prometheus-server.prometheus.svc.cluster.local:80
-
+    secretName: ""
+    usernameKey: ""
+    passwordKey: ""
+    bearerTokenKey: token
 image:
   registry: docker.io
   repository: randoli/insights-agent
-  tag: "1.7"
+  tag: "1.8"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -32,6 +35,54 @@ resources:
     cpu: 50m
     memory: 256Mi
 
+logAnalytics:
+  # If enabled, the agent will query for container logs to augment events
+  collectLogs: true
+
+anomalyDetection:
+  # Defaults anomaly detection list contains detections for:
+  # - memory usage spikes
+  # - postgres transactions latency spikes
+  # - postgres active connections spike
+  # - JVM heap memory spike
+  # - Golang heap memory usage spike
+  defaultsQueries:
+    enabled: true
+  customQueries:
+    # Path for user defined queries, queries should be in YAML format
+    path: /prometheus
+
+costManagement:
+  opencost:
+    # If enabled, OpenCost will be deployed
+    install: true
+    # Only required if installOpencost is false
+    # OpenCost URL for instance already running and not installed through this chart
+    url: 
+    metrics:
+      serviceMonitor:
+        enabled: true
+
+  # Move to this place
+  rightsizingRecommendations:
+    enabled: false
+    # If enabled, VerticalPodAutoscaler will be installed
+    installVpa: false
+
+securityScans:
+  # Install kubescape-operator
+  # Kubescape-operator is required to run security scans in the cluster
+  installKubescape: false
+ 
+  # Default value is OFF
+  # OFF|INTERVAL_SCANNING
+  mode: 'OFF'
+  # Only required if INTERVAL_SCANNING is set as mode
+  cronSpec: '0 10,20 * * *'
+
+  # -- set the image pull secrets for Kubescape to be able to pull from private image registry
+  imagePullSecrets: ""
+
 # -- Toleration labels for pod assignment
 tolerations: []
 # -- Node labels for pod assignment
@@ -45,7 +96,12 @@ extraEnv: []
 extraEnvFrom: []
 
 extraVolumes: []
+  # - name: extra-queries
+  #   configMap:
+  #     name: extra-queries
 extraVolumeMounts: []
+  # - name: extra-queries
+  #   mountPath: /prometheus
 
 securityContext: {}
 
@@ -56,24 +112,3 @@ serviceAccount:
   automountServiceAccountToken: true
   annotations: {}
   labels: {}
-
-opencost:
-  # If enabled, OpenCost will be deployed and does not need the URL
-  enabled: true
-  # If this URL is provided then it will replace the generated one
-  url:
-
-  opencost:
-    ui:
-      enabled: false
-    metrics:
-      kubeStateMetrics:
-        emitKsmV1Metrics: false
-        emitKsmV1MetricsOnly: false
-      serviceMonitor:
-        enabled: true
-
-rightsizingRecommendations:
-  enabled: true
-  # If enabled, VerticalPodAutoscaler will be installed
-  installVpa: false

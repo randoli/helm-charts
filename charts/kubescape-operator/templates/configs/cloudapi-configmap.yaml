@@ -1,0 +1,53 @@
+{{- $components := fromYaml (include "components" .)  }}
+{{- $configurations := fromYaml (include "configurations" .)  }}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ .Values.global.cloudConfig }}
+  namespace: {{ include "app-insights-agent.namespace" . }}
+  labels:
+    app: {{ .Values.global.cloudConfig }}
+    tier: {{ .Values.global.namespaceTier }}
+    kubescape.io/ignore: "true"
+    kubescape.io/tier: "core"
+    kubescape.io/infra: config
+  {{- if $components.serviceDiscovery.enabled }}
+  annotations:
+    "argocd.argoproj.io/sync-options": Delete=false
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/resource-policy": keep
+  {{- end }}
+data:
+  {{- if $components.serviceDiscovery.enabled }}
+  metrics: '{{ .Values.serviceDiscovery.metrics }}'
+  services: '{{ .Values.serviceDiscovery.services }}'
+  {{- end }}
+  clusterData: |
+    {
+      "serviceDiscovery": {{ $components.serviceDiscovery.enabled }},
+      "gatewayWebsocketURL": "{{ .Values.gateway.name }}:{{ .Values.gateway.websocketService.port }}",
+      "gatewayRestURL": "{{ .Values.gateway.name }}:{{ .Values.gateway.httpService.port }}",
+      "vulnScanURL": "{{ .Values.kubevuln.name }}:{{ .Values.kubevuln.service.port }}",
+      "kubevulnURL": "{{ .Values.kubevuln.name }}:{{ .Values.kubevuln.service.port }}",
+      "kubescapeURL": "{{ .Values.kubescape.name }}:{{ .Values.kubescape.service.port }}",
+      "clusterName": "{{ regexReplaceAll "\\W+" .Values.clusterName "-" }}",
+      "storage": {{ $components.storage.enabled }},
+      "relevantImageVulnerabilitiesEnabled": {{ eq .Values.capabilities.relevancy "enable" }},
+      "namespace": "{{ include "app-insights-agent.namespace" . }}",
+      "imageVulnerabilitiesScanningEnabled": {{ $components.kubevuln.enabled }},
+      "postureScanEnabled": {{ $components.kubescape.enabled }},
+      "otelCollector": {{ $components.otelCollector.enabled }},
+      "nodeAgent": "{{ $components.nodeAgent.enabled }}",
+      "maxImageSize": {{ .Values.kubevuln.config.maxImageSize }},
+      "maxSBOMSize": {{ .Values.kubevuln.config.maxSBOMSize }},
+      "keepLocal": {{ not $components.serviceDiscovery.enabled }},
+      "scanTimeout": "{{ .Values.kubevuln.config.scanTimeout }}",
+      "vexGeneration": {{ eq .Values.capabilities.vexGeneration "enable" }},
+      "continuousPostureScan": {{ $configurations.continuousScan }},
+{{- if .Values.grypeOfflineDB.enabled }}
+      "listingURL": "http://{{ .Values.grypeOfflineDB.name }}:80/listing.json",
+{{- end }}
+      "relevantImageVulnerabilitiesConfiguration": "{{ .Values.capabilities.relevancy }}"
+    }

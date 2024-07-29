@@ -67,9 +67,31 @@ spec:
             {{- if .Values.extraVolumeMounts }}
               {{- toYaml .Values.extraVolumeMounts | nindent 12 }} 
             {{- end }}
-          {{- if .Values.extraEnv }}
+          {{- if or .Values.extraEnv .Values.global.prometheus.secretName }}
           env:
-            {{- toYaml .Values.extraEnv | nindent 12 }} 
+            {{- if and .Values.global.prometheus.secretName .Values.global.prometheus.usernameKey }}
+            - name: PROMETHEUS_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.prometheus.secretName }}
+                  key: {{ .Values.global.prometheus.usernameKey }}
+            {{- end }}
+            {{- if and .Values.global.prometheus.secretName .Values.global.prometheus.passwordKey }}
+            - name: PROMETHEUS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.prometheus.secretName }}
+                  key: {{ .Values.global.prometheus.passwordKey }}
+            {{- else if and .Values.global.prometheus.secretName .Values.global.prometheus.bearerTokenKey }}
+            - name: PROMETHEUS_BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.prometheus.secretName }}
+                  key: {{ .Values.global.prometheus.bearerTokenKey }}
+            {{- end }}
+            {{- if .Values.extraEnv }}
+              {{- toYaml .Values.extraEnv | nindent 12 }}
+            {{- end }}
           {{- end }}
       serviceAccountName: {{ template "app-insights-agent.serviceAccountName" . }}
       serviceAccount: {{ template "app-insights-agent.serviceAccountName" . }}
