@@ -36,6 +36,14 @@ spec:
               - key: client-key.pem
                 path: client-key.pem
             defaultMode: 420
+        {{- if and .Values.global.prometheus.tlsCertConfigmapName .Values.global.prometheus.tlsCertConfigmapKey }}
+        - name: prometheus-tls-cert
+          configMap:
+            name: {{ .Values.global.prometheus.tlsCertConfigmapName }}
+            items:
+              - key: {{ .Values.global.prometheus.tlsCertConfigmapKey }}
+                path: prometheus-service.crt
+        {{- end }}
         {{- if .Values.extraVolumes }}
           {{- toYaml .Values.extraVolumes | nindent 8}}
         {{- end }}
@@ -64,6 +72,12 @@ spec:
           volumeMounts:
             - name: tls-certs
               mountPath: /app/certs
+            {{- if and .Values.global.prometheus.tlsCertConfigmapName .Values.global.prometheus.tlsCertConfigmapKey }}
+            - mountPath: /etc/ssl/certs/prometheus-service.crt
+              name: prometheus-tls-cert
+              subPath: prometheus-service.crt
+              readOnly: false
+            {{- end }}
             {{- if .Values.extraVolumeMounts }}
               {{- toYaml .Values.extraVolumeMounts | nindent 12 }} 
             {{- end }}

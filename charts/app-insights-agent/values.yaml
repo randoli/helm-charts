@@ -6,6 +6,8 @@ global:
     passwordKey: ""
     bearerTokenKey: token
     tlsInsecureSkipVerify: true
+    tlsCertConfigmapName: ""
+    tlsCertConfigmapKey: ""
 image:
   registry: docker.io
   repository: randoli/insights-agent

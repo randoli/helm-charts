@@ -177,8 +177,14 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-          {{- if or .Values.opencost.exporter.persistence.enabled .Values.opencost.exporter.extraVolumeMounts .Values.opencost.customPricing.enabled .Values.opencost.cloudIntegrationSecret}}
+          {{- if or .Values.opencost.exporter.persistence.enabled .Values.opencost.exporter.extraVolumeMounts .Values.opencost.customPricing.enabled .Values.opencost.cloudIntegrationSecret (and .Values.global.prometheus.tlsCertConfigmapName .Values.global.prometheus.tlsCertConfigmapKey)}}
           volumeMounts:
+            {{- if and .Values.global.prometheus.tlsCertConfigmapName .Values.global.prometheus.tlsCertConfigmapKey }}
+            - mountPath: /etc/ssl/certs/prometheus-service.crt
+              name: prometheus-tls-cert
+              subPath: prometheus-service.crt
+              readOnly: false
+            {{- end }}
             {{- if .Values.opencost.exporter.persistence.enabled }}
             - mountPath: /mnt/export
               name: opencost-export
@@ -274,8 +280,16 @@ spec:
           {{- toYaml . | nindent 12 }}
           {{- end }}
         {{- end }}
-      {{- if or .Values.opencost.exporter.persistence.enabled .Values.extraVolumes .Values.opencost.customPricing.enabled .Values.opencost.cloudIntegrationSecret}}
+      {{- if or .Values.opencost.exporter.persistence.enabled .Values.extraVolumes .Values.opencost.customPricing.enabled .Values.opencost.cloudIntegrationSecret (and .Values.global.prometheus.tlsCertConfigmapName .Values.global.prometheus.tlsCertConfigmapKey)}}
       volumes:
+        {{- if and .Values.global.prometheus.tlsCertConfigmapName .Values.global.prometheus.tlsCertConfigmapKey }}
+        - name: prometheus-tls-cert
+          configMap:
+            name: {{ .Values.global.prometheus.tlsCertConfigmapName }}
+            items:
+              - key: {{ .Values.global.prometheus.tlsCertConfigmapKey }}
+                path: prometheus-service.crt
+        {{- end }}
         {{- if .Values.opencost.customPricing.enabled }}
         - name: custom-configs
           configMap:
