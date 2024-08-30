@@ -170,6 +170,8 @@ spec:
               value: {{ .Values.opencost.cloudCost.queryWindowDays | quote }}
             - name: CLOUD_COST_RUN_WINDOW_DAYS
               value: {{ .Values.opencost.cloudCost.runWindowDays | quote }}
+            - name: INSECURE_SKIP_VERIFY
+              value: {{ .Values.global.prometheus.tlsInsecureSkipVerify | quote }}
             # Add any additional provided variables
             {{- range $key, $value := .Values.opencost.exporter.extraEnv }}
             - name: {{ $key }}
