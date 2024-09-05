@@ -20,6 +20,7 @@ data:
   OPENCOST_BACKEND_URL: http://{{ .Release.Name }}-opencost.{{ .Release.Namespace }}.svc.cluster.local:9003
   {{ end -}}
   PROMETHEUS_URL: {{ .Values.global.prometheus.url }}
+  PROMETHEUS_INSECURE_SKIP_VERIFY: {{ .Values.global.prometheus.tlsInsecureSkipVerify | quote }}
   TLS_ENABLED: 'true'
   RIGHTSIZING_RECOMMENDATIONS_ENABLED: '{{ .Values.costManagement.rightsizingRecommendations.enabled }}'
   SECURITY_SCANS_MODE: '{{ .Values.securityScans.mode }}'

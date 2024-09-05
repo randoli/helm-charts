@@ -25,7 +25,7 @@ entries:
   app-insights-agent:
   - apiVersion: v2
     appVersion: 1.8.0
-    created: "2024-07-10T15:34:37.469742311-03:00"
+    created: "2024-08-30T18:40:12.046397427-04:00"
     dependencies:
     - alias: costManagement
       condition: costManagement.opencost.install
@@ -61,7 +61,7 @@ entries:
     version: 1.8.1
   - apiVersion: v2
     appVersion: 1.8.0
-    created: "2024-07-10T15:34:37.464042342-03:00"
+    created: "2024-08-30T18:40:12.037427527-04:00"
     dependencies:
     - alias: costManagement
       condition: costManagement.opencost.install
@@ -153,7 +153,7 @@ entries:
     version: 1.7.1
   - apiVersion: v2
     appVersion: "1.7"
-    created: "2024-07-18T16:58:57.467728237-04:00"
+    created: "2024-08-30T18:40:12.01973556-04:00"
     dependencies:
     - condition: opencost.enabled
       name: opencost
@@ -284,7 +284,7 @@ entries:
   kubescape-operator:
   - apiVersion: v2
     appVersion: 1.18.16
-    created: "2024-07-10T15:34:37.473009688-03:00"
+    created: "2024-08-30T18:40:12.050123507-04:00"
     dependencies:
     - condition: alertCRD.scopeClustered
       name: kubescape-alert-crd
@@ -321,9 +321,9 @@ entries:
   opencost:
   - apiVersion: v2
     appVersion: 1.111.0
-    created: "2024-07-10T15:34:37.477581835-03:00"
+    created: "2024-08-30T18:40:12.055372865-04:00"
     description: OpenCost and OpenCost UI
-    digest: 3d57a60cad09e724ca1a218d5009aa22e45639331f83efd42d6be865b5f127e6
+    digest: 7b8b3e7fa5391db2cd0d983774728706d5e5cc7292148476e75226a7d69bc611
     home: https://github.com/opencost/opencost-helm-chart
     keywords:
     - cloud-costs
