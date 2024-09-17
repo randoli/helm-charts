@@ -5,10 +5,13 @@ global:
     usernameKey: ""
     passwordKey: ""
     bearerTokenKey: token
+    tlsInsecureSkipVerify: true
+    tlsCertConfigmapName: ""
+    tlsCertConfigmapKey: ""
 image:
   registry: docker.io
   repository: randoli/insights-agent
-  tag: "1.8"
+  tag: "1.9"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'

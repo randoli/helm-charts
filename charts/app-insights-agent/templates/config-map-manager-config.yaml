@@ -20,10 +20,24 @@ data:
   OPENCOST_BACKEND_URL: http://{{ .Release.Name }}-opencost.{{ .Release.Namespace }}.svc.cluster.local:9003
   {{ end -}}
   PROMETHEUS_URL: {{ .Values.global.prometheus.url }}
+  PROMETHEUS_INSECURE_SKIP_VERIFY: {{ .Values.global.prometheus.tlsInsecureSkipVerify | quote }}
   TLS_ENABLED: 'true'
   RIGHTSIZING_RECOMMENDATIONS_ENABLED: '{{ .Values.costManagement.rightsizingRecommendations.enabled }}'
+  RIGHTSIZING_INSTALL_VPA: '{{ .Values.costManagement.rightsizingRecommendations.installVPA }}'
   SECURITY_SCANS_MODE: '{{ .Values.securityScans.mode }}'
   SECURITY_SCANS_CRON_SPEC: '{{ .Values.securityScans.cronSpec }}'
+  SECURITY_SCANS_INSTALL_KUBESCAPE: '{{ .Values.securityScans.installKubescape }}'
   COLLECT_LOGS: '{{ .Values.logAnalytics.collectLogs }}'
   ENABLE_DEFAULT_TIMELINE_PROMETHEUS_QUERIES: '{{ .Values.anomalyDetection.defaultsQueries.enabled }}'
   PROMETHEUS_CUSTOM_QUERIES_PATH: '{{ .Values.anomalyDetection.customQueries.path }}'
+  OPENCOST_INSTALL: '{{ .Values.costManagement.opencost.install }}'
+  OPENCOST_SERVICE_MONITOR: '{{ .Values.costManagement.opencost.metrics.serviceMonitor.enabled }}'
+  IMAGE_REGISTRY: '{{ .Values.image.registry }}'
+  IMAGE_REPOSITORY: '{{ .Values.image.repository }}'
+  IMAGE_TAG: '{{ .Values.image.tag }}'
+  IMAGE_DIGEST: '{{ .Values.image.digest }}'
+  IMAGE_PULL_POLICY: '{{ .Values.image.pullPolicy }}'
+  RESOURCES_LIMITS_CPU: '{{ .Values.resources.limits.cpu }}'
+  RESOURCES_LIMITS_MEMORY: '{{ .Values.resources.limits.memory }}'
+  RESOURCES_REQUESTS_CPU: '{{ .Values.resources.requests.cpu }}'
+  RESOURCES_REQUESTS_MEMORY: '{{ .Values.resources.requests.memory }}'
