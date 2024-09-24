@@ -86,6 +86,14 @@ securityScans:
   # -- set the image pull secrets for Kubescape to be able to pull from private image registry
   imagePullSecrets: ""
 
+telemetry:
+  pixie:
+    # If enabled, pixie will be installed
+    install: false
+
+     # -- set the deploy key generated when creating the cluster
+    deployKey: ""
+
 # -- Toleration labels for pod assignment
 tolerations: []
 # -- Node labels for pod assignment
