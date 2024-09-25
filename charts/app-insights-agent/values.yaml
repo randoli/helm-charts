@@ -89,10 +89,13 @@ securityScans:
 telemetry:
   pixie:
     # If enabled, pixie will be installed
-    install: false
+    install: true
 
-     # -- set the deploy key generated when creating the cluster
+    # -- set the deploy key generated when creating the cluster
     deployKey: ""
+
+    # -- set the clustername e.g.:<cluster_name>_<clusterId_prefix>
+    clusterName: ""
 
 # -- Toleration labels for pod assignment
 tolerations: []
