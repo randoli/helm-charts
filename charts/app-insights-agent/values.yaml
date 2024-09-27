@@ -94,8 +94,11 @@ telemetry:
     # -- set the deploy key generated when creating the cluster
     deployKey: ""
 
-    # -- set the clustername e.g.:<cluster_name>_<clusterId_prefix>
+    # -- set the clusterName
     clusterName: ""
+
+    # the default value is raandoli pixie cloud, --set the cloudAddr to change the pixie cloud address
+    cloudAddr: ""
 
 # -- Toleration labels for pod assignment
 tolerations: []
