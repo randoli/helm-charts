@@ -43,7 +43,7 @@ disableAutoUpdate: false
 useEtcdOperator: false
 # The address of the Pixie cloud instance that the Vizier should be connected to.
 # This should only be updated when using a self-hosted version of Pixie Cloud.
-cloudAddr: "work.pixie.dev.az.us-east.randolicloud.ca:443"
+cloudAddr: "work.pixie.aws.us-east-1.randoli.io/:443"
 # DevCloudNamespace should be specified only for self-hosted versions of Pixie cloud which have no ingress to help
 # redirect traffic to the correct service. The DevCloudNamespace is the namespace that the dev Pixie cloud is
 # running on, for example: "plc-dev".
