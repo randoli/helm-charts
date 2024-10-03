@@ -41,3 +41,4 @@ data:
   RESOURCES_LIMITS_MEMORY: '{{ .Values.resources.limits.memory }}'
   RESOURCES_REQUESTS_CPU: '{{ .Values.resources.requests.cpu }}'
   RESOURCES_REQUESTS_MEMORY: '{{ .Values.resources.requests.memory }}'
+  PIXIE_ENABLED: '{{ .Values.telemetry.pixie.install }}'
