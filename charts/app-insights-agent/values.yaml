@@ -32,15 +32,19 @@ deploymentAnnotations: {}
 
 resources:
   limits:
-    cpu: 150m
     memory: 512Mi
   requests:
     cpu: 50m
     memory: 256Mi
 
-logAnalytics:
-  # If enabled, the agent will query for container logs to augment events
-  collectLogs: true
+logs:
+  shipLogSamples:
+    # If enabled, the agent will query for container logs to augment events
+    enabled: true
+  analyzers:
+    enabled: true
+  vector:
+    install: true
 
 anomalyDetection:
   # Defaults anomaly detection list contains detections for:

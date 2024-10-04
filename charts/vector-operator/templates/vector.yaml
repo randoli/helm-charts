@@ -1,0 +1,13 @@
+{{- if .Values.vector.enable  -}}
+apiVersion: observability.kaasops.io/v1alpha1
+kind: Vector
+metadata:
+  name: {{ .Values.vector.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  useApiServerCache: {{ .Values.vector.useApiServerCache }}
+{{- with .Values.vector.agent }}
+  agent:
+{{ toYaml . | indent 4 }}
+{{- end }}
+{{- end }}
