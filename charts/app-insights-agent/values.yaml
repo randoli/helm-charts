@@ -32,15 +32,19 @@ deploymentAnnotations: {}
 
 resources:
   limits:
-    cpu: 150m
     memory: 512Mi
   requests:
     cpu: 50m
     memory: 256Mi
 
-logAnalytics:
-  # If enabled, the agent will query for container logs to augment events
-  collectLogs: true
+logs:
+  shipLogSamples:
+    # If enabled, the agent will query for container logs to augment events
+    enabled: true
+  analyzers:
+    enabled: true
+  vector:
+    install: true
 
 anomalyDetection:
   # Defaults anomaly detection list contains detections for:
@@ -85,6 +89,20 @@ securityScans:
 
   # -- set the image pull secrets for Kubescape to be able to pull from private image registry
   imagePullSecrets: ""
+
+telemetry:
+  pixie:
+    # If enabled, pixie will be installed
+    install: true
+
+    # -- set the deploy key generated when creating the cluster
+    deployKey: ""
+
+    # -- set the clusterName
+    clusterName: ""
+
+    # the default value is raandoli pixie cloud, --set the cloudAddr to change the pixie cloud address
+    cloudAddr: ""
 
 # -- Toleration labels for pod assignment
 tolerations: []
