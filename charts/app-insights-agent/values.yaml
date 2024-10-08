@@ -93,7 +93,7 @@ securityScans:
 telemetry:
   pixie:
     # If enabled, pixie will be installed
-    install: true
+    install: false
 
     # -- set the deploy key generated when creating the cluster
     deployKey: ""
@@ -101,7 +101,7 @@ telemetry:
     # -- set the clusterName
     clusterName: ""
 
-    # the default value is raandoli pixie cloud, --set the cloudAddr to change the pixie cloud address
+    # the default value is randoli pixie cloud, --set the cloudAddr to change the pixie cloud address
     cloudAddr: ""
 
 # -- Toleration labels for pod assignment
