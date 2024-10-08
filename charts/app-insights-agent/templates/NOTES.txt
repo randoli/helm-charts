@@ -36,6 +36,6 @@ Prometheus ServiceMonitor was created for OpenCost
 
 
 OpenCost ServiceMonitor is enabled but Prometheus operator is not present in the cluster,
-please follow instructions on how to add an extra scrape config in Prometheus here: https://app-insights-doc.dev.eng.randolicloud.ca/agent/prometheus#installed-without-prometheus-operator-if-yes
+please follow instructions on how to add an extra scrape config in Prometheus here: https://docs.insights.randoli.io/agent/prometheus#installed-without-prometheus-operator-if-yes
   {{- end }}
 {{- end }}
