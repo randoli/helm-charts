@@ -99,3 +99,18 @@ rules:
       - vulnerabilitymanifests
       - vulnerabilitysummaries
 {{ end }}
+{{- if .Values.logs.analyzers.enabled }}
+  - verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+    apiGroups:
+      - observability.kaasops.io
+    resources:
+      - vectorpipelines
+      - clustervectorpipelines
+{{ end }}
