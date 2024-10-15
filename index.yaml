@@ -57,7 +57,7 @@ entries:
     sources:
     - https://github.com/randoli/helm-charts
     urls:
-    - app-insights-agent-1.9.0.tgz
+    - app-insights-agent-1.10.0.tgz
     version: 1.10.0
   - apiVersion: v2
     appVersion: 1.8.0
