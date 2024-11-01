@@ -39,3 +39,7 @@ dependencies:
     repository: https://randoli.github.io/helm-charts
     version: 0.0.40
     condition: logs.vector.install
+  - name: kube-prometheus-stack
+    repository: https://randoli.github.io/helm-charts
+    version: 65.5.1
+    condition: global.prometheus.install

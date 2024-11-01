@@ -1,3 +1,5 @@
+{{ $serviceAccountExists := (lookup "v1" "ServiceAccount" .Release.Namespace "pl-deleter-service-account") }}
+{{- if $serviceAccountExists }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -23,3 +25,4 @@ spec:
         name: delete-job
       restartPolicy: Never
       serviceAccountName: pl-deleter-service-account
+{{ end -}}

@@ -19,7 +19,16 @@ data:
   {{ else }}
   OPENCOST_BACKEND_URL: http://{{ .Release.Name }}-opencost.{{ .Release.Namespace }}.svc.cluster.local:9003
   {{ end -}}
+  {{- if .Values.global.prometheus.install }}
+  {{ $prometheusStackValues := (index .Values "kube-prometheus-stack") }}
+  {{- if eq "" $prometheusStackValues.namespaceOverride }}
+  PROMETHEUS_URL: 'http://prometheus-operated.{{ .Release.Namespace }}:9090'
+  {{ else }}
+  PROMETHEUS_URL: 'http://prometheus-operated.{{ $prometheusStackValues.namespaceOverride }}:9090'
+  {{ end }}
+  {{ else }}
   PROMETHEUS_URL: {{ .Values.global.prometheus.url }}
+  {{ end -}}
   PROMETHEUS_INSECURE_SKIP_VERIFY: {{ .Values.global.prometheus.tlsInsecureSkipVerify | quote }}
   TLS_ENABLED: 'true'
   RIGHTSIZING_RECOMMENDATIONS_ENABLED: '{{ .Values.costManagement.rightsizingRecommendations.enabled }}'
@@ -48,3 +57,4 @@ data:
   LOG_ANALYZERS_ENABLED: '{{ .Values.logs.analyzers.enabled }}'
   VECTOR_INSTALL: '{{ .Values.logs.vector.install }}'
   VECTOR_HTTP_SINKER_URL: 'http://{{ include "app-insights-agent.fullname" . }}.{{ include "app-insights-agent.namespace" . }}:8080/log-sink/'
+  PROMETHEUS_INSTALL: '{{ .Values.global.prometheus.install }}'
