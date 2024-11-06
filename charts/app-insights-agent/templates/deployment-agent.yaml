@@ -29,7 +29,7 @@ spec:
       volumes:
         - name: tls-certs
           secret:
-            secretName: {{ .Values.secrets.cert }}
+            secretName: {{ .Values.global.secrets.cert }}
             items:
               - key: client-cert.pem
                 path: client-cert.pem
@@ -55,7 +55,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
             - secretRef:
-                name: {{ .Values.secrets.config }}
+                name: {{ .Values.global.secrets.config }}
             - configMapRef:
                 name: {{ include "app-insights-agent.fullname" . }}-config
             {{- if .Values.extraEnvFrom }}

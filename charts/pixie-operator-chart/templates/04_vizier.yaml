@@ -1,3 +1,4 @@
+{{ $agentConfigSecret := (lookup "v1" "Secret" .Release.Namespace .Values.global.secrets.config) }}
 apiVersion: px.dev/v1alpha1
 kind: Vizier
 metadata:
@@ -7,19 +8,15 @@ spec:
   {{- if .Values.version }}
   version: {{ .Values.version }}
   {{- end }}
-  {{- if .Values.deployKey }}
-  deployKey: {{ .Values.deployKey }}
-  {{- end }}
   {{- if .Values.customDeployKeySecret }}
   customDeployKeySecret: {{ .Values.customDeployKeySecret }}
   {{- end }}
-  cloudAddr: {{ .Values.cloudAddr }}
   disableAutoUpdate: {{ .Values.disableAutoUpdate }}
   useEtcdOperator: {{ .Values.useEtcdOperator }}
-  {{- if (.Values.global).cluster }}
-  clusterName: {{ .Values.global.cluster }}
-  {{- else if .Values.clusterName }}
-  clusterName: {{ .Values.clusterName }}
+  {{- if $agentConfigSecret }}
+  cloudAddr: {{ default "" (index $agentConfigSecret.data "PIXIE_CLOUD_ADDR") | b64dec }}
+  deployKey: {{ default "" (index $agentConfigSecret.data "PIXIE_DEPLOY_KEY") | b64dec }}
+  clusterName: {{ default "" (index $agentConfigSecret.data "CLUSTER_ID") | b64dec }}
   {{- end }}
   {{- if .Values.devCloudNamespace }}
   devCloudNamespace: {{ .Values.devCloudNamespace }}

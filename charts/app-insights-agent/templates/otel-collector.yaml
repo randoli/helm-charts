@@ -6,8 +6,9 @@ metadata:
   name: otel-collector-conf
   namespace: {{ include "app-insights-agent.namespace" . }}
   labels:
-    app: opentelemetry
-    component: otel-collector-conf
+    app.kubernetes.io/name: opentelemetry
+    app.kubernetes.io/component: otel-collector
+    {{- include "labels" . | nindent 4 }}
 data:
   otel-collector-config: |
     receivers:
@@ -56,8 +57,9 @@ metadata:
   name: otel-collector
   namespace: {{ include "app-insights-agent.namespace" . }}
   labels:
-    app: opentelemetry
-    component: otel-collector
+    app.kubernetes.io/name: opentelemetry
+    app.kubernetes.io/component: otel-collector
+    {{- include "labels" . | nindent 4 }}
 spec:
   ports:
   - name: otlp-grpc # Default endpoint for OpenTelemetry gRPC receiver.
@@ -77,27 +79,53 @@ spec:
   selector:
     component: otel-collector
 ---
+{{- if .Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor" -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/name: opentelemetry
+    app.kubernetes.io/component: otel-collector
+    {{- include "labels" . | nindent 4 }}
+  name: otel-collector
+  namespace: {{ include "app-insights-agent.namespace" . }}
+spec:
+  endpoints:
+    - honorLabels: true
+      interval: 10s
+      path: /metrics
+      port: prometheus
+      relabelings:
+        - action: labelmap
+          regex: __meta_kubernetes_service_label_(.+)
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: otel-collector
+---
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: otel-collector
   namespace: {{ include "app-insights-agent.namespace" . }}
   labels:
-    app: opentelemetry
-    component: otel-collector
+    app.kubernetes.io/name: opentelemetry
+    app.kubernetes.io/component: otel-collector
+    {{- include "labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      app: opentelemetry
-      component: otel-collector
+      app.kubernetes.io/name: opentelemetry
+      app.kubernetes.io/component: otel-collector
   minReadySeconds: 5
   progressDeadlineSeconds: 120
-  replicas: 1 #TODO - adjust this to your own requirements
+  replicas: 1 # adjust this to your own requirements
   template:
     metadata:
       labels:
-        app: opentelemetry
-        component: otel-collector
+        app.kubernetes.io/name: opentelemetry
+        app.kubernetes.io/component: otel-collector
+        {{- include "labels" . | nindent 8 }}
     spec:
       containers:
       - command:

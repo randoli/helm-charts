@@ -1,6 +1,7 @@
 global:
   prometheus:
-    url: http://my-prometheus-server.prometheus.svc.cluster.local:80
+    install: false
+    url: http://prometheus-operated.prometheus:9090
     secretName: ""
     usernameKey: ""
     passwordKey: ""
@@ -8,10 +9,15 @@ global:
     tlsInsecureSkipVerify: true
     tlsCertConfigmapName: ""
     tlsCertConfigmapKey: ""
+
+  secrets:
+    cert: insights-agent-cert
+    config: insights-agent-secret
+
 image:
   registry: docker.io
   repository: randoli/insights-agent
-  tag: "1.10"
+  tag: "1.11"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -20,10 +26,6 @@ image:
   pullPolicy: Always
 
 imagePullSecrets: []
-
-secrets:
-  cert: insights-agent-cert
-  config: insights-agent-secret
 
 labels:
   app: app-insights-agent
@@ -70,7 +72,6 @@ costManagement:
       serviceMonitor:
         enabled: true
 
-  # Move to this place
   rightsizingRecommendations:
     enabled: false
     # If enabled, VerticalPodAutoscaler will be installed
@@ -94,15 +95,6 @@ telemetry:
   pixie:
     # If enabled, pixie will be installed
     install: false
-
-    # -- set the deploy key generated when creating the cluster
-    deployKey: ""
-
-    # -- set the clusterName
-    clusterName: ""
-
-    # the default value is randoli pixie cloud, --set the cloudAddr to change the pixie cloud address
-    cloudAddr: ""
 
 # -- Toleration labels for pod assignment
 tolerations: []
