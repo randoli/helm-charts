@@ -77,7 +77,7 @@ spec:
     protocol: TCP
     targetPort: 8889
   selector:
-    component: otel-collector
+    app.kubernetes.io/component: otel-collector
 ---
 {{- if .Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor" -}}
 apiVersion: monitoring.coreos.com/v1
