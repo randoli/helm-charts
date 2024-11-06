@@ -125,3 +125,8 @@ serviceAccount:
   automountServiceAccountToken: true
   annotations: {}
   labels: {}
+
+kube-prometheus-stack:
+  prometheus:
+    prometheusSpec:
+      serviceMonitorSelectorNilUsesHelmValues: false
