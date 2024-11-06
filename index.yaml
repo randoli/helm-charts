@@ -1,31 +1,103 @@
 apiVersion: v1
 entries:
-  app-director-agent-operator:
+  app-insights-agent:
   - apiVersion: v2
-    appVersion: 1.1.0
-    created: "2024-09-05T10:43:55.266315406-03:00"
-    description: Randoli App Director Agent Operator
-    digest: c6e57eb1edeac757dab0733fb8ba7d7179cc9a67132240a48f9690bcd36b4c20
+    appVersion: 1.11.0
+    created: "2024-11-05T21:11:53.819041877-03:00"
+    dependencies:
+    - alias: costManagement
+      condition: costManagement.opencost.install
+      name: opencost
+      repository: https://randoli.github.io/helm-charts
+      version: 1.41.0
+    - condition: costManagement.rightsizingRecommendations.installVpa
+      name: vertical-pod-autoscaler
+      repository: https://randoli.github.io/helm-charts
+      version: 1.0.0
+    - alias: securityScans
+      condition: securityScans.installKubescape
+      name: kubescape-operator
+      repository: https://randoli.github.io/helm-charts
+      version: 1.18.16
+    - alias: telemetry
+      condition: telemetry.pixie.install
+      name: pixie-operator-chart
+      repository: https://randoli.github.io/helm-charts
+      version: 0.1.6
+    - condition: logs.vector.install
+      name: vector-operator
+      repository: https://randoli.github.io/helm-charts
+      version: 0.0.40
+    - condition: global.prometheus.install
+      name: kube-prometheus-stack
+      repository: https://randoli.github.io/helm-charts
+      version: 65.5.1
+    description: Randoli App Insights Agent
+    digest: 589ce6511c15aa3740775f99ed3fec85f511e835812ec508c05fa277f31b7c0c
     home: https://randoli.ca
     icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
     keywords:
-    - app-director
-    - app-director-operator
+    - app-insights
+    - app-insights-agent
     - randoli
     maintainers:
     - email: support@randoli.ca
       name: Randoli
       url: https://randoli.ca
-    name: app-director-agent-operator
+    name: app-insights-agent
     sources:
-    - https://github.com/randoli/app-director-operator
+    - https://github.com/randoli/helm-charts
     urls:
-    - app-director-agent-operator-1.1.0.tgz
-    version: 1.1.0
-  app-insights-agent:
+    - app-insights-agent-1.11.0.tgz
+    version: 1.11.0
   - apiVersion: v2
     appVersion: 1.10.0
-    created: "2024-09-05T10:43:55.295198523-03:00"
+    created: "2024-11-05T21:11:53.789541835-03:00"
+    dependencies:
+    - alias: costManagement
+      condition: costManagement.opencost.install
+      name: opencost
+      repository: https://randoli.github.io/helm-charts
+      version: 1.41.0
+    - condition: costManagement.rightsizingRecommendations.installVpa
+      name: vertical-pod-autoscaler
+      repository: https://randoli.github.io/helm-charts
+      version: 1.0.0
+    - alias: securityScans
+      condition: securityScans.installKubescape
+      name: kubescape-operator
+      repository: https://randoli.github.io/helm-charts
+      version: 1.18.16
+    - alias: telemetry
+      condition: telemetry.pixie.install
+      name: pixie-operator-chart
+      repository: https://randoli.github.io/helm-charts
+      version: 0.1.6
+    - condition: logs.vector.install
+      name: vector-operator
+      repository: https://randoli.github.io/helm-charts
+      version: 0.0.40
+    description: Randoli App Insights Agent
+    digest: 8ae3b7380bf8489018b7b84d03716b71abb4c9e7ee890a49203b3dad01c54cbf
+    home: https://randoli.ca
+    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
+    keywords:
+    - app-insights
+    - app-insights-agent
+    - randoli
+    maintainers:
+    - email: support@randoli.ca
+      name: Randoli
+      url: https://randoli.ca
+    name: app-insights-agent
+    sources:
+    - https://github.com/randoli/helm-charts
+    urls:
+    - app-insights-agent-1.10.0.tgz
+    version: 1.10.0
+  - apiVersion: v2
+    appVersion: 1.9.0
+    created: "2024-11-05T21:11:53.824156028-03:00"
     dependencies:
     - alias: costManagement
       condition: costManagement.opencost.install
@@ -57,270 +129,82 @@ entries:
     sources:
     - https://github.com/randoli/helm-charts
     urls:
-    - app-insights-agent-1.10.0.tgz
-    version: 1.10.0
-  - apiVersion: v2
-    appVersion: 1.8.0
-    created: "2024-09-05T10:43:55.289515033-03:00"
+    - app-insights-agent-1.9.0.tgz
+    version: 1.9.0
+  kube-prometheus-stack:
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Chart Source
+          url: https://github.com/prometheus-community/helm-charts
+        - name: Upstream Project
+          url: https://github.com/prometheus-operator/kube-prometheus
+      artifacthub.io/operator: "true"
+    apiVersion: v2
+    appVersion: v0.77.2
+    created: "2024-11-05T21:11:53.842052833-03:00"
     dependencies:
-    - alias: costManagement
-      condition: costManagement.opencost.install
-      name: opencost
-      repository: https://randoli.github.io/helm-charts
-      version: 1.41.0
-    - condition: costManagement.rightsizingRecommendations.installVpa
-      name: vertical-pod-autoscaler
-      repository: https://randoli.github.io/helm-charts
-      version: 1.0.0
-    - alias: securityScans
-      condition: securityScans.installKubescape
-      name: kubescape-operator
-      repository: https://randoli.github.io/helm-charts
-      version: 1.18.16
-    description: Randoli App Insights Agent
-    digest: 3859b92e56b0a0fdafe422dc7eeb956e4451437d23685ed460b60f3a7228c763
-    home: https://randoli.ca
-    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
+    - condition: crds.enabled
+      name: crds
+      repository: ""
+      version: 0.0.0
+    - condition: kubeStateMetrics.enabled
+      name: kube-state-metrics
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 5.26.*
+    - condition: nodeExporter.enabled
+      name: prometheus-node-exporter
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 4.40.*
+    - condition: grafana.enabled
+      name: grafana
+      repository: https://grafana.github.io/helm-charts
+      version: 8.5.*
+    - condition: windowsMonitoring.enabled
+      name: prometheus-windows-exporter
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 0.7.*
+    description: kube-prometheus-stack collects Kubernetes manifests, Grafana dashboards,
+      and Prometheus rules combined with documentation and scripts to provide easy
+      to operate end-to-end Kubernetes cluster monitoring with Prometheus using the
+      Prometheus Operator.
+    digest: ff6167fe4036a73a85b9fbad3c01568ae41a208c2fcd9110566c0f42afb3ad5b
+    home: https://github.com/prometheus-operator/kube-prometheus
+    icon: https://raw.githubusercontent.com/prometheus/prometheus.github.io/master/assets/prometheus_logo-cb55bb5c346.png
     keywords:
-    - app-insights
-    - app-insights-agent
-    - randoli
+    - operator
+    - prometheus
+    - kube-prometheus
+    kubeVersion: '>=1.19.0-0'
     maintainers:
-    - email: support@randoli.ca
-      name: Randoli
-      url: https://randoli.ca
-    name: app-insights-agent
+    - email: andrew@quadcorps.co.uk
+      name: andrewgkew
+    - email: gianrubio@gmail.com
+      name: gianrubio
+    - email: github.gkarthiks@gmail.com
+      name: gkarthiks
+    - email: kube-prometheus-stack@sisti.pt
+      name: GMartinez-Sisti
+    - email: github@jkroepke.de
+      name: jkroepke
+    - email: scott@r6by.com
+      name: scottrigby
+    - email: miroslav.hadzhiev@gmail.com
+      name: Xtigyro
+    - email: quentin.bisson@gmail.com
+      name: QuentinBisson
+    name: kube-prometheus-stack
     sources:
-    - https://github.com/randoli/helm-charts
+    - https://github.com/prometheus-community/helm-charts
+    - https://github.com/prometheus-operator/kube-prometheus
+    type: application
     urls:
-    - app-insights-agent-1.8.1.tgz
-    version: 1.8.1
-  - apiVersion: v2
-    appVersion: 1.8.0
-    created: "2024-09-05T10:43:55.284628283-03:00"
-    dependencies:
-    - alias: costManagement
-      condition: costManagement.opencost.install
-      name: opencost
-      repository: https://randoli.github.io/helm-charts
-      version: 1.33.1
-    - condition: costManagement.rightsizingRecommendations.installVpa
-      name: vertical-pod-autoscaler
-      repository: https://randoli.github.io/helm-charts
-      version: 1.0.0
-    - alias: securityScans
-      condition: securityScans.installKubescape
-      name: kubescape-operator
-      repository: https://randoli.github.io/helm-charts
-      version: 1.18.16
-    description: Randoli App Insights Agent
-    digest: 0c52699dd49ef1278125d17139b7bf93ba4c9fe853e7f8dad467f7af5329bf2c
-    home: https://randoli.ca
-    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
-    keywords:
-    - app-insights
-    - app-insights-agent
-    - randoli
-    maintainers:
-    - email: support@randoli.ca
-      name: Randoli
-      url: https://randoli.ca
-    name: app-insights-agent
-    sources:
-    - https://github.com/randoli/helm-charts
-    urls:
-    - app-insights-agent-1.8.0.tgz
-    version: 1.8.0
-  - apiVersion: v2
-    appVersion: 1.7.3
-    created: "2024-09-05T10:43:55.278104628-03:00"
-    dependencies:
-    - condition: opencost.enabled
-      name: opencost
-      repository: https://randoli.github.io/helm-charts
-      version: 1.33.1
-    - condition: rightsizingRecommendations.installVpa
-      name: vertical-pod-autoscaler
-      repository: https://randoli.github.io/helm-charts
-      version: 1.0.0
-    description: Randoli App Insights Agent
-    digest: 771032cf7264d0b05d86b7070c879cc43f27ba1d1326c19edb091b0f175d1976
-    home: https://randoli.ca
-    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
-    keywords:
-    - app-insights
-    - app-insights-agent
-    - randoli
-    maintainers:
-    - email: support@randoli.ca
-      name: Randoli
-      url: https://randoli.ca
-    name: app-insights-agent
-    sources:
-    - https://github.com/randoli/helm-charts
-    urls:
-    - app-insights-agent-1.7.3.tgz
-    version: 1.7.3
-  - apiVersion: v2
-    appVersion: "1.7"
-    created: "2024-09-05T10:43:55.273477896-03:00"
-    dependencies:
-    - condition: opencost.enabled
-      name: opencost
-      repository: https://randoli.github.io/helm-charts
-      version: 1.33.1
-    description: Randoli App Insights Agent
-    digest: 12ad4e7790e02e6a0c446d17db3d247559295d8394388bfc30ab1a67a3586ab8
-    home: https://randoli.ca
-    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
-    keywords:
-    - app-insights
-    - app-insights-agent
-    - randoli
-    maintainers:
-    - email: support@randoli.ca
-      name: Randoli
-      url: https://randoli.ca
-    name: app-insights-agent
-    sources:
-    - https://github.com/randoli/helm-charts
-    urls:
-    - app-insights-agent-1.7.1.tgz
-    version: 1.7.1
-  - apiVersion: v2
-    appVersion: "1.7"
-    created: "2024-09-05T10:43:55.271840711-03:00"
-    dependencies:
-    - condition: opencost.enabled
-      name: opencost
-      repository: https://randoli.github.io/helm-charts
-      version: 1.33.1
-    description: Randoli App Insights Agent
-    digest: 04cd05caaea298ae72f407e9323616f91ba92c6d9219885f96bd56ab1f29253b
-    home: https://randoli.ca
-    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
-    keywords:
-    - app-insights
-    - app-insights-agent
-    - randoli
-    maintainers:
-    - email: support@randoli.ca
-      name: Randoli
-      url: https://randoli.ca
-    name: app-insights-agent
-    sources:
-    - https://github.com/randoli/helm-charts
-    urls:
-    - app-insights-agent-1.7.0.tgz
-    version: 1.7.0
-  - apiVersion: v2
-    appVersion: "1.6"
-    created: "2024-09-05T10:43:55.270546474-03:00"
-    dependencies:
-    - condition: opencost.enabled
-      name: opencost
-      repository: https://randoli.github.io/helm-charts
-      version: 1.33.1
-    description: Randoli App Insights Agent
-    digest: 7b7db10c0085baf776f4f168e3fd8bd9e42b52a927b4f46a15fa19ea03af3f91
-    home: https://randoli.ca
-    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
-    keywords:
-    - app-insights
-    - app-insights-agent
-    - randoli
-    maintainers:
-    - email: support@randoli.ca
-      name: Randoli
-      url: https://randoli.ca
-    name: app-insights-agent
-    sources:
-    - https://github.com/randoli/helm-charts
-    urls:
-    - app-insights-agent-1.6.0.tgz
-    version: 1.6.0
-  - apiVersion: v2
-    appVersion: "1.5"
-    created: "2024-09-05T10:43:55.269441829-03:00"
-    dependencies:
-    - condition: opencost.enabled
-      name: opencost
-      repository: https://randoli.github.io/helm-charts
-      version: 1.27.0
-    description: Randoli App Insights Agent
-    digest: b38fdc601d561bb3cf3d4c1df630891a8fcc777fa1fedbf5ae6cabc5dfb22c1d
-    home: https://randoli.ca
-    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
-    keywords:
-    - app-insights
-    - app-insights-agent
-    - randoli
-    maintainers:
-    - email: support@randoli.ca
-      name: Randoli
-      url: https://randoli.ca
-    name: app-insights-agent
-    sources:
-    - https://github.com/randoli/helm-charts
-    urls:
-    - app-insights-agent-1.5.0.tgz
-    version: 1.5.0
-  - apiVersion: v2
-    appVersion: 1.4.0
-    created: "2024-09-05T10:43:55.268439248-03:00"
-    dependencies:
-    - condition: opencost.enabled
-      name: opencost
-      repository: https://randoli.github.io/helm-charts
-      version: 1.27.0
-    description: Randoli App Insights Agent
-    digest: 9fd371ca5f747b5d89e711d4f31e1a249b35dde36f8f6d588e608c47479d393f
-    home: https://randoli.ca
-    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
-    keywords:
-    - app-insights
-    - app-insights-agent
-    - randoli
-    maintainers:
-    - email: support@randoli.ca
-      name: Randoli
-      url: https://randoli.ca
-    name: app-insights-agent
-    sources:
-    - https://github.com/randoli/helm-charts
-    urls:
-    - app-insights-agent-1.0.1.tgz
-    version: 1.0.1
-  - apiVersion: v2
-    appVersion: 1.4.0
-    created: "2024-09-05T10:43:55.267446791-03:00"
-    dependencies:
-    - condition: opencost.enabled
-      name: opencost
-      repository: https://randoli.github.io/helm-charts
-      version: 1.27.0
-    description: Randoli App Insights Agent
-    digest: 73d03a593fb1e6067bf793e08e67587e98d87c7fd3d0dbebd51dd12e09490673
-    home: https://randoli.ca
-    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
-    keywords:
-    - app-insights
-    - app-insights-agent
-    - randoli
-    maintainers:
-    - email: support@randoli.ca
-      name: Randoli
-      url: https://randoli.ca
-    name: app-insights-agent
-    sources:
-    - https://github.com/randoli/helm-charts
-    urls:
-    - app-insights-agent-1.0.0.tgz
-    version: 1.0.0
+    - kube-prometheus-stack-65.5.1.tgz
+    version: 65.5.1
   kubescape-operator:
   - apiVersion: v2
     appVersion: 1.18.16
-    created: "2024-09-05T10:43:55.297621857-03:00"
+    created: "2024-11-05T21:11:53.844167624-03:00"
     dependencies:
     - condition: alertCRD.scopeClustered
       name: kubescape-alert-crd
@@ -357,7 +241,7 @@ entries:
   opencost:
   - apiVersion: v2
     appVersion: 1.111.0
-    created: "2024-09-05T10:43:55.300102029-03:00"
+    created: "2024-11-05T21:11:53.846460006-03:00"
     description: OpenCost and OpenCost UI
     digest: 7b8b3e7fa5391db2cd0d983774728706d5e5cc7292148476e75226a7d69bc611
     home: https://github.com/opencost/opencost-helm-chart
@@ -380,7 +264,7 @@ entries:
     version: 1.41.0
   - apiVersion: v2
     appVersion: 1.109.0
-    created: "2024-09-05T10:43:55.299254167-03:00"
+    created: "2024-11-05T21:11:53.845668786-03:00"
     description: OpenCost and OpenCost UI
     digest: e013511b2ea9412d4d69c701f75914213f5fb2891217fe431aa025e28061efbc
     home: https://github.com/opencost/opencost-helm-chart
@@ -403,7 +287,7 @@ entries:
     version: 1.33.1
   - apiVersion: v2
     appVersion: 1.107.1
-    created: "2024-09-05T10:43:55.298387812-03:00"
+    created: "2024-11-05T21:11:53.844875689-03:00"
     description: OpenCost and OpenCost UI
     digest: 426916e316e3f0a2723b0bd7ebc2e0c703bd264e83f920922d2652028a1f47ef
     home: https://github.com/opencost/opencost-helm-chart
@@ -422,12 +306,35 @@ entries:
     urls:
     - opencost-1.27.0.tgz
     version: 1.27.0
+  pixie-operator-chart:
+  - apiVersion: v2
+    created: "2024-11-05T21:11:53.848444905-03:00"
+    digest: 769d145dfe118fa9d5e86f2633b3eeb4c286343f0be8488c82ae3ea67ed41816
+    name: pixie-operator-chart
+    type: application
+    urls:
+    - pixie-operator-chart-0.1.6.tgz
+    version: 0.1.6
+  vector-operator:
+  - apiVersion: v2
+    appVersion: v0.0.40
+    created: "2024-11-05T21:11:53.849355058-03:00"
+    description: A Helm chart to install Vector Operator
+    digest: 41b85faab149d627be1cb457cd73fb0be12f8ed58132a5504974092da7fff163
+    home: https://github.com/kaasops/vector-operator
+    name: vector-operator
+    sources:
+    - https://github.com/kaasops/vector-operator
+    type: application
+    urls:
+    - vector-operator-0.0.40.tgz
+    version: 0.0.40
   vertical-pod-autoscaler:
   - annotations:
       kubeVersion: '>=1.24'
     apiVersion: v2
     appVersion: 1.1.2
-    created: "2024-09-05T10:43:55.302065799-03:00"
+    created: "2024-11-05T21:11:53.850862637-03:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami/
@@ -441,4 +348,4 @@ entries:
     urls:
     - vertical-pod-autoscaler-1.0.0.tgz
     version: 1.0.0
-generated: "2024-09-05T10:43:55.265859316-03:00"
+generated: "2024-11-05T21:11:53.781678239-03:00"

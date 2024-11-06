@@ -17,7 +17,7 @@ global:
 image:
   registry: docker.io
   repository: randoli/insights-agent
-  tag: "1.10"
+  tag: "1.11"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
