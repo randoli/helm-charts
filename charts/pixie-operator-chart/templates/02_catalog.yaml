@@ -2,7 +2,7 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:
   name: pixie-operator-index
-  namespace: {{ .Values.olmOperatorNamespace }}
+  namespace: {{ default .Release.Namespace .Values.olmOperatorNamespace }}
   {{- if .Values.olmCatalogSource.annotations }}
   annotations: {{ .Values.olmCatalogSource.annotations | toYaml | nindent 4 }}
   {{- end }}
