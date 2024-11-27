@@ -58,4 +58,4 @@ data:
   VECTOR_INSTALL: '{{ .Values.logs.vector.install }}'
   VECTOR_HTTP_SINKER_URL: 'http://{{ include "app-insights-agent.fullname" . }}.{{ include "app-insights-agent.namespace" . }}:8080/log-sink/'
   PROMETHEUS_INSTALL: '{{ .Values.global.prometheus.install }}'
-	TEKTON_PIPELINE_ENABLED: '{{ .Values.tektonPipeline.enabled }}'
+  TEKTON_PIPELINE_ENABLED: '{{ .Values.tektonPipeline.enabled }}'
