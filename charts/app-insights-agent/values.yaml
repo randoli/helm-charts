@@ -96,6 +96,10 @@ telemetry:
     # If enabled, pixie will be installed
     install: false
 
+tektonPipeline:
+  # Identifying tekton pipeline resource
+  enabled: false
+
 # -- Toleration labels for pod assignment
 tolerations: []
 # -- Node labels for pod assignment
