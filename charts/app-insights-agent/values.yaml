@@ -1,4 +1,6 @@
 global:
+  openshift:
+    enabled: false
   prometheus:
     install: false
     url: http://prometheus-operated.prometheus:9090
