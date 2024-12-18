@@ -158,6 +158,14 @@ spec:
             - name: CONFIG_PATH
               value: {{ .Values.opencost.customPricing.configPath | quote }}
             {{- end }}
+            {{- if .Values.global.openshift.enabled }}
+            - name: PROM_NAMESPACE_LABEL
+              value: exported_namespace
+            - name: PROM_POD_LABEL
+              value: exported_pod
+            - name: PROM_CONTAINER_LABEL
+              value: exported_container
+            {{- end }}
             - name: DATA_RETENTION_DAILY_RESOLUTION_DAYS
               value: {{ .Values.opencost.dataRetention.dailyResolutionDays | quote }}
             - name: CLOUD_COST_ENABLED
