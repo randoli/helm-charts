@@ -333,9 +333,9 @@ opencost:
       # -- Use in-cluster Prometheus
       enabled: true
       # -- Service name of in-cluster Prometheus
-      serviceName: prometheus-server
+      serviceName: "{{.Release.Name }}-prometheus-server"
       # -- Namespace of in-cluster Prometheus
-      namespaceName: prometheus-system
+      namespaceName: "{{.Release.Namespace}}"
       # -- Service port of in-cluster Prometheus
       port: 80
     amp:

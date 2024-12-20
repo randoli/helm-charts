@@ -1,7 +1,10 @@
 global:
+  opencost:
+    install: true
+    url: ""
   prometheus:
-    install: false
-    url: http://prometheus-operated.prometheus:9090
+    install: true
+    url: ""
     secretName: ""
     usernameKey: ""
     passwordKey: ""
@@ -62,15 +65,15 @@ anomalyDetection:
     path: /prometheus
 
 costManagement:
-  opencost:
-    # If enabled, OpenCost will be deployed
-    install: true
-    # Only required if installOpencost is false
-    # OpenCost URL for instance already running and not installed through this chart
-    url: 
-    metrics:
-      serviceMonitor:
-        enabled: true
+  # opencost:
+  #   # If enabled, OpenCost will be deployed
+  #   install: true
+  #   # Only required if installOpencost is false
+  #   # OpenCost URL for instance already running and not installed through this chart
+  #   url: 
+  #   metrics:
+  #     serviceMonitor:
+  #       enabled: true
 
   rightsizingRecommendations:
     enabled: false

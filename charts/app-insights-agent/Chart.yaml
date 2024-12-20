@@ -20,7 +20,7 @@ dependencies:
     repository: https://randoli.github.io/helm-charts
     version: 1.41.0
     alias: costManagement
-    condition: costManagement.opencost.install
+    condition: global.opencost.install
   - name: vertical-pod-autoscaler
     repository: https://randoli.github.io/helm-charts
     version: 1.0.0
@@ -39,7 +39,7 @@ dependencies:
     repository: https://randoli.github.io/helm-charts
     version: 0.0.40
     condition: logs.vector.install
-  - name: kube-prometheus-stack
+  - name: prometheus
     repository: https://randoli.github.io/helm-charts
-    version: 65.5.1
+    version: 26.0.1
     condition: global.prometheus.install
