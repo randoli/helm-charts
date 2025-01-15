@@ -16,11 +16,10 @@ sources:
 - https://github.com/randoli/helm-charts
 version: 1.11.0
 dependencies:
-  - name: opencost
+  - name: prometheus
     repository: https://randoli.github.io/helm-charts
-    version: 1.41.0
-    alias: costManagement
-    condition: global.opencost.install
+    version: 26.0.1
+    condition: global.prometheus.install
   - name: vertical-pod-autoscaler
     repository: https://randoli.github.io/helm-charts
     version: 1.0.0
@@ -39,7 +38,9 @@ dependencies:
     repository: https://randoli.github.io/helm-charts
     version: 0.0.40
     condition: logs.vector.install
-  - name: prometheus
+  - name: opencost
     repository: https://randoli.github.io/helm-charts
-    version: 26.0.1
-    condition: global.prometheus.install
+    version: 1.41.0
+    alias: costManagement
+    condition: global.opencost.install
+  
