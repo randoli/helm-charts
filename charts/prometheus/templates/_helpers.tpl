@@ -242,7 +242,7 @@ RANDOLI - Define prometheus.opencost.url by getting the opencost url based on th
 {{- if .Values.global.opencost.install -}}
 {{- printf "%s-opencost.%s.svc:9003" .Release.Name .Release.Namespace -}}
 {{- else -}}
-{{- print .Values.global.opencost.url -}}
+{{- print .Values.global.opencost.url | replace "http://" ""  -}}
 {{- end -}}
 {{- end -}}
 

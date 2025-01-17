@@ -1209,13 +1209,15 @@ serverFiles:
 # example adds prometheus-blackbox-exporter scrape config
 extraScrapeConfigs: |
   - job_name: 'opencost'
-    scrape_interval: 5s
+    scrape_interval: 1m
+    scrape_timeout: 10s
     metrics_path: "/metrics"
     static_configs:
       - targets: ['{{ include "prometheus.opencost.url" . }}']
 
   - job_name: 'randoli-otel-collector'
-    scrape_interval: 5s
+    scrape_interval: 1m
+    scrape_timeout: 10s
     metrics_path: "/metrics"
     static_configs:
       - targets: ['otel-collector.{{ .Release.Namespace }}.svc:8889']
