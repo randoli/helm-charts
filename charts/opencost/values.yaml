@@ -122,12 +122,12 @@ opencost:
     defaultClusterId: 'default-cluster'
     image:
       # -- Exporter container image registry
-      registry: ghcr.io
+      registry: docker.io
       # -- Exporter container image name
-      repository: opencost/opencost
+      repository: randoli/opencost
       # -- Exporter container image tag
       # @default -- `""` (use appVersion in Chart.yaml)
-      tag: "1.111.0"
+      tag: "1.112.1"
       # -- Exporter container image pull policy
       pullPolicy: IfNotPresent
       # -- Override the full image name for development purposes

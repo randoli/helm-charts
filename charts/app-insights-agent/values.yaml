@@ -2,6 +2,8 @@ global:
   opencost:
     install: true
     url: ""
+  openshift:
+    enabled: false
   prometheus:
     install: true
     url: ""
