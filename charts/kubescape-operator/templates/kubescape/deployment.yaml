@@ -39,9 +39,12 @@ spec:
         checksum/proxy-config: {{ $checksums.proxySecret }}
       {{- end }}
       {{- if eq .Values.configurations.prometheusAnnotations "enable" }}
-        prometheus.io/path: /v1/metrics
-        prometheus.io/port: "8080"
-        prometheus.io/scrape: "true"
+        #prometheus.io/path: /v1/metrics
+        #prometheus.io/port: "8080"
+        #prometheus.io/scrape: "true"
+        randoli.prometheus.io/path: /v1/metrics
+        randoli.prometheus.io/port: "8080"
+        randoli.prometheus.io/scrape: "true"
       {{- end }}
       labels:
         kubescape.io/tier: "core"
