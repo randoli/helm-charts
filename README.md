@@ -22,4 +22,4 @@ Install the App Insights Agent Standalone chart
 helm install randoli/app-insights-agent --generate-name
 ```
 
-For more details see [App Director Documentation](https://docs.appdir.randolicloud.ca).
+For more details see [App Insights agent Documentation](https://docs.insights.randoli.io/agent/overview).

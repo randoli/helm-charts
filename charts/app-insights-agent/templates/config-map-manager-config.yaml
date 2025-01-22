@@ -14,18 +14,13 @@ data:
   DEBUG: 'false'
   HTTP_SERVICE_PORT: '8080'
   KEYCLOAK_TIMEOUT: 1m0s
-  {{- if .Values.costManagement.opencost.url }}
-  OPENCOST_BACKEND_URL: {{ .Values.costManagement.opencost.url }}
+  {{- if .Values.global.opencost.url }}
+  OPENCOST_BACKEND_URL: {{ .Values.global.opencost.url }}
   {{ else }}
-  OPENCOST_BACKEND_URL: http://{{ .Release.Name }}-opencost.{{ .Release.Namespace }}.svc.cluster.local:9003
+  OPENCOST_BACKEND_URL: http://{{ .Release.Name }}-opencost.{{ .Release.Namespace }}.svc:9003
   {{ end -}}
   {{- if .Values.global.prometheus.install }}
-  {{ $prometheusStackValues := (index .Values "kube-prometheus-stack") }}
-  {{- if eq "" $prometheusStackValues.namespaceOverride }}
-  PROMETHEUS_URL: 'http://prometheus-operated.{{ .Release.Namespace }}:9090'
-  {{ else }}
-  PROMETHEUS_URL: 'http://prometheus-operated.{{ $prometheusStackValues.namespaceOverride }}:9090'
-  {{ end }}
+  PROMETHEUS_URL: 'http://{{ .Release.Name}}-prometheus-server.{{ .Release.Namespace }}.svc:80'
   {{ else }}
   PROMETHEUS_URL: {{ .Values.global.prometheus.url }}
   {{ end -}}
@@ -39,8 +34,7 @@ data:
   COLLECT_LOGS: '{{ .Values.logs.shipLogSamples.enabled }}'
   ENABLE_DEFAULT_TIMELINE_PROMETHEUS_QUERIES: '{{ .Values.anomalyDetection.defaultsQueries.enabled }}'
   PROMETHEUS_CUSTOM_QUERIES_PATH: '{{ .Values.anomalyDetection.customQueries.path }}'
-  OPENCOST_INSTALL: '{{ .Values.costManagement.opencost.install }}'
-  OPENCOST_SERVICE_MONITOR: '{{ .Values.costManagement.opencost.metrics.serviceMonitor.enabled }}'
+  OPENCOST_INSTALL: '{{ .Values.global.opencost.install }}'
   IMAGE_REGISTRY: '{{ .Values.image.registry }}'
   IMAGE_REPOSITORY: '{{ .Values.image.repository }}'
   IMAGE_TAG: '{{ .Values.image.tag }}'
@@ -58,3 +52,4 @@ data:
   VECTOR_INSTALL: '{{ .Values.logs.vector.install }}'
   VECTOR_HTTP_SINKER_URL: 'http://{{ include "app-insights-agent.fullname" . }}.{{ include "app-insights-agent.namespace" . }}:8080/log-sink/'
   PROMETHEUS_INSTALL: '{{ .Values.global.prometheus.install }}'
+  TEKTON_PIPELINE_ENABLED: '{{ .Values.tektonPipeline.enabled }}'

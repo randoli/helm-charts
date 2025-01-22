@@ -92,7 +92,7 @@ metadata:
 spec:
   endpoints:
     - honorLabels: true
-      interval: 10s
+      interval: 60s
       path: /metrics
       port: prometheus
       relabelings:

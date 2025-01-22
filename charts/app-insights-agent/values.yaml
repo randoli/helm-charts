@@ -1,9 +1,12 @@
 global:
+  opencost:
+    install: true
+    url: ""
   openshift:
     enabled: false
   prometheus:
-    install: false
-    url: http://prometheus-operated.prometheus:9090
+    install: true
+    url: ""
     secretName: ""
     usernameKey: ""
     passwordKey: ""
@@ -19,7 +22,7 @@ global:
 image:
   registry: docker.io
   repository: randoli/insights-agent
-  tag: "1.11"
+  tag: "1.12"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -36,10 +39,10 @@ deploymentAnnotations: {}
 
 resources:
   limits:
-    memory: 512Mi
+    memory: 2Gi
   requests:
     cpu: 50m
-    memory: 256Mi
+    memory: 512Mi
 
 logs:
   shipLogSamples:
@@ -64,15 +67,15 @@ anomalyDetection:
     path: /prometheus
 
 costManagement:
-  opencost:
-    # If enabled, OpenCost will be deployed
-    install: true
-    # Only required if installOpencost is false
-    # OpenCost URL for instance already running and not installed through this chart
-    url: 
-    metrics:
-      serviceMonitor:
-        enabled: true
+  # opencost:
+  #   # If enabled, OpenCost will be deployed
+  #   install: true
+  #   # Only required if installOpencost is false
+  #   # OpenCost URL for instance already running and not installed through this chart
+  #   url: 
+  #   metrics:
+  #     serviceMonitor:
+  #       enabled: true
 
   rightsizingRecommendations:
     enabled: false
@@ -97,6 +100,10 @@ telemetry:
   pixie:
     # If enabled, pixie will be installed
     install: false
+
+tektonPipeline:
+  # Identifying tekton pipeline resource
+  enabled: false
 
 # -- Toleration labels for pod assignment
 tolerations: []

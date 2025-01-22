@@ -82,7 +82,9 @@ Define the endpoint for Prometheus
 Only change done by Randoli
 */}}
 {{- define "opencost.prometheusServerEndpoint" -}}
-  {{- if .Values.global.prometheus.url -}}
+  {{- if .Values.global.prometheus.install -}}
+    {{- printf "http://%s-prometheus-server.%s.svc:80" .Release.Name .Release.Namespace -}}
+  {{- else if .Values.global.prometheus.url -}}
     {{ tpl .Values.global.prometheus.url . }}
   {{- else if .Values.opencost.prometheus.external.enabled -}}
     {{ tpl .Values.opencost.prometheus.external.url . }}

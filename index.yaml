@@ -2,8 +2,106 @@ apiVersion: v1
 entries:
   app-insights-agent:
   - apiVersion: v2
+    appVersion: 1.12.0
+    created: "2025-01-21T19:16:51.778796789-03:00"
+    dependencies:
+    - condition: global.prometheus.install
+      name: prometheus
+      repository: https://randoli.github.io/helm-charts
+      version: 26.0.1
+    - condition: costManagement.rightsizingRecommendations.installVpa
+      name: vertical-pod-autoscaler
+      repository: https://randoli.github.io/helm-charts
+      version: 1.0.0
+    - alias: securityScans
+      condition: securityScans.installKubescape
+      name: kubescape-operator
+      repository: https://randoli.github.io/helm-charts
+      version: 1.18.16
+    - alias: telemetry
+      condition: telemetry.pixie.install
+      name: pixie-operator-chart
+      repository: https://randoli.github.io/helm-charts
+      version: 0.1.6
+    - condition: logs.vector.install
+      name: vector-operator
+      repository: https://randoli.github.io/helm-charts
+      version: 0.0.40
+    - alias: costManagement
+      condition: global.opencost.install
+      name: opencost
+      repository: https://randoli.github.io/helm-charts
+      version: 1.41.0
+    description: Randoli App Insights Agent
+    digest: 56c7ad126c744ad5753f3c471aa3fc54744223cf39f5f91d7f0c39fc913101e3
+    home: https://randoli.ca
+    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
+    keywords:
+    - app-insights
+    - app-insights-agent
+    - randoli
+    maintainers:
+    - email: support@randoli.ca
+      name: Randoli
+      url: https://randoli.ca
+    name: app-insights-agent
+    sources:
+    - https://github.com/randoli/helm-charts
+    urls:
+    - app-insights-agent-1.12.0.tgz
+    version: 1.12.0
+  - apiVersion: v2
+    appVersion: 1.11.1
+    created: "2025-01-21T19:16:51.75746304-03:00"
+    dependencies:
+    - alias: costManagement
+      condition: costManagement.opencost.install
+      name: opencost
+      repository: https://randoli.github.io/helm-charts
+      version: 1.41.0
+    - condition: costManagement.rightsizingRecommendations.installVpa
+      name: vertical-pod-autoscaler
+      repository: https://randoli.github.io/helm-charts
+      version: 1.0.0
+    - alias: securityScans
+      condition: securityScans.installKubescape
+      name: kubescape-operator
+      repository: https://randoli.github.io/helm-charts
+      version: 1.18.16
+    - alias: telemetry
+      condition: telemetry.pixie.install
+      name: pixie-operator-chart
+      repository: https://randoli.github.io/helm-charts
+      version: 0.1.6
+    - condition: logs.vector.install
+      name: vector-operator
+      repository: https://randoli.github.io/helm-charts
+      version: 0.0.40
+    - condition: global.prometheus.install
+      name: kube-prometheus-stack
+      repository: https://randoli.github.io/helm-charts
+      version: 65.5.1
+    description: Randoli App Insights Agent
+    digest: 5f5c6b56068781014bc9a495acf61e208f0165aa63c0049ea0be8322c269a997
+    home: https://randoli.ca
+    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
+    keywords:
+    - app-insights
+    - app-insights-agent
+    - randoli
+    maintainers:
+    - email: support@randoli.ca
+      name: Randoli
+      url: https://randoli.ca
+    name: app-insights-agent
+    sources:
+    - https://github.com/randoli/helm-charts
+    urls:
+    - app-insights-agent-1.11.1.tgz
+    version: 1.11.1
+  - apiVersion: v2
     appVersion: 1.11.0
-    created: "2024-12-01T00:25:53.339498819-05:00"
+    created: "2025-01-21T19:16:51.716175141-03:00"
     dependencies:
     - alias: costManagement
       condition: costManagement.opencost.install
@@ -52,7 +150,7 @@ entries:
     version: 1.11.0
   - apiVersion: v2
     appVersion: 1.10.0
-    created: "2024-12-01T00:25:53.283324042-05:00"
+    created: "2025-01-21T19:16:51.663640359-03:00"
     dependencies:
     - alias: costManagement
       condition: costManagement.opencost.install
@@ -97,7 +195,7 @@ entries:
     version: 1.10.0
   - apiVersion: v2
     appVersion: 1.9.0
-    created: "2024-12-01T00:25:53.349875016-05:00"
+    created: "2025-01-21T19:16:51.785299497-03:00"
     dependencies:
     - alias: costManagement
       condition: costManagement.opencost.install
@@ -131,80 +229,10 @@ entries:
     urls:
     - app-insights-agent-1.9.0.tgz
     version: 1.9.0
-  kube-prometheus-stack:
-  - annotations:
-      artifacthub.io/license: Apache-2.0
-      artifacthub.io/links: |
-        - name: Chart Source
-          url: https://github.com/prometheus-community/helm-charts
-        - name: Upstream Project
-          url: https://github.com/prometheus-operator/kube-prometheus
-      artifacthub.io/operator: "true"
-    apiVersion: v2
-    appVersion: v0.77.2
-    created: "2024-12-01T00:25:53.385698382-05:00"
-    dependencies:
-    - condition: crds.enabled
-      name: crds
-      repository: ""
-      version: 0.0.0
-    - condition: kubeStateMetrics.enabled
-      name: kube-state-metrics
-      repository: https://prometheus-community.github.io/helm-charts
-      version: 5.26.*
-    - condition: nodeExporter.enabled
-      name: prometheus-node-exporter
-      repository: https://prometheus-community.github.io/helm-charts
-      version: 4.40.*
-    - condition: grafana.enabled
-      name: grafana
-      repository: https://grafana.github.io/helm-charts
-      version: 8.5.*
-    - condition: windowsMonitoring.enabled
-      name: prometheus-windows-exporter
-      repository: https://prometheus-community.github.io/helm-charts
-      version: 0.7.*
-    description: kube-prometheus-stack collects Kubernetes manifests, Grafana dashboards,
-      and Prometheus rules combined with documentation and scripts to provide easy
-      to operate end-to-end Kubernetes cluster monitoring with Prometheus using the
-      Prometheus Operator.
-    digest: ff6167fe4036a73a85b9fbad3c01568ae41a208c2fcd9110566c0f42afb3ad5b
-    home: https://github.com/prometheus-operator/kube-prometheus
-    icon: https://raw.githubusercontent.com/prometheus/prometheus.github.io/master/assets/prometheus_logo-cb55bb5c346.png
-    keywords:
-    - operator
-    - prometheus
-    - kube-prometheus
-    kubeVersion: '>=1.19.0-0'
-    maintainers:
-    - email: andrew@quadcorps.co.uk
-      name: andrewgkew
-    - email: gianrubio@gmail.com
-      name: gianrubio
-    - email: github.gkarthiks@gmail.com
-      name: gkarthiks
-    - email: kube-prometheus-stack@sisti.pt
-      name: GMartinez-Sisti
-    - email: github@jkroepke.de
-      name: jkroepke
-    - email: scott@r6by.com
-      name: scottrigby
-    - email: miroslav.hadzhiev@gmail.com
-      name: Xtigyro
-    - email: quentin.bisson@gmail.com
-      name: QuentinBisson
-    name: kube-prometheus-stack
-    sources:
-    - https://github.com/prometheus-community/helm-charts
-    - https://github.com/prometheus-operator/kube-prometheus
-    type: application
-    urls:
-    - kube-prometheus-stack-65.5.1.tgz
-    version: 65.5.1
   kubescape-operator:
   - apiVersion: v2
     appVersion: 1.18.16
-    created: "2024-12-01T00:25:53.389690146-05:00"
+    created: "2025-01-21T19:16:51.788494558-03:00"
     dependencies:
     - condition: alertCRD.scopeClustered
       name: kubescape-alert-crd
@@ -215,7 +243,7 @@ entries:
       repository: file://./charts/namespaced-crds
       version: 0.0.2
     description: Kubescape is an E2E Kubernetes cluster security platform
-    digest: 3a857774b3c51c88926e9c6ccf49f736c4ccd1141afea864c9e0d6dc4674b12f
+    digest: 30fdedf38e74239a7697b8b9fd34817fd36d276b15518aad09df9f2aa9f227d1
     home: https://kubescape.io/
     maintainers:
     - email: ben@armosec.io
@@ -241,9 +269,9 @@ entries:
   opencost:
   - apiVersion: v2
     appVersion: 1.111.0
-    created: "2024-12-01T00:25:53.394535378-05:00"
+    created: "2025-01-21T19:16:51.791423219-03:00"
     description: OpenCost and OpenCost UI
-    digest: a2b864c06e53b385260d053e92a499cd9163e716b9c1a641c7bfd795d88bc097
+    digest: 69f682b5afe57dfcefb78d75645e445f9f57721d750334b3e92bee47570c20dc
     home: https://github.com/opencost/opencost-helm-chart
     keywords:
     - cloud-costs
@@ -264,7 +292,7 @@ entries:
     version: 1.41.0
   - apiVersion: v2
     appVersion: 1.109.0
-    created: "2024-12-01T00:25:53.392752617-05:00"
+    created: "2025-01-21T19:16:51.790398355-03:00"
     description: OpenCost and OpenCost UI
     digest: e013511b2ea9412d4d69c701f75914213f5fb2891217fe431aa025e28061efbc
     home: https://github.com/opencost/opencost-helm-chart
@@ -287,7 +315,7 @@ entries:
     version: 1.33.1
   - apiVersion: v2
     appVersion: 1.107.1
-    created: "2024-12-01T00:25:53.391028042-05:00"
+    created: "2025-01-21T19:16:51.789390534-03:00"
     description: OpenCost and OpenCost UI
     digest: 426916e316e3f0a2723b0bd7ebc2e0c703bd264e83f920922d2652028a1f47ef
     home: https://github.com/opencost/opencost-helm-chart
@@ -308,17 +336,75 @@ entries:
     version: 1.27.0
   pixie-operator-chart:
   - apiVersion: v2
-    created: "2024-12-01T00:25:53.399734995-05:00"
-    digest: 769d145dfe118fa9d5e86f2633b3eeb4c286343f0be8488c82ae3ea67ed41816
+    created: "2025-01-21T19:16:51.794217712-03:00"
+    digest: 9fe41559ad8f43e0204da07d6fbad14ee361b6aecf8f3c426f0e647cc3e2d588
     name: pixie-operator-chart
     type: application
     urls:
     - pixie-operator-chart-0.1.6.tgz
     version: 0.1.6
+  prometheus:
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Chart Source
+          url: https://github.com/prometheus-community/helm-charts
+        - name: Upstream Project
+          url: https://github.com/prometheus/prometheus
+    apiVersion: v2
+    appVersion: v3.0.1
+    created: "2025-01-21T19:16:51.800479672-03:00"
+    dependencies:
+    - condition: alertmanager.enabled
+      name: alertmanager
+      repository: https://randoli.github.io/helm-charts
+      version: 1.13.*
+    - condition: kube-state-metrics.enabled
+      name: kube-state-metrics
+      repository: https://randoli.github.io/helm-charts
+      version: 5.27.*
+    - condition: prometheus-node-exporter.enabled
+      name: prometheus-node-exporter
+      repository: https://randoli.github.io/helm-charts
+      version: 4.42.*
+    - condition: prometheus-pushgateway.enabled
+      name: prometheus-pushgateway
+      repository: https://randoli.github.io/helm-charts
+      version: 2.15.*
+    description: Prometheus is a monitoring system and time series database.
+    digest: 2a0b45e0fd27f11d891c4d5dee2d25533d41df5e790c977ac0a90586156bd4e1
+    home: https://prometheus.io/
+    icon: https://raw.githubusercontent.com/prometheus/prometheus.github.io/master/assets/prometheus_logo-cb55bb5c346.png
+    keywords:
+    - monitoring
+    - prometheus
+    kubeVersion: '>=1.19.0-0'
+    maintainers:
+    - email: gianrubio@gmail.com
+      name: gianrubio
+    - email: zanhsieh@gmail.com
+      name: zanhsieh
+    - email: miroslav.hadzhiev@gmail.com
+      name: Xtigyro
+    - email: naseem@transit.app
+      name: naseemkullah
+    - email: rootsandtrees@posteo.de
+      name: zeritti
+    name: prometheus
+    sources:
+    - https://github.com/prometheus/alertmanager
+    - https://github.com/prometheus/prometheus
+    - https://github.com/prometheus/pushgateway
+    - https://github.com/prometheus/node_exporter
+    - https://github.com/kubernetes/kube-state-metrics
+    type: application
+    urls:
+    - prometheus-26.0.1.tgz
+    version: 26.0.1
   vector-operator:
   - apiVersion: v2
     appVersion: v0.0.40
-    created: "2024-12-01T00:25:53.401497501-05:00"
+    created: "2025-01-21T19:16:51.801486263-03:00"
     description: A Helm chart to install Vector Operator
     digest: 41b85faab149d627be1cb457cd73fb0be12f8ed58132a5504974092da7fff163
     home: https://github.com/kaasops/vector-operator
@@ -334,7 +420,7 @@ entries:
       kubeVersion: '>=1.24'
     apiVersion: v2
     appVersion: 1.1.2
-    created: "2024-12-01T00:25:53.404347073-05:00"
+    created: "2025-01-21T19:16:51.803242425-03:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami/
@@ -348,4 +434,4 @@ entries:
     urls:
     - vertical-pod-autoscaler-1.0.0.tgz
     version: 1.0.0
-generated: "2024-12-01T00:25:53.266783118-05:00"
+generated: "2025-01-21T19:16:51.643419296-03:00"

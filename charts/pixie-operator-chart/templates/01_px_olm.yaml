@@ -1,4 +1,4 @@
-{{ if not (eq .Values.olmOperatorNamespace .Release.Namespace) }}
+{{ if .Values.olmOperatorNamespace }}
 ---
 apiVersion: v1
 kind: Namespace
@@ -10,4 +10,4 @@ apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
   name: global-operators
-  namespace: {{ .Values.olmOperatorNamespace }}
+  namespace: {{ default .Release.Namespace .Values.olmOperatorNamespace }}

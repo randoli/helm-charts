@@ -114,3 +114,15 @@ rules:
       - vectorpipelines
       - clustervectorpipelines
 {{ end }}
+{{- if .Values.tektonPipeline.enabled }}
+  - verbs:
+      - list
+      - watch
+      - get
+    apiGroups:
+      - tekton.dev
+    resources:
+      - pipelineruns
+      - pipelines
+      - taskruns
+{{ end }}
