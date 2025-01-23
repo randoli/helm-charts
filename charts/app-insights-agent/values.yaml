@@ -82,6 +82,12 @@ costManagement:
     # If enabled, VerticalPodAutoscaler will be installed
     installVpa: false
 
+vertical-pod-autoscaler:
+  recommender:
+    extraArgs:
+      pod-recommendation-min-cpu-millicores: 25
+      pod-recommendation-min-memory-mb: 25
+
 securityScans:
   # Install kubescape-operator
   # Kubescape-operator is required to run security scans in the cluster
