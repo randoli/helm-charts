@@ -47,3 +47,11 @@ Create the name of the service account to use
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
+
+{{- define "prometheus-server-endpoint" -}}
+  {{- if .Values.global.prometheus.install -}}
+    {{- printf "http://%s-prometheus-server.%s.svc:80" .Release.Name .Release.Namespace -}}
+  {{- else if .Values.global.prometheus.url -}}
+    {{ tpl .Values.global.prometheus.url . }}
+  {{- end -}}
+{{- end -}}

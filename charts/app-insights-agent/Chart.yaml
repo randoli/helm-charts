@@ -16,31 +16,37 @@ sources:
 - https://github.com/randoli/helm-charts
 version: 1.12.0
 dependencies:
+  - name: opentelemetry-operator
+    version: 0.80.2
+    repository: https://randoli.github.io/helm-charts
+    condition: observability.otel.enabled
   - name: prometheus
     repository: https://randoli.github.io/helm-charts
     version: 26.0.1
     condition: global.prometheus.install
-  - name: vertical-pod-autoscaler
+  - name: rightsizing
     repository: https://randoli.github.io/helm-charts
     version: 1.0.0
-    condition: costManagement.rightsizingRecommendations.installVpa
-  - name: kubescape-operator
+    condition: costManagement.rightsizingRecommendations.install
+  - name: security-scans
     alias: securityScans
     repository: https://randoli.github.io/helm-charts
     version: 1.18.16
-    condition: securityScans.installKubescape
-  - name: pixie-operator-chart
-    alias: telemetry
+    condition: securityScans.install
+  - name: network
     repository: https://randoli.github.io/helm-charts
     version: 0.1.6
-    condition: telemetry.pixie.install
-  - name: vector-operator
+    condition: observability.networkMap.enabled
+  - name: logs
     repository: https://randoli.github.io/helm-charts
     version: 0.0.40
-    condition: logs.vector.install
-  - name: opencost
+    condition: observability.logsAnalyzer.enabled
+  - name: cost-management
     repository: https://randoli.github.io/helm-charts
     version: 1.41.0
     alias: costManagement
     condition: global.opencost.install
-  
+  - name: tracing
+    version: 3.4.0
+    repository: https://randoli.github.io/helm-charts
+    condition: observability.tracing.enabled

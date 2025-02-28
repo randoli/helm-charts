@@ -53,3 +53,6 @@ data:
   VECTOR_HTTP_SINKER_URL: 'http://{{ include "app-insights-agent.fullname" . }}.{{ include "app-insights-agent.namespace" . }}:8080/log-sink/'
   PROMETHEUS_INSTALL: '{{ .Values.global.prometheus.install }}'
   TEKTON_PIPELINE_ENABLED: '{{ .Values.tektonPipeline.enabled }}'
+  JAEGER_QUERY_SVC_GRPC: {{ .Release.Name }}-tracing-query.{{ .Release.Namespace }}:16685
+  JAEGER_QUERY_SVC_HTTP: http://{{ .Release.Name }}-tracing-query.{{ .Release.Namespace }}:16686
+  PROMETHEUS_ALERTMANAGER_URL: http://{{ .Release.Name }}-alertmanager.{{ .Release.Namespace }}:9093
