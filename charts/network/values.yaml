@@ -23,7 +23,7 @@ olmCatalogSource:
   labels: {}
 ## Vizier configuration
 # The name of the Vizier instance deployed to the cluster.
-name: "pixie"
+name: "randoli-rok-pixie"
 # The name of the cluster that the Vizier is monitoring. If empty,
 # a random name will be generated.
 clusterName: ""

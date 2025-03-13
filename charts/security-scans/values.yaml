@@ -191,7 +191,7 @@ imageScanning:
 # kubescape scanner - https://github.com/kubescape/kubescape
 kubescape:
 
-  name: kubescape
+  name: randoli-rok-kubescape
 
   image:
     # -- source code: https://github.com/kubescape/kubescape/tree/master/httphandler (public repo)

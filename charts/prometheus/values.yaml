@@ -354,7 +354,7 @@ server:
   extraConfigmapLabels: {}
 
   ## Override the prometheus.server.fullname for all objects related to the Prometheus server
-  fullnameOverride: ""
+  fullnameOverride: "randoli-prometheuss"
 
   ingress:
     ## If true, Prometheus server Ingress will be created

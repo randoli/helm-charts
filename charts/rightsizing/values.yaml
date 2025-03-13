@@ -20,7 +20,7 @@ kubeVersion: ""
 nameOverride: ""
 
 ## @param fullnameOverride Fully override `vertical-pod-autoscaler.fullname` template with a string
-fullnameOverride: ""
+fullnameOverride: "randoli-cmk-vpa"
 
 ## @param commonAnnotations Annotations to add to all deployed objects
 commonAnnotations: {}
