@@ -12,7 +12,7 @@ image:
 imagePullSecrets: []
 # - name: "image-pull-secret"
 nameOverride: ""
-fullnameOverride: ""
+fullnameOverride: "randoli-prometheus-node-exporter"
 
 # Number of old history to retain to allow rollback
 # Default Kubernetes value is set to 10

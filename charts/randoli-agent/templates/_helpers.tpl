@@ -50,7 +50,7 @@ Create the name of the service account to use
 
 {{- define "prometheus-server-endpoint" -}}
   {{- if .Values.global.prometheus.install -}}
-    {{- printf "http://%s-prometheus-server.%s.svc:80" .Release.Name .Release.Namespace -}}
+    {{- printf "http://randoli-prometheus.%s.svc:80" .Release.Namespace -}}
   {{- else if .Values.global.prometheus.url -}}
     {{ tpl .Values.global.prometheus.url . }}
   {{- end -}}

@@ -72,7 +72,7 @@ args:
 
 vector:
   enable: true
-  name: "vector"
+  name: "randoli-rok-vector"
   useApiServerCache: false
   agent:
     image: timberio/vector:0.41.X-distroless-libc

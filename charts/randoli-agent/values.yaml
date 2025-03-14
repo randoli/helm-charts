@@ -1,3 +1,8 @@
+
+
+
+
+
 global:
   opencost:
     install: true
@@ -18,6 +23,27 @@ global:
   secrets:
     cert: insights-agent-cert
     config: insights-agent-secret
+
+
+observability:
+  enabled: false
+  otel:
+    operator:
+      install: true
+  vector:
+    install: true
+  security:
+    enabled: true
+    # OFF|INTERVAL_SCANNING
+    mode: 'INTERVAL_SCANNING'
+    cronSpec: '0 10,20 * * *'
+    imagePullSecrets: ""
+  pixie:
+    install: true ## TODO Change to false by default.  
+costManagement:
+  enabled: true
+  vpaOperator:
+    install: true   
 
 image:
   registry: docker.io
@@ -66,21 +92,21 @@ anomalyDetection:
     # Path for user defined queries, queries should be in YAML format
     path: /prometheus
 
-costManagement:
-  # opencost:
-  #   # If enabled, OpenCost will be deployed
-  #   install: true
-  #   # Only required if installOpencost is false
-  #   # OpenCost URL for instance already running and not installed through this chart
-  #   url: 
-  #   metrics:
-  #     serviceMonitor:
-  #       enabled: true
+# costManagement:
+#   # opencost:
+#   #   # If enabled, OpenCost will be deployed
+#   #   install: true
+#   #   # Only required if installOpencost is false
+#   #   # OpenCost URL for instance already running and not installed through this chart
+#   #   url: 
+#   #   metrics:
+#   #     serviceMonitor:
+#   #       enabled: true
 
-  rightsizingRecommendations:
-    enabled: false
-    # If enabled, VerticalPodAutoscaler will be installed
-    installVpa: false
+#   rightsizingRecommendations:
+#     enabled: false
+#     # If enabled, VerticalPodAutoscaler will be installed
+#     installVpa: false
 
 securityScans:
   # Install kubescape-operator
@@ -139,3 +165,26 @@ kube-prometheus-stack:
   prometheus:
     prometheusSpec:
       serviceMonitorSelectorNilUsesHelmValues: false
+
+tracing:
+  provisionDataStore:
+    cassandra: false
+
+  allInOne:
+    enabled: true
+    args:
+      - "--badger.span-store-ttl=2h"
+  storage:
+    type: badger
+    badger:
+      ephemeral: false
+      persistence:
+        mountPath: /mnt/data
+        useExistingPvcName: "randoli-jaeger-storage"
+        size: 10Gi
+  agent:
+    enabled: false
+  collector:
+    enabled: false
+  query:
+    enabled: false      

@@ -239,8 +239,8 @@ Define prometheus.server.remoteRead producing a list of remoteRead configuration
 RANDOLI - Define prometheus.opencost.url by getting the opencost url based on the agent installations 
 */}}
 {{- define "prometheus.opencost.url" -}}
-{{- if .Values.global.opencost.install -}}
-{{- printf "%s-opencost.%s.svc:9003" .Release.Name .Release.Namespace -}}
+{{- if .Values.global.opencost.install -}}randoli-prometheus
+{{- printf "randoli-cmk-opencost.%s.svc:9003" .Release.Namespace -}}
 {{- else -}}
 {{- print .Values.global.opencost.url | replace "http://" ""  -}}
 {{- end -}}

@@ -31,7 +31,7 @@ extraSecretMounts: []
 
 imagePullSecrets: []
 nameOverride: ""
-fullnameOverride: ""
+fullnameOverride: "randoli-alerts"
 ## namespaceOverride overrides the namespace which the resources will be deployed in
 namespaceOverride: ""
 
