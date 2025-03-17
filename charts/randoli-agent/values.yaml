@@ -25,7 +25,7 @@ global:
 
 
 observability:
-  enabled: true
+  enabled: false
   otel:
     operator:
       install: true
@@ -40,7 +40,7 @@ observability:
   pixie:
     install: true ## TODO Change to false by default.  
 costManagement:
-  enabled: true
+  enabled: false
   vpaOperator:
     install: true   
 
