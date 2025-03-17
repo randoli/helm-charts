@@ -8,7 +8,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ .Values.kollector.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     app.kubernetes.io/name: {{ .Values.kollector.name }}
     app.kubernetes.io/instance: {{ .Release.Name }}

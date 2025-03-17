@@ -5,7 +5,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Values.nodeAgent.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     kubescape.io/ignore: "true"
     kubescape.io/tier: "core"
@@ -36,7 +36,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Values.clamav.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
 data:
   clamd.conf: |-
 {{ .Files.Get "clamav/clamd.conf" | indent 4 }}

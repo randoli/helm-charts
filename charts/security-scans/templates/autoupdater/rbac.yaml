@@ -23,7 +23,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: {{ .Values.helmReleaseUpgrader.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
 roleRef:
   apiGroup: "rbac.authorization.k8s.io"
   kind: ClusterRole

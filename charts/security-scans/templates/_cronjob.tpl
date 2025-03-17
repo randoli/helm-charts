@@ -9,7 +9,7 @@
 
 {{- define "kubescape_daily_scan_cron_tab" -}}
   {{- if eq .Values.kubescapeScheduler.scanSchedule "0 8 * * *" -}}
-    {{- $existingSchedule := (lookup "batch/v1" "CronJob" (include "app-insights-agent.namespace" .) .Values.kubescapeScheduler.name) -}}
+    {{- $existingSchedule := (lookup "batch/v1" "CronJob" (include "randoli-agent.namespace" .) .Values.kubescapeScheduler.name) -}}
     {{- if $existingSchedule -}}
       {{ $existingSchedule.spec.schedule }}
     {{- else -}}
@@ -38,7 +38,7 @@
 
 {{- define "kubevuln_daily_scan_cron_tab" -}}
   {{- if eq .Values.kubevulnScheduler.scanSchedule "0 0 * * *" -}}
-    {{- $existingSchedule := (lookup "batch/v1" "CronJob" (include "app-insights-agent.namespace" .) .Values.kubevulnScheduler.name) -}}
+    {{- $existingSchedule := (lookup "batch/v1" "CronJob" (include "randoli-agent.namespace" .) .Values.kubevulnScheduler.name) -}}
     {{- if $existingSchedule -}}
       {{ $existingSchedule.spec.schedule }}
     {{- else -}}

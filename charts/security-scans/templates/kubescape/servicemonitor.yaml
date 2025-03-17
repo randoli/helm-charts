@@ -4,7 +4,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Values.kubescape.name }}-monitor
-  namespace: {{ .Values.kubescape.serviceMonitor.namespace | default (include "app-insights-agent.namespace" .) }}
+  namespace: {{ .Values.kubescape.serviceMonitor.namespace | default (include "randoli-agent.namespace" .) }}
   labels:
     app: {{ .Values.kubescape.name }}
     kubescape.io/ignore: "true"
@@ -14,7 +14,7 @@ metadata:
 spec:
   namespaceSelector:
     matchNames:
-      -  {{ include "app-insights-agent.namespace" . }}
+      -  {{ include "randoli-agent.namespace" . }}
   selector:
     matchLabels:
       app: {{ .Values.kubescape.name }}

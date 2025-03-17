@@ -45,7 +45,7 @@ subjects:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: olm-operator
+  name: randoli-olm-operator
   namespace: {{ .Values.olmNamespace }}
   labels:
     app: olm-operator

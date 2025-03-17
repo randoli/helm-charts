@@ -4,13 +4,13 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: runtime-monitor
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     app: runtime-monitor
 spec:
   namespaceSelector:
     matchNames:
-      -  {{ include "app-insights-agent.namespace" . }}
+      -  {{ include "randoli-agent.namespace" . }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ .Values.nodeAgent.name }}

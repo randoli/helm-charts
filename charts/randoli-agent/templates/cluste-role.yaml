@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "app-insights-agent.fullname" . }}-role
+  name: {{ include "randoli-agent.fullname" . }}-role
   labels:
     {{- include "labels" . | nindent 4 }}
 rules:
@@ -85,7 +85,7 @@ rules:
       - autoscaling.k8s.io
     resources:
       - verticalpodautoscalers
-{{- if ne .Values.securityScans.mode "OFF" }}
+{{- if ne .Values.observability.security.mode "OFF" }}
   - verbs:
       - get
       - list

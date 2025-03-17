@@ -7,7 +7,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: kubescape-cronjob-template
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     app: {{ .Values.global.cloudConfig }}
     tier: {{ .Values.global.namespaceTier }}

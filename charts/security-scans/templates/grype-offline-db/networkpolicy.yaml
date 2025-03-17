@@ -3,7 +3,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: {{ .Values.grypeOfflineDB.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     app: {{ .Values.grypeOfflineDB.name }}
     tier: {{ .Values.global.namespaceTier }}
@@ -19,7 +19,7 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app.kubernetes.io/instance: {{ include "app-insights-agent.namespace" . }}
+              app.kubernetes.io/instance: {{ include "randoli-agent.namespace" . }}
               app.kubernetes.io/name: {{ .Values.kubevuln.name }}
               tier: {{ .Values.global.namespaceTier }}
       ports:

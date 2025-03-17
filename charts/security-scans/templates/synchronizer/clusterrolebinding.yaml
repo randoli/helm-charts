@@ -13,5 +13,5 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: {{ .Values.synchronizer.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
 {{- end }}

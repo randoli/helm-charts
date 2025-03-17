@@ -2,7 +2,7 @@ apiVersion: batch/v1
     kind: CronJob
     metadata:
       name: {{ .Values.kubescapeScheduler.name }}
-      namespace: {{ include "app-insights-agent.namespace" . }}
+      namespace: {{ include "randoli-agent.namespace" . }}
       labels:
         app: {{ .Values.kubescapeScheduler.name }}
         tier: {{ .Values.global.namespaceTier }}

@@ -1,7 +1,7 @@
 # -- Overwrite the default name of the chart
 nameOverride: "opencost"
 # -- Overwrite all resources name created by the chart
-fullnameOverride: ""
+fullnameOverride: "randoli-cmk-opencost"
 # -- Override the deployment namespace
 namespaceOverride: ""
 

@@ -17,7 +17,7 @@ networkPolicy:
 tag: ""
 
 nameOverride: ""
-fullnameOverride: ""
+fullnameOverride: "randoli-rok-jaeger"
 
 allInOne:
   enabled: true

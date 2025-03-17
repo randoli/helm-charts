@@ -4,7 +4,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Values.nodeAgent.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     app: {{ .Values.nodeAgent.name }}
     app.kubernetes.io/name: {{ .Values.nodeAgent.name }}

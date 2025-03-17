@@ -13,7 +13,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: service-discovery
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role

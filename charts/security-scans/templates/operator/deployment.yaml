@@ -6,7 +6,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.operator.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     app.kubernetes.io/name: {{ .Values.operator.name }}
     app.kubernetes.io/instance: {{ .Release.Name }}
