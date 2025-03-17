@@ -4,7 +4,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: {{ .Values.kubevulnScheduler.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     app: {{ .Values.kubevulnScheduler.name }}
     tier: {{ .Values.global.namespaceTier }}

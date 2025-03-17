@@ -1,7 +1,7 @@
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
-  name: randoli-otel  
+  name: randoli-otel 
 spec:
   mode: deployment
   serviceAccount: randoli-otel-collector

@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "app-insights-agent.fullname" . }}-config
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  name: {{ include "randoli-agent.fullname" . }}-config
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     {{- include "labels" . | nindent 4 }}
 data:
   AGENT_CONTROLLER_DIAL_TIMEOUT: 10000ms
-  APP_NAME: app-insights-agent
+  APP_NAME: randoli-agent
   CLIENT_CERT_PATH: /app/certs/client-cert.pem
   CLIENT_PRIVATE_KEY_PATH: /app/certs/client-key.pem
   CONTEXT_PATH: /
@@ -17,7 +17,7 @@ data:
   {{- if .Values.global.opencost.url }}
   OPENCOST_BACKEND_URL: {{ .Values.global.opencost.url }}
   {{ else }}
-  OPENCOST_BACKEND_URL: http://{{ .Release.Name }}-opencost.{{ .Release.Namespace }}.svc:9003
+  OPENCOST_BACKEND_URL: http://randoli-cmk-opencost.{{ .Release.Namespace }}.svc:9003
   {{ end -}}
   {{- if .Values.global.prometheus.install }}
   PROMETHEUS_URL: 'http://randoli-prometheus.{{ .Release.Namespace }}.svc:80'
@@ -28,9 +28,9 @@ data:
   TLS_ENABLED: 'true'
   RIGHTSIZING_RECOMMENDATIONS_ENABLED: '{{ .Values.costManagement.enabled }}'
   RIGHTSIZING_INSTALL_VPA: '{{ .Values.costManagement.vpaOperator.install }}'
-  SECURITY_SCANS_MODE: '{{ .Values.securityScans.mode }}'
-  SECURITY_SCANS_CRON_SPEC: '{{ .Values.securityScans.cronSpec }}'
-  SECURITY_SCANS_INSTALL_KUBESCAPE: '{{ .Values.securityScans.installKubescape }}'
+  SECURITY_SCANS_MODE: '{{ .Values.observability.security.mode }}'
+  SECURITY_SCANS_CRON_SPEC: '{{ .Values.observability.security.cronSpec }}'
+  SECURITY_SCANS_INSTALL_KUBESCAPE: '{{ .Values.observability.security.enabled }}'
   COLLECT_LOGS: '{{ .Values.logs.shipLogSamples.enabled }}'
   ENABLE_DEFAULT_TIMELINE_PROMETHEUS_QUERIES: '{{ .Values.anomalyDetection.defaultsQueries.enabled }}'
   PROMETHEUS_CUSTOM_QUERIES_PATH: '{{ .Values.anomalyDetection.customQueries.path }}'
@@ -44,13 +44,10 @@ data:
   RESOURCES_LIMITS_MEMORY: '{{ .Values.resources.limits.memory }}'
   RESOURCES_REQUESTS_CPU: '{{ .Values.resources.requests.cpu }}'
   RESOURCES_REQUESTS_MEMORY: '{{ .Values.resources.requests.memory }}'
-  PIXIE_INSTALL: '{{ .Values.telemetry.pixie.install }}'
-  PIXIE_CLOUD_ADDRESS: '{{ .Values.telemetry.pixie.cloudAddr }}'
-  PIXIE_CLUSTER_NAME: '{{ .Values.telemetry.pixie.clusterName }}'
-  PIXIE_DEPLOY_KEY: '{{ .Values.telemetry.pixie.deployKey }}'
+  PIXIE_INSTALL: '{{ .Values.observability.pixie.install }}'
   LOG_ANALYZERS_ENABLED: '{{ .Values.logs.analyzers.enabled }}'
   VECTOR_INSTALL: '{{ .Values.logs.vector.install }}'
-  VECTOR_HTTP_SINKER_URL: 'http://{{ include "app-insights-agent.fullname" . }}.{{ include "app-insights-agent.namespace" . }}:8080/log-sink/'
+  VECTOR_HTTP_SINKER_URL: 'http://{{ include "randoli-agent.fullname" . }}.{{ include "randoli-agent.namespace" . }}:8080/log-sink/'
   PROMETHEUS_INSTALL: '{{ .Values.global.prometheus.install }}'
   TEKTON_PIPELINE_ENABLED: '{{ .Values.tektonPipeline.enabled }}'
   JAEGER_QUERY_SVC_GRPC: randoli-rok-jaeger-query.{{ .Release.Namespace }}:16685

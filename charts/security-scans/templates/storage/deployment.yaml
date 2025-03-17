@@ -4,7 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.storage.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     kubescape.io/ignore: "true"
     kubescape.io/tier: "core"

@@ -3,7 +3,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ .Values.helmReleaseUpgrader.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     kubescape.io/ignore: "true"
   annotations:

@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "app-insights-agent.fullname" . }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  name: {{ include "randoli-agent.fullname" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
-    app.kubernetes.io/name: {{ include "app-insights-agent.name" . }}
+    app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: app-insights-agent
+    app.kubernetes.io/component: randoli-agent
     {{- include "labels" . | nindent 4 }}
   {{- with .Values.statefulSetAnnotations }}
   annotations:
@@ -16,20 +16,20 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "app-insights-agent.name" . }}
+      app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
-      app.kubernetes.io/component: app-insights-agent
+      app.kubernetes.io/component: randoli-agent
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "app-insights-agent.name" . }}
+        app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: app-insights-agent
+        app.kubernetes.io/component: randoli-agent
     spec:
       volumes:
         - name: agent-pv
           persistentVolumeClaim:
-            claimName: {{ include "app-insights-agent.fullname" . }}
+            claimName: {{ include "randoli-agent.fullname" . }}
         - name: tls-certs
           secret:
             secretName: {{ .Values.global.secrets.cert }}
@@ -51,7 +51,7 @@ spec:
           {{- toYaml .Values.extraVolumes | nindent 8}}
         {{- end }}
       containers:
-        - name: app-insights-agent
+        - name: randoli-agent
           {{- with .Values.image }}
           image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{ .digest }}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
           {{- end }}
@@ -60,7 +60,7 @@ spec:
             - secretRef:
                 name: {{ .Values.global.secrets.config }}
             - configMapRef:
-                name: {{ include "app-insights-agent.fullname" . }}-config
+                name: {{ include "randoli-agent.fullname" . }}-config
             {{- if .Values.extraEnvFrom }}
               {{- toYaml .Values.extraEnvFrom | nindent 12 }} 
             {{- end }}
@@ -112,8 +112,8 @@ spec:
               {{- toYaml .Values.extraEnv | nindent 12 }}
             {{- end }}
           {{- end }}
-      serviceAccountName: {{ template "app-insights-agent.serviceAccountName" . }}
-      serviceAccount: {{ template "app-insights-agent.serviceAccountName" . }}
+      serviceAccountName: {{ template "randoli-agent.serviceAccountName" . }}
+      serviceAccount: {{ template "randoli-agent.serviceAccountName" . }}
       {{- with .Values.tolerations }}
       tolerations: {{- toYaml . | nindent 8 }}
       {{- end }}

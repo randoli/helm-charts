@@ -79,6 +79,6 @@ clamAV:
 
 {{- end -}}
 
-{{- define "app-insights-agent.namespace" -}}
+{{- define "randoli-agent.namespace" -}}
   {{ .Values.namespace | default .Release.Namespace }}
 {{- end -}}

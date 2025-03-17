@@ -4,7 +4,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Values.kubescape.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     app: {{ .Values.kubescape.name }}
     kubescape.io/ignore: "true"

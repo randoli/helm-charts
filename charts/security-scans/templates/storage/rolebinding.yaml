@@ -15,5 +15,5 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: {{ .Values.storage.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
 {{- end }}

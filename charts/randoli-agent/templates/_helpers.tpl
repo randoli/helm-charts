@@ -1,12 +1,12 @@
-{{- define "app-insights-agent.namespace" -}}
+{{- define "randoli-agent.namespace" -}}
   {{ .Values.namespace | default .Release.Namespace }}
 {{- end -}}
 
-{{- define "app-insights-agent.name" -}}
+{{- define "randoli-agent.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "app-insights-agent.fullname" -}}
+{{- define "randoli-agent.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -40,9 +40,9 @@ helm.sh/chart: {{ include "chartName" . }}
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "app-insights-agent.serviceAccountName" -}}
+{{- define "randoli-agent.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-    {{ default (include "app-insights-agent.fullname" .) .Values.serviceAccount.name }}
+    {{ default (include "randoli-agent.fullname" .) .Values.serviceAccount.name }}
 {{- else -}}
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
@@ -54,4 +54,16 @@ Create the name of the service account to use
   {{- else if .Values.global.prometheus.url -}}
     {{ tpl .Values.global.prometheus.url . }}
   {{- end -}}
+{{- end -}}
+
+
+{{/*
+Dependencies Logic
+*/}}
+{{- define "enable.vpa.operator" -}}
+{{- if and .Values.costManagement.enabled .Values.costManagement.vpaOperator.install -}}
+true
+{{- else -}}
+false
+{{- end -}}
 {{- end -}}

@@ -5,7 +5,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ .Values.serviceDiscovery.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     app.kubernetes.io/name: {{ .Values.serviceDiscovery.name }}
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -69,7 +69,7 @@ spec:
 {{ toYaml .Values.serviceDiscovery.resources | indent 14 }}
         args:
           - |
-            kubectl create configmap {{ .Values.global.cloudConfig }} --from-literal=metrics=$(jq -r '.response.metrics' /data/services.json) --from-file=services=/data/services.json -n {{ include "app-insights-agent.namespace" . }} --dry-run=client -o yaml | kubectl patch configmap {{ .Values.global.cloudConfig }} --patch "$(cat -)" -n {{ include "app-insights-agent.namespace" . }}
+            kubectl create configmap {{ .Values.global.cloudConfig }} --from-literal=metrics=$(jq -r '.response.metrics' /data/services.json) --from-file=services=/data/services.json -n {{ include "randoli-agent.namespace" . }} --dry-run=client -o yaml | kubectl patch configmap {{ .Values.global.cloudConfig }} --patch "$(cat -)" -n {{ include "randoli-agent.namespace" . }}
         volumeMounts:
         - name: shared-data
           mountPath: /data

@@ -2,7 +2,7 @@ apiVersion: batch/v1
     kind: CronJob
     metadata:
       name: {{ .Values.registryScanScheduler.name }}
-      namespace: {{ include "app-insights-agent.namespace" . }}
+      namespace: {{ include "randoli-agent.namespace" . }}
       labels:
         app: {{ .Values.registryScanScheduler.name }}
         kubescape.io/ignore: "true"

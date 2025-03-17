@@ -18,4 +18,6 @@ data:
   {{ $key }}: |-
     {{- $value | nindent 4 }}
   {{- end }}
+  {{- include "prometheus.alerts.route" . | nindent 4 -}}
+  {{- include "prometheus.alerts.receiver" . | nindent 4 -}}
 {{- end }}

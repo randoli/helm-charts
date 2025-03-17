@@ -4,14 +4,14 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Values.operator.name }}
-  namespace: {{ include "app-insights-agent.namespace" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     kubescape.io/ignore: "true"
     kubescape.io/tier: "core"
 data:
   config.json: |
     {
-        "namespace": "{{ include "app-insights-agent.namespace" . }}",
+        "namespace": "{{ include "randoli-agent.namespace" . }}",
         "triggersecurityframework": {{ .Values.operator.triggerSecurityFramework }}
     }
 {{- end }}

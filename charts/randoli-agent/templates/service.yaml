@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "app-insights-agent.fullname" . }}
+  name: {{ include "randoli-agent.fullname" . }}
   labels:
     {{- include "labels" . | nindent 4 }}
 spec:
@@ -10,7 +10,7 @@ spec:
       port: 8080
       targetPort: 8080
   selector:
-    app.kubernetes.io/name: {{ include "app-insights-agent.name" . }}
+    app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: app-insights-agent
+    app.kubernetes.io/component: randoli-agent
   type: ClusterIP

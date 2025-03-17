@@ -19,7 +19,7 @@ helm install randoli/app-director-agent-operator --generate-name -n <namespace_n
 
 Install the App Insights Agent Standalone chart
 ```
-helm install randoli/app-insights-agent --generate-name
+helm install randoli/randoli-agent --generate-name
 ```
 
 For more details see [App Insights agent Documentation](https://docs.insights.randoli.io/agent/overview).

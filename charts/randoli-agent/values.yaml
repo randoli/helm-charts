@@ -1,12 +1,6 @@
-
-
-
-
-
 global:
   opencost:
-    install: true
-    url: ""
+    url: 
   openshift:
     enabled: false
   prometheus:
@@ -20,13 +14,18 @@ global:
     tlsCertConfigmapName: ""
     tlsCertConfigmapKey: ""
 
+  alerts:
+    slack:
+      channel: 
+      api_url: 
+
   secrets:
     cert: insights-agent-cert
     config: insights-agent-secret
 
 
 observability:
-  enabled: false
+  enabled: true
   otel:
     operator:
       install: true
@@ -59,7 +58,7 @@ image:
 imagePullSecrets: []
 
 labels:
-  app: app-insights-agent
+  app: randoli-agent
 
 deploymentAnnotations: {}
 
@@ -92,40 +91,6 @@ anomalyDetection:
     # Path for user defined queries, queries should be in YAML format
     path: /prometheus
 
-# costManagement:
-#   # opencost:
-#   #   # If enabled, OpenCost will be deployed
-#   #   install: true
-#   #   # Only required if installOpencost is false
-#   #   # OpenCost URL for instance already running and not installed through this chart
-#   #   url: 
-#   #   metrics:
-#   #     serviceMonitor:
-#   #       enabled: true
-
-#   rightsizingRecommendations:
-#     enabled: false
-#     # If enabled, VerticalPodAutoscaler will be installed
-#     installVpa: false
-
-securityScans:
-  # Install kubescape-operator
-  # Kubescape-operator is required to run security scans in the cluster
-  installKubescape: false
- 
-  # Default value is OFF
-  # OFF|INTERVAL_SCANNING
-  mode: 'OFF'
-  # Only required if INTERVAL_SCANNING is set as mode
-  cronSpec: '0 10,20 * * *'
-
-  # -- set the image pull secrets for Kubescape to be able to pull from private image registry
-  imagePullSecrets: ""
-
-telemetry:
-  pixie:
-    # If enabled, pixie will be installed
-    install: false
 
 tektonPipeline:
   # Identifying tekton pipeline resource
@@ -161,11 +126,6 @@ serviceAccount:
   annotations: {}
   labels: {}
 
-kube-prometheus-stack:
-  prometheus:
-    prometheusSpec:
-      serviceMonitorSelectorNilUsesHelmValues: false
-
 tracing:
   provisionDataStore:
     cassandra: false
@@ -187,4 +147,6 @@ tracing:
   collector:
     enabled: false
   query:
-    enabled: false      
+    enabled: false
+
+  
