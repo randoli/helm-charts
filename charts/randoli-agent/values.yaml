@@ -38,7 +38,7 @@ observability:
     cronSpec: '0 10,20 * * *'
     imagePullSecrets: ""
   pixie:
-    install: true ## TODO Change to false by default.  
+    install: false 
 costManagement:
   enabled: false
   vpaOperator:
