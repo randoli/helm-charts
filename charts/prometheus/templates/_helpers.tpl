@@ -239,11 +239,67 @@ Define prometheus.server.remoteRead producing a list of remoteRead configuration
 RANDOLI - Define prometheus.opencost.url by getting the opencost url based on the agent installations 
 */}}
 {{- define "prometheus.opencost.url" -}}
-{{- if .Values.global.opencost.install -}}
-{{- printf "%s-opencost.%s.svc:9003" .Release.Name .Release.Namespace -}}
-{{- else -}}
+{{- if .Values.global.opencost.url -}}
 {{- print .Values.global.opencost.url | replace "http://" ""  -}}
+{{- else -}}
+{{- printf "randoli-cmk-opencost.%s.svc:9003" .Release.Namespace -}}
 {{- end -}}
 {{- end -}}
 
 
+# {{/*
+# RANDOLI - Define AlertManager Route 
+# */}}
+{{- define "prometheus.alerts.route" -}}
+{{- if and .Values.global.alerts.slack.channel .Values.global.alerts.slack.api_url  -}}
+route:
+  group_by: ["alertName", "cluster", "namespace", "deployment"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 3h
+  receiver: "randoli-alerts-slack-channel"
+  routes:
+    - matchers:
+        - prometheus=~".+"
+      receiver: "null"
+{{- else -}}
+route:
+  group_wait: 10s
+  group_interval: 5m
+  receiver: default-receiver
+  repeat_interval: 3h
+{{- end -}}
+{{- end -}}
+
+
+{{/*
+RANDOLI - Define AlertManager Receiver 
+*/}}
+{{- define "prometheus.alerts.receiver" -}}
+{{- if and .Values.global.alerts.slack.channel .Values.global.alerts.slack.api_url  -}}
+receivers:
+  - name: default-receiver
+  - name: "randoli-alerts-slack-channel"
+    slack_configs:
+      - api_url: {{.Values.global.alerts.slack.api_url}}
+        channel: {{.Values.global.alerts.slack.channel}}
+        icon_url: "https://cdn.prod.website-files.com/66e2aa7f74a05584d1dc32d8/67b4ede66602c10c41838925_logo_48px.png"
+        username: Randoli Alert Bot
+        text: |-
+          *Cluster:* {{ "{{" }} .CommonLabels.cluster {{ "}}" }}
+          *Namespace:* {{ "{{" }} .CommonLabels.namespace {{ "}}" }}
+          *Deployment:* {{ "{{" }} .CommonLabels.deployment {{ "}}" }}
+          *Description:* {{ "{{" }} .CommonAnnotations.description {{ "}}" }}
+        footer: "Occurred At {{ "{{" }} .CommonAnnotations.occurredAt {{ "}}" }}"
+        actions:
+          - type: "button"
+            text: "View Issue"
+            url: "{{ "{{" }} .CommonAnnotations.issueUrl {{ "}}" }}"
+{{- else -}}
+receivers:
+  - name: default-receiver
+    # slack_configs:
+    #  - channel: '@you'
+    #    send_resolved: true
+{{- end -}}
+{{- end -}}

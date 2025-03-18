@@ -1,0 +1,14 @@
+apiVersion: v2
+appVersion: 1.1.2
+name: rightsizing
+description: Vertical Pod Autoscaler Services and CustomResourceDefinitions
+type: application
+version: 1.0.0
+sources:
+  - https://github.com/kubernetes/autoscaler
+dependencies:
+  - name: common
+    version: 2.19.1
+    repository: https://charts.bitnami.com/bitnami/
+annotations:
+  kubeVersion: ">=1.24"

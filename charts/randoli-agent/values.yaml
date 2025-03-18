@@ -1,0 +1,152 @@
+global:
+  opencost:
+    url: 
+  openshift:
+    enabled: false
+  prometheus:
+    install: true
+    url: ""
+    secretName: ""
+    usernameKey: ""
+    passwordKey: ""
+    bearerTokenKey: token
+    tlsInsecureSkipVerify: true
+    tlsCertConfigmapName: ""
+    tlsCertConfigmapKey: ""
+
+  alerts:
+    slack:
+      channel: 
+      api_url: 
+
+  secrets:
+    cert: insights-agent-cert
+    config: insights-agent-secret
+
+
+observability:
+  enabled: false
+  otel:
+    operator:
+      install: true
+  vector:
+    install: true
+  security:
+    enabled: true
+    # OFF|INTERVAL_SCANNING
+    mode: 'INTERVAL_SCANNING'
+    cronSpec: '0 10,20 * * *'
+    imagePullSecrets: ""
+  pixie:
+    install: false 
+costManagement:
+  enabled: false
+  vpaOperator:
+    install: true   
+
+image:
+  registry: docker.io
+  repository: randoli/insights-agent
+  tag: "1.13"
+  digest: ""
+  ## Specify a imagePullPolicy
+  ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+  ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  ##
+  pullPolicy: Always
+
+imagePullSecrets: []
+
+labels:
+  app: randoli-agent
+
+deploymentAnnotations: {}
+
+resources:
+  limits:
+    memory: 2Gi
+  requests:
+    cpu: 50m
+    memory: 512Mi
+
+logs:
+  shipLogSamples:
+    # If enabled, the agent will query for container logs to augment events
+    enabled: true
+  analyzers:
+    enabled: true
+  vector:
+    install: true
+
+anomalyDetection:
+  # Defaults anomaly detection list contains detections for:
+  # - memory usage spikes
+  # - postgres transactions latency spikes
+  # - postgres active connections spike
+  # - JVM heap memory spike
+  # - Golang heap memory usage spike
+  defaultsQueries:
+    enabled: true
+  customQueries:
+    # Path for user defined queries, queries should be in YAML format
+    path: /prometheus
+
+
+tektonPipeline:
+  # Identifying tekton pipeline resource
+  enabled: false
+
+# -- Toleration labels for pod assignment
+tolerations: []
+# -- Node labels for pod assignment
+nodeSelector: {}
+# -- Affinity settings for pod assignment
+affinity: {}
+# -- Assign custom TopologySpreadConstraints rules
+topologySpreadConstraints: []
+
+extraEnv: []
+extraEnvFrom: []
+
+extraVolumes: []
+  # - name: extra-queries
+  #   configMap:
+  #     name: extra-queries
+extraVolumeMounts: []
+  # - name: extra-queries
+  #   mountPath: /prometheus
+
+securityContext: {}
+
+serviceAccount:
+  create: true
+  # If not set and create is true, a name is generated using the fullname template
+  # name: ""
+  automountServiceAccountToken: true
+  annotations: {}
+  labels: {}
+
+tracing:
+  provisionDataStore:
+    cassandra: false
+
+  allInOne:
+    enabled: true
+    args:
+      - "--badger.span-store-ttl=2h"
+  storage:
+    type: badger
+    badger:
+      ephemeral: false
+      persistence:
+        mountPath: /mnt/data
+        useExistingPvcName: "randoli-jaeger-storage"
+        size: 10Gi
+  agent:
+    enabled: false
+  collector:
+    enabled: false
+  query:
+    enabled: false
+
+  

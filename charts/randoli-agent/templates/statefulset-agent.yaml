@@ -1,0 +1,128 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "randoli-agent.fullname" . }}
+  namespace: {{ include "randoli-agent.namespace" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: randoli-agent
+    {{- include "labels" . | nindent 4 }}
+  {{- with .Values.statefulSetAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: randoli-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: randoli-agent
+    spec:
+      volumes:
+        - name: agent-pv
+          persistentVolumeClaim:
+            claimName: {{ include "randoli-agent.fullname" . }}
+        - name: tls-certs
+          secret:
+            secretName: {{ .Values.global.secrets.cert }}
+            items:
+              - key: client-cert.pem
+                path: client-cert.pem
+              - key: client-key.pem
+                path: client-key.pem
+            defaultMode: 420
+        {{- if and .Values.global.prometheus.tlsCertConfigmapName .Values.global.prometheus.tlsCertConfigmapKey }}
+        - name: prometheus-tls-cert
+          configMap:
+            name: {{ .Values.global.prometheus.tlsCertConfigmapName }}
+            items:
+              - key: {{ .Values.global.prometheus.tlsCertConfigmapKey }}
+                path: prometheus-service.crt
+        {{- end }}
+        {{- if .Values.extraVolumes }}
+          {{- toYaml .Values.extraVolumes | nindent 8}}
+        {{- end }}
+      containers:
+        - name: randoli-agent
+          {{- with .Values.image }}
+          image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{ .digest }}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.global.secrets.config }}
+            - configMapRef:
+                name: {{ include "randoli-agent.fullname" . }}-config
+            {{- if .Values.extraEnvFrom }}
+              {{- toYaml .Values.extraEnvFrom | nindent 12 }} 
+            {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: agent-pv
+              mountPath: /persistence
+            - name: tls-certs
+              mountPath: /app/certs
+            {{- if and .Values.global.prometheus.tlsCertConfigmapName .Values.global.prometheus.tlsCertConfigmapKey }}
+            - mountPath: /etc/ssl/certs/prometheus-service.crt
+              name: prometheus-tls-cert
+              subPath: prometheus-service.crt
+              readOnly: false
+            {{- end }}
+            {{- if .Values.extraVolumeMounts }}
+              {{- toYaml .Values.extraVolumeMounts | nindent 12 }} 
+            {{- end }}
+          {{- if or .Values.extraEnv .Values.global.prometheus.secretName }}
+          env:
+            {{- if and .Values.global.prometheus.secretName .Values.global.prometheus.usernameKey }}
+            - name: PROMETHEUS_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.prometheus.secretName }}
+                  key: {{ .Values.global.prometheus.usernameKey }}
+            {{- end }}
+            {{- if and .Values.global.prometheus.secretName .Values.global.prometheus.passwordKey }}
+            - name: PROMETHEUS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.prometheus.secretName }}
+                  key: {{ .Values.global.prometheus.passwordKey }}
+            {{- else if and .Values.global.prometheus.secretName .Values.global.prometheus.bearerTokenKey }}
+            - name: PROMETHEUS_BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.prometheus.secretName }}
+                  key: {{ .Values.global.prometheus.bearerTokenKey }}
+            {{- end }}
+            {{- if .Values.extraEnv }}
+              {{- toYaml .Values.extraEnv | nindent 12 }}
+            {{- end }}
+          {{- end }}
+      serviceAccountName: {{ template "randoli-agent.serviceAccountName" . }}
+      serviceAccount: {{ template "randoli-agent.serviceAccountName" . }}
+      {{- with .Values.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with.Values.topologySpreadConstraints }}
+      topologySpreadConstraints: {{- toYaml . | nindent 8 }}
+      {{- end }}

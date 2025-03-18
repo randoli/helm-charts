@@ -1,0 +1,217 @@
+{{- $checksums := fromYaml (include "checksums" .) }}
+{{- $components := fromYaml (include "components" .) }}
+{{- if $components.nodeAgent.enabled }}
+{{- $no_proxy_envar_list := (include "no_proxy_envar_list" .) -}}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ .Values.nodeAgent.name }}
+  namespace: {{ include "randoli-agent.namespace" . }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.nodeAgent.name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app: {{ .Values.nodeAgent.name }}
+    tier: {{ .Values.global.namespaceTier }}
+    kubescape.io/ignore: "true"
+    kubescape.io/tier: "core"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.nodeAgent.name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      tier: {{ .Values.global.namespaceTier }}
+  template:
+    metadata:
+      annotations:
+        checksum/node-agent-config: {{ $checksums.nodeAgentConfig }}
+        checksum/cloud-secret: {{ $checksums.cloudSecret }}
+        checksum/cloud-config: {{ $checksums.cloudConfig }}
+      {{- if ne .Values.global.proxySecretFile "" }}
+        checksum/proxy-config: {{ $checksums.proxySecret }}
+      {{- end }}
+        container.apparmor.security.beta.kubernetes.io/node-agent: unconfined
+      {{- if eq .Values.configurations.prometheusAnnotations "enable" }}
+        #prometheus.io/path: /metrics
+        #prometheus.io/port: "8080"
+        #prometheus.io/scrape: "true"
+        randoli.prometheus.io/path: /metrics
+        randoli.prometheus.io/port: "8080"
+        randoli.prometheus.io/scrape: "true"
+      {{- end }}
+      labels:
+        kubescape.io/tier: "core"
+        app.kubernetes.io/name: {{ .Values.nodeAgent.name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        tier: {{ .Values.global.namespaceTier }}
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+        app: {{ .Values.nodeAgent.name }}
+        alt-name: {{ .Values.nodeAgent.name }} # Why?
+      {{- if $components.otelCollector.enabled }}
+        otel: enabled
+      {{- end }}
+    spec:
+      {{- if .Values.configurations.priorityClass.enabled }}
+      priorityClassName: kubescape-critical
+      {{- end }}
+      serviceAccountName: {{ .Values.nodeAgent.name }}
+      automountServiceAccountToken: true
+      hostPID: true
+      volumes:
+      {{- if .Values.nodeAgent.volumes }}
+      {{- toYaml .Values.nodeAgent.volumes | nindent 8 }}
+      {{- end }}
+      {{- if .Values.volumes }}
+      {{- toYaml .Values.volumes | nindent 8 }}
+      {{- end }}
+      {{- if .Values.clamav.volumes }}
+      {{- toYaml .Values.clamav.volumes | nindent 8 }}
+      {{- end }}
+        - name: {{ $components.cloudSecret.name }}
+          secret:
+            secretName: {{ $components.cloudSecret.name }}
+        - name: {{ .Values.global.cloudConfig }}
+          configMap:
+            name: {{ .Values.global.cloudConfig }}
+            items:
+              - key: "clusterData"
+                path: "clusterData.json"
+              {{- if $components.serviceDiscovery.enabled }}
+              - key: "services"
+                path: "services.json"
+              {{- end }}
+        - name: config
+          configMap:
+            name: {{ .Values.nodeAgent.name }}
+            items:
+              - key: "config.json"
+                path: "config.json"
+
+
+        {{- if ne .Values.global.proxySecretFile "" }}
+        - name: proxy-secret
+          secret:
+            secretName: {{ .Values.global.proxySecretName }}
+        {{- end }}
+      containers:
+        {{- if $components.clamAV.enabled }}
+        - name: {{ .Values.clamav.name }}
+          image: "{{ .Values.clamav.image.repository }}:{{ .Values.clamav.image.tag }}"
+          imagePullPolicy: {{ .Values.clamav.image.pullPolicy }}
+          securityContext:
+            runAsUser: 0
+            capabilities:
+              add:
+                - SYS_PTRACE
+          resources:
+{{ toYaml .Values.clamav.resources | indent 12 }}
+          {{- if .Values.clamav.volumeMounts }}
+          volumeMounts:
+            {{- toYaml .Values.clamav.volumeMounts | nindent 10 }}
+          {{- end }}
+        {{- end }}
+        - name: {{ .Values.nodeAgent.name }}
+          image: "{{ .Values.nodeAgent.image.repository }}:{{ .Values.nodeAgent.image.tag }}"
+          imagePullPolicy: {{ .Values.nodeAgent.image.pullPolicy }}
+          resources:
+{{ toYaml .Values.nodeAgent.resources | indent 12 }}
+          env:
+            - name: GOMEMLIMIT
+              value: "{{ .Values.nodeAgent.gomemlimit }}"
+            - name: HOST_ROOT
+              value: "/host"
+            - name: KS_LOGGER_LEVEL
+              value: "{{ .Values.logger.level }}"
+            - name: KS_LOGGER_NAME
+              value: "{{ .Values.logger.name }}"
+            {{- if $components.otelCollector.enabled }}
+            - name: OTEL_COLLECTOR_SVC
+              value: "otel-collector:4318"
+            {{- end }}
+            {{- if $components.clamAV.enabled }}
+            - name: CLAMAV_SOCKET
+              value: "/clamav/clamd.sock"
+            {{- end }}
+            {{- if ne .Values.global.overrideRuntimePath "" }}
+            - name: RUNTIME_PATH
+              value: "{{ .Values.global.overrideRuntimePath }}"
+            {{- end }}
+            {{- if ne .Values.global.httpsProxy "" }}
+            - name: HTTPS_PROXY
+              value: "{{ .Values.global.httpsProxy }}"
+            - name : no_proxy
+              value: "{{ $no_proxy_envar_list }}"
+            {{- end }}
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NAMESPACE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            {{- range .Values.nodeAgent.env }}
+            - name: {{ .name }}
+            {{- if .value }}
+              value: "{{ .value }}"
+            {{- end }}
+            {{- end }}
+          securityContext:
+            runAsUser: 0
+            privileged: {{ .Values.nodeAgent.privileged }}
+            capabilities:
+              add:
+                - SYS_ADMIN
+                - SYS_PTRACE
+                - NET_ADMIN
+                - SYSLOG
+                - SYS_RESOURCE
+                - IPC_LOCK
+                - NET_RAW
+            seLinuxOptions:
+              type: {{ .Values.nodeAgent.seLinuxType }}
+          volumeMounts:
+          {{- if .Values.volumeMounts }}
+          {{- toYaml .Values.volumeMounts | nindent 10 }}
+          {{- end }}
+          {{- if .Values.nodeAgent.volumeMounts }}
+          {{- toYaml .Values.nodeAgent.volumeMounts | nindent 10 }}
+          {{- end }}
+          - name: {{ $components.cloudSecret.name }}
+            mountPath: /etc/credentials
+            readOnly: true
+          - name: {{ .Values.global.cloudConfig }}
+            mountPath: /etc/config/clusterData.json
+            readOnly: true
+            subPath: "clusterData.json"
+          - name: config
+            mountPath: /etc/config/config.json
+            readOnly: true
+            subPath: "config.json"
+          {{- if ne .Values.global.proxySecretFile "" }}
+          - name: proxy-secret
+            mountPath: /etc/ssl/certs/proxy.crt
+            subPath: proxy.crt
+          {{- end }}
+      nodeSelector:
+      {{- if .Values.nodeAgent.nodeSelector }}
+      {{- toYaml .Values.nodeAgent.nodeSelector | nindent 8 }}
+      {{- else if .Values.customScheduling.nodeSelector }}
+      {{- toYaml .Values.customScheduling.nodeSelector | nindent 8 }}
+      {{- end }}
+      affinity:
+      {{- if .Values.nodeAgent.affinity }}
+      {{- toYaml .Values.nodeAgent.affinity | nindent 8 }}
+      {{- else if .Values.customScheduling.affinity }}
+      {{- toYaml .Values.customScheduling.affinity | nindent 8 }}
+      {{- end }}
+      tolerations:
+      {{- if .Values.nodeAgent.tolerations }}
+      {{- toYaml .Values.nodeAgent.tolerations | nindent 8 }}
+      {{- else if .Values.customScheduling.tolerations }}
+      {{- toYaml .Values.customScheduling.tolerations | nindent 8 }}
+      {{- end }}
+{{- end }}

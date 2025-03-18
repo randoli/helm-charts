@@ -1,0 +1,46 @@
+{{- $components := fromYaml (include "components" .) }}
+{{- $configurations := fromYaml (include "configurations" .) }}
+{{- if $components.nodeAgent.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.nodeAgent.name }}
+  namespace: {{ include "randoli-agent.namespace" . }}
+  labels:
+    kubescape.io/ignore: "true"
+    kubescape.io/tier: "core"
+data:
+  config.json: |
+    {
+        "applicationProfileServiceEnabled": {{ $configurations.runtimeObservability }},
+        "relevantCVEServiceEnabled": {{ eq .Values.capabilities.relevancy "enable" }},
+        "prometheusExporterEnabled": {{ eq .Values.nodeAgent.config.prometheusExporter "enable" }},
+        "runtimeDetectionEnabled": {{ eq .Values.capabilities.runtimeDetection "enable" }},
+        "networkServiceEnabled": {{ eq .Values.capabilities.networkPolicyService "enable" }},
+        "malwareDetectionEnabled": {{ eq .Values.capabilities.malwareDetection "enable" }},
+        "nodeProfileServiceEnabled": {{ eq .Values.capabilities.nodeProfileService "enable" }},
+        "initialDelay": "{{ .Values.nodeAgent.config.learningPeriod }}",
+        "updateDataPeriod": "{{ .Values.nodeAgent.config.updatePeriod }}",
+        "nodeProfileInterval": "{{ .Values.nodeAgent.config.nodeProfileInterval }}",
+        "maxSniffingTimePerContainer": "{{ .Values.nodeAgent.config.maxLearningPeriod }}",
+        "exporters": {
+          "httpExporterConfig": {{- .Values.nodeAgent.config.httpExporterConfig | toJson }},
+          "alertManagerExporterUrls": {{- .Values.nodeAgent.config.alertManagerExporterUrls | toJson }},
+          "stdoutExporter": {{- .Values.nodeAgent.config.stdoutExporter }},
+          "syslogExporterURL": "{{- .Values.nodeAgent.config.syslogExporterURL }}"
+        }
+    }
+---
+{{- if $components.clamAV.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.clamav.name }}
+  namespace: {{ include "randoli-agent.namespace" . }}
+data:
+  clamd.conf: |-
+{{ .Files.Get "clamav/clamd.conf" | indent 4 }}
+  freshclam.conf: |-
+{{ .Files.Get "clamav/freshclam.conf" | indent 4 }}
+{{- end}}
+{{- end }}

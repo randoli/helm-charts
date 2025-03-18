@@ -1,0 +1,128 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "randoli-agent.fullname" . }}-role
+  labels:
+    {{- include "labels" . | nindent 4 }}
+rules:
+  - verbs:
+      - list
+      - watch
+      - get
+    apiGroups:
+      - ''
+    resources:
+      - nodes
+      - namespaces
+      - services
+      - persistentvolumes
+  - verbs:
+      - list
+    apiGroups:
+      - storage.k8s.io
+    resources:
+      - storageclasses
+  - verbs:
+      - list
+      - watch
+    apiGroups:
+      - ''
+    resources:
+      - events
+      - configmaps
+  - verbs:
+      - list
+      - watch
+      - get
+    apiGroups:
+      - 'apps'
+      - core.strimzi.io
+    resources:
+      - pods
+      - deployments
+      - replicasets
+      - statefulsets
+      - daemonsets
+      - strimzipodsets
+  - verbs:
+      - get
+    apiGroups:
+      - metrics.k8s.io
+    resources:
+      - nodes
+  - verbs:
+      - get
+      - list
+      - watch
+    apiGroups:
+      - ''
+    resources:
+      - pods
+  - verbs:
+      - get
+    apiGroups:
+      - ''
+    resources:
+      - pods/log
+  - verbs:
+      - list
+    apiGroups:
+      - batch
+    resources:
+      - cronjobs
+      - jobs
+  - verbs:
+      - get
+    apiGroups:
+      - autoscaling
+    resources:
+      - horizontalpodautoscalers
+  - verbs:
+      - create
+      - delete
+      - list
+    apiGroups:
+      - autoscaling.k8s.io
+    resources:
+      - verticalpodautoscalers
+{{- if ne .Values.observability.security.mode "OFF" }}
+  - verbs:
+      - get
+      - list
+      - watch
+    apiGroups:
+      - spdx.softwarecomposition.kubescape.io
+    resources:
+      - workloadconfigurationscans
+      - workloadconfigurationscansummaries
+      - vulnerabilitymanifestsummaries
+      - vulnerabilitymanifests
+      - vulnerabilitysummaries
+{{ end }}
+{{- if .Values.logs.analyzers.enabled }}
+  - verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+    apiGroups:
+      - observability.kaasops.io
+    resources:
+      - vectorpipelines
+      - clustervectorpipelines
+{{ end }}
+{{- if .Values.tektonPipeline.enabled }}
+  - verbs:
+      - list
+      - watch
+      - get
+    apiGroups:
+      - tekton.dev
+    resources:
+      - pipelineruns
+      - pipelines
+      - taskruns
+{{ end }}

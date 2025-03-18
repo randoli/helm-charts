@@ -7,5 +7,5 @@ To update existing charts, make sure to change the chart version beforehand.
 
 As an example, to publish the agent, run this:
 ```
-helm package charts/app-insights-agent 
+helm package charts/randoli-agent 
 ```

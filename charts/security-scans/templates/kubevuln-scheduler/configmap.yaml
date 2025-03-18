@@ -1,0 +1,16 @@
+{{- $components := fromYaml (include "components" .) }}
+{{- if $components.kubevulnScheduler.enabled }}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ .Values.kubevulnScheduler.name }}
+  namespace: {{ include "randoli-agent.namespace" . }}
+  labels:
+    app: {{ .Values.kubevulnScheduler.name }}
+    tier: {{ .Values.global.namespaceTier }}
+    kubescape.io/ignore: "true"
+    kubescape.io/tier: "core"
+data:
+  request-body.json: |-
+    {"commands":[{"commandName":"scan","designators":[{"designatorType":"Attributes","attributes":{}}]}]}
+{{- end }}

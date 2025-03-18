@@ -1,0 +1,17 @@
+{{- $components := fromYaml (include "components" .) }}
+  {{- if $components.operator.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.operator.name }}
+  namespace: {{ include "randoli-agent.namespace" . }}
+  labels:
+    kubescape.io/ignore: "true"
+    kubescape.io/tier: "core"
+data:
+  config.json: |
+    {
+        "namespace": "{{ include "randoli-agent.namespace" . }}",
+        "triggersecurityframework": {{ .Values.operator.triggerSecurityFramework }}
+    }
+{{- end }}

@@ -1,0 +1,12 @@
+{{ if .Values.storage.badger.persistence.useExistingPvcName }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.storage.badger.persistence.useExistingPvcName }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.badger.persistence.size }}
+{{ end }}

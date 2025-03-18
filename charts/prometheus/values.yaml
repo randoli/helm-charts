@@ -248,6 +248,7 @@ server:
 
   extraFlags:
     - web.enable-lifecycle
+    - web.enable-otlp-receiver
     ## web.enable-admin-api flag controls access to the administrative HTTP API which includes functionality such as
     ## deleting time series. This is disabled by default.
     # - web.enable-admin-api
@@ -284,8 +285,8 @@ server:
 
   ## https://prometheus.io/docs/prometheus/latest/configuration/configuration/#tsdb
   ##
-  tsdb: {}
-    # out_of_order_time_window: 0s
+  tsdb:
+    out_of_order_time_window: 30m
 
   ## https://prometheus.io/docs/prometheus/latest/configuration/configuration/#exemplars
   ## Must be enabled via --enable-feature=exemplar-storage
@@ -353,7 +354,7 @@ server:
   extraConfigmapLabels: {}
 
   ## Override the prometheus.server.fullname for all objects related to the Prometheus server
-  fullnameOverride: ""
+  fullnameOverride: "randoli-prometheus"
 
   ingress:
     ## If true, Prometheus server Ingress will be created
@@ -785,6 +786,27 @@ serverFiles:
   rules: {}
 
   prometheus.yml:
+    otlp:
+      # Recommended attributes to be promoted to labels.
+      promote_resource_attributes:
+        - service.instance.id
+        - service.name
+        - service.namespace
+        - cloud.availability_zone
+        - cloud.region
+        - container.name
+        - deployment.environment.name
+        - k8s.cluster.name
+        - k8s.container.name
+        - k8s.cronjob.name
+        - k8s.daemonset.name
+        - k8s.deployment.name
+        - k8s.job.name
+        - k8s.namespace.name
+        - k8s.pod.name
+        - k8s.replicaset.name
+        - k8s.statefulset.name
+
     rule_files:
       - /etc/config/recording_rules.yml
       - /etc/config/alerting_rules.yml
@@ -1215,27 +1237,6 @@ extraScrapeConfigs: |
     static_configs:
       - targets: ['{{ include "prometheus.opencost.url" . }}']
 
-  - job_name: 'randoli-otel-collector'
-    scrape_interval: 1m
-    scrape_timeout: 10s
-    metrics_path: "/metrics"
-    static_configs:
-      - targets: ['otel-collector.{{ .Release.Namespace }}.svc:8889']
-# - job_name: 'prometheus-blackbox-exporter'
-#   metrics_path: /probe
-#   params:
-#     module: [http_2xx]
-#   static_configs:
-#     - targets:
-#       - https://example.com
-#   relabel_configs:
-#     - source_labels: [__address__]
-#       target_label: __param_target
-#     - source_labels: [__param_target]
-#       target_label: instance
-#     - target_label: __address__
-#       replacement: prometheus-blackbox-exporter:9115
-
 # Adds option to add alert_relabel_configs to avoid duplicate alerts in alertmanager
 # useful in H/A prometheus with different external labels but the same alerts
 alertRelabelConfigs: {}
@@ -1310,7 +1311,7 @@ prometheus-node-exporter:
 prometheus-pushgateway:
   ## If false, pushgateway will not be installed
   ##
-  enabled: true
+  enabled: false
 
   # Optional service annotations
   serviceAnnotations:
