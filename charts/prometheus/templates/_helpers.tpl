@@ -293,8 +293,8 @@ receivers:
         footer: "Occurred At {{ "{{" }} .CommonAnnotations.occurredAt {{ "}}" }}"
         actions:
           - type: "button"
-            text: "View Issue"
-            url: "{{ "{{" }} .CommonAnnotations.issueUrl {{ "}}" }}"
+            text: 'View {{ "{{" }} .CommonLabels.alertType {{ "}}" }}'
+            url: '{{ "{{" }} .CommonAnnotations.sourceUrl {{ "}}" }}'
 {{- else -}}
 receivers:
   - name: default-receiver
