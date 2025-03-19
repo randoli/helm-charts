@@ -37,8 +37,11 @@ observability:
     mode: 'INTERVAL_SCANNING'
     cronSpec: '0 10,20 * * *'
     imagePullSecrets: ""
+  tracing:
+    enabled: true
   pixie:
-    install: false 
+    install: false
+
 costManagement:
   enabled: false
   vpaOperator:
