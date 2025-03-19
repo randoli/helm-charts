@@ -20,8 +20,8 @@ global:
       api_url: 
 
   secrets:
-    cert: insights-agent-cert
-    config: insights-agent-secret
+    cert: randoli-agent-cert
+    config: randoli-agent-secret
 
 
 observability:
