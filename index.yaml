@@ -3,7 +3,7 @@ entries:
   app-insights-agent:
   - apiVersion: v2
     appVersion: 1.12.0
-    created: "2025-03-18T18:34:23.390699854-04:00"
+    created: "2025-03-19T07:57:49.292385681-04:00"
     dependencies:
     - condition: global.prometheus.install
       name: prometheus
@@ -52,7 +52,7 @@ entries:
     version: 1.12.0
   - apiVersion: v2
     appVersion: 1.11.1
-    created: "2025-03-18T18:34:23.331902026-04:00"
+    created: "2025-03-19T07:57:49.213750533-04:00"
     dependencies:
     - alias: costManagement
       condition: costManagement.opencost.install
@@ -101,7 +101,7 @@ entries:
     version: 1.11.1
   - apiVersion: v2
     appVersion: 1.11.0
-    created: "2025-03-18T18:34:23.187790637-04:00"
+    created: "2025-03-19T07:57:49.059583786-04:00"
     dependencies:
     - alias: costManagement
       condition: costManagement.opencost.install
@@ -150,7 +150,7 @@ entries:
     version: 1.11.0
   - apiVersion: v2
     appVersion: 1.10.0
-    created: "2025-03-18T18:34:23.09659686-04:00"
+    created: "2025-03-19T07:57:48.880999141-04:00"
     dependencies:
     - alias: costManagement
       condition: costManagement.opencost.install
@@ -195,7 +195,7 @@ entries:
     version: 1.10.0
   - apiVersion: v2
     appVersion: 1.9.0
-    created: "2025-03-18T18:34:23.412260887-04:00"
+    created: "2025-03-19T07:57:49.321080721-04:00"
     dependencies:
     - alias: costManagement
       condition: costManagement.opencost.install
@@ -232,7 +232,7 @@ entries:
   cost-management:
   - apiVersion: v2
     appVersion: 1.111.0
-    created: "2025-03-18T18:34:23.41574958-04:00"
+    created: "2025-03-19T07:57:49.326290546-04:00"
     description: OpenCost and OpenCost UI
     digest: 73d978b7748f81475c0b48d62a652e24c7f276843c17fb7cedc1b3631fd82220
     home: https://github.com/opencost/opencost-helm-chart
@@ -256,7 +256,7 @@ entries:
   kubescape-operator:
   - apiVersion: v2
     appVersion: 1.18.16
-    created: "2025-03-18T18:34:23.426524199-04:00"
+    created: "2025-03-19T07:57:49.339944606-04:00"
     dependencies:
     - condition: alertCRD.scopeClustered
       name: kubescape-alert-crd
@@ -293,7 +293,7 @@ entries:
   logs:
   - apiVersion: v2
     appVersion: v0.0.40
-    created: "2025-03-18T18:34:23.429775271-04:00"
+    created: "2025-03-19T07:57:49.347122375-04:00"
     description: A Helm chart to install Vector Operator
     digest: a5b070574a72333fde4266626128547d478653b4ab55ea0e573a2f145b51ea2c
     home: https://github.com/kaasops/vector-operator
@@ -306,7 +306,7 @@ entries:
     version: 0.0.40
   network:
   - apiVersion: v2
-    created: "2025-03-18T18:34:23.440456511-04:00"
+    created: "2025-03-19T07:57:49.359848735-04:00"
     digest: fce331e09b4bf5c8a16b1c74ee68a379af4716e83ef193e6277128734ce0086f
     name: network
     type: application
@@ -316,7 +316,7 @@ entries:
   opencost:
   - apiVersion: v2
     appVersion: 1.111.0
-    created: "2025-03-18T18:34:23.450284351-04:00"
+    created: "2025-03-19T07:57:49.374617489-04:00"
     description: OpenCost and OpenCost UI
     digest: 69f682b5afe57dfcefb78d75645e445f9f57721d750334b3e92bee47570c20dc
     home: https://github.com/opencost/opencost-helm-chart
@@ -339,7 +339,7 @@ entries:
     version: 1.41.0
   - apiVersion: v2
     appVersion: 1.109.0
-    created: "2025-03-18T18:34:23.446885912-04:00"
+    created: "2025-03-19T07:57:49.369316901-04:00"
     description: OpenCost and OpenCost UI
     digest: e013511b2ea9412d4d69c701f75914213f5fb2891217fe431aa025e28061efbc
     home: https://github.com/opencost/opencost-helm-chart
@@ -362,7 +362,7 @@ entries:
     version: 1.33.1
   - apiVersion: v2
     appVersion: 1.107.1
-    created: "2025-03-18T18:34:23.443505544-04:00"
+    created: "2025-03-19T07:57:49.364389023-04:00"
     description: OpenCost and OpenCost UI
     digest: 426916e316e3f0a2723b0bd7ebc2e0c703bd264e83f920922d2652028a1f47ef
     home: https://github.com/opencost/opencost-helm-chart
@@ -384,7 +384,7 @@ entries:
   opentelemetry-operator:
   - apiVersion: v2
     appVersion: 0.117.0
-    created: "2025-03-18T18:34:23.457300223-04:00"
+    created: "2025-03-19T07:57:49.385824921-04:00"
     description: OpenTelemetry Operator Helm chart for Kubernetes
     digest: 0bc085395e6874187e93cc79df15fa44954aa3b7ef10c8a3cf8725279bfa1e51
     home: https://opentelemetry.io/
@@ -403,7 +403,7 @@ entries:
     version: 0.80.2
   pixie-operator-chart:
   - apiVersion: v2
-    created: "2025-03-18T18:34:23.472284715-04:00"
+    created: "2025-03-19T07:57:49.40191929-04:00"
     digest: 5d2da47717ebc2e0e96cc8bee8baf42f3f19c3784f307e7b793d1a7d5e12a943
     name: pixie-operator-chart
     type: application
@@ -420,7 +420,7 @@ entries:
           url: https://github.com/prometheus/prometheus
     apiVersion: v2
     appVersion: v3.0.1
-    created: "2025-03-18T18:34:23.501335839-04:00"
+    created: "2025-03-19T07:57:49.4306179-04:00"
     dependencies:
     - condition: alertmanager.enabled
       name: alertmanager
@@ -471,7 +471,7 @@ entries:
   randoli-agent:
   - apiVersion: v2
     appVersion: 1.13.0
-    created: "2025-03-18T18:34:23.676104702-04:00"
+    created: "2025-03-19T07:57:49.583808163-04:00"
     dependencies:
     - condition: observability.enabled, observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -508,7 +508,7 @@ entries:
       repository: https://randoli.github.io/helm-charts
       version: 3.4.0
     description: Randoli Agent
-    digest: 75d10c9a87da3e789358c74277859a8ae8c923658024ff4eaa07f77524a4b8e8
+    digest: e4559cb15b3d4c11b4f5da3b8c23dd8da929d8789dac4afce9435a5f0696b0a1
     home: https://randoli.ca
     icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
     keywords:
@@ -529,7 +529,7 @@ entries:
       kubeVersion: '>=1.24'
     apiVersion: v2
     appVersion: 1.1.2
-    created: "2025-03-18T18:34:23.685038098-04:00"
+    created: "2025-03-19T07:57:49.588304454-04:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami/
@@ -546,7 +546,7 @@ entries:
   security-scans:
   - apiVersion: v2
     appVersion: 1.18.16
-    created: "2025-03-18T18:34:23.698181583-04:00"
+    created: "2025-03-19T07:57:49.594966655-04:00"
     dependencies:
     - condition: alertCRD.scopeClustered
       name: kubescape-alert-crd
@@ -583,7 +583,7 @@ entries:
   tracing:
   - apiVersion: v2
     appVersion: 1.53.0
-    created: "2025-03-18T18:34:23.744561345-04:00"
+    created: "2025-03-19T07:57:49.631420617-04:00"
     dependencies:
     - condition: provisionDataStore.cassandra
       name: cassandra
@@ -633,7 +633,7 @@ entries:
   vector-operator:
   - apiVersion: v2
     appVersion: v0.0.40
-    created: "2025-03-18T18:34:23.747231215-04:00"
+    created: "2025-03-19T07:57:49.633611068-04:00"
     description: A Helm chart to install Vector Operator
     digest: 41b85faab149d627be1cb457cd73fb0be12f8ed58132a5504974092da7fff163
     home: https://github.com/kaasops/vector-operator
@@ -649,7 +649,7 @@ entries:
       kubeVersion: '>=1.24'
     apiVersion: v2
     appVersion: 1.1.2
-    created: "2025-03-18T18:34:23.751531614-04:00"
+    created: "2025-03-19T07:57:49.638566648-04:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami/
@@ -663,4 +663,4 @@ entries:
     urls:
     - vertical-pod-autoscaler-1.0.0.tgz
     version: 1.0.0
-generated: "2025-03-18T18:34:23.070213229-04:00"
+generated: "2025-03-19T07:57:48.82727142-04:00"
