@@ -39,7 +39,7 @@ dependencies:
   - name: logs
     repository: https://randoli.github.io/helm-charts
     version: 0.0.40
-    condition: observability.enabled, observability.vector.enabled
+    condition: observability.enabled, observability.vector.install
   - name: cost-management
     repository: https://randoli.github.io/helm-charts
     version: 1.41.0
