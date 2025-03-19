@@ -6,6 +6,6 @@ metadata:
 spec:
   channel: {{ .Values.olmBundleChannel }}
   name: pixie-operator
-  source: pixie-operator-index
+  source: randoli-pixie-operator-index
   sourceNamespace: {{ default .Release.Namespace .Values.olmOperatorNamespace }}
   installPlanApproval: Automatic
