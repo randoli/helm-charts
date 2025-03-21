@@ -25,27 +25,30 @@ global:
 
 
 observability:
-  enabled: false
   otel:
-    operator:
-      install: true
-  vector:
-    install: true
-  security:
-    enabled: true
-    # OFF|INTERVAL_SCANNING
+    operator: 
+      #enabled: false
+  vector: 
+    #enabled: false
+  security: 
+    #enabled: false
+    #OFF|INTERVAL_SCANNING
     mode: 'INTERVAL_SCANNING'
     cronSpec: '0 10,20 * * *'
     imagePullSecrets: ""
-  tracing:
-    enabled: true
-  pixie:
-    install: false
+  tracing:  
+    #enabled: false
+  pixie: 
+    enabled: false
 
 costManagement:
-  enabled: false
-  vpaOperator:
-    install: true   
+  vpaOperator: 
+    #enabled: false
+
+tags:
+  observability: false
+  costManagement: false
+
 
 image:
   registry: docker.io

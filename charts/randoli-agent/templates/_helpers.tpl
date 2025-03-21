@@ -58,10 +58,56 @@ Create the name of the service account to use
 
 
 {{/*
-Dependencies Logic
+Dependencies Logic for config map
 */}}
+
 {{- define "enable.vpa.operator" -}}
-{{- if and .Values.costManagement.enabled .Values.costManagement.vpaOperator.install -}}
+{{- $vpaOperator := .Values.costManagement.vpaOperator | default dict }}
+{{- if and (or (empty $vpaOperator) $vpaOperator.enabled ) .Values.tags.costManagement -}}
+true
+{{- else if eq (default false $vpaOperator.enabled) true  -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{- define "enable.pixie.operator" -}}
+{{- $pixie := .Values.observability.pixie | default dict }}
+{{- if and (or (empty $pixie) $pixie.enabled ) .Values.tags.observability -}}
+true
+{{- else if eq (default false $pixie.enabled) true  -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{- define "enable.security" -}}
+{{- $security := .Values.observability.security | default dict }}
+{{- if and (or (not (hasKey $security "enabled")) $security.enabled ) .Values.tags.observability -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+
+{{- define "observability.secutiry.mode" -}}
+{{- $security := .Values.observability.security | default dict }}
+{{- if and (or (not (hasKey $security "enabled")) $security.enabled ) .Values.tags.observability -}}
+{{.Values.observability.security.mode}}
+{{- else -}}
+OFF
+{{- end -}}
+{{- end -}}
+
+
+{{- define "enable.vector" -}}
+{{- $vector := .Values.observability.vector | default dict }}
+{{- if and (or (empty $vector) $vector.enabled ) .Values.tags.observability -}}
+true
+{{- else if eq (default false $vector.enabled) true  -}}
 true
 {{- else -}}
 false
