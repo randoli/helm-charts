@@ -99,7 +99,7 @@ rules:
       - vulnerabilitymanifests
       - vulnerabilitysummaries
 {{ end }}
-{{- if .Values.logs.analyzers.enabled }}
+{{- if and .Values.tags.observability .Values.observability.logs.analyzers.enabled }}
   - verbs:
       - create
       - delete

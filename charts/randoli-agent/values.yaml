@@ -28,6 +28,9 @@ observability:
   otel:
     operator: 
       #enabled: false
+  logs:
+    analyzers:
+      enabled: true
   vector: 
     #enabled: false
   security: 
@@ -74,15 +77,6 @@ resources:
   requests:
     cpu: 50m
     memory: 512Mi
-
-logs:
-  shipLogSamples:
-    # If enabled, the agent will query for container logs to augment events
-    enabled: true
-  analyzers:
-    enabled: true
-  vector:
-    install: true
 
 anomalyDetection:
   # Defaults anomaly detection list contains detections for:
