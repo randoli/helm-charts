@@ -5,13 +5,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.operator.name }}
+  name: {{ template "operator.fullname" . }}
   namespace: {{ include "randoli-agent.namespace" . }}
   labels:
-    app.kubernetes.io/name: {{ .Values.operator.name }}
+    app.kubernetes.io/name: {{ template "operator.fullname" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     kubescape.io/ignore: "true"
-    app: {{ .Values.operator.name }}
+    app: {{ template "operator.fullname" . }}
     tier: {{ .Values.global.namespaceTier }}
     kubescape.io/tier: "core"
 spec:
@@ -24,7 +24,7 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.operator.name }}
+      app.kubernetes.io/name: {{ template "operator.fullname" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       tier: {{ .Values.global.namespaceTier }}
   template:
@@ -40,11 +40,11 @@ spec:
       {{- end }}
       labels:
         kubescape.io/tier: "core"
-        app.kubernetes.io/name: {{ .Values.operator.name }}
+        app.kubernetes.io/name: {{ template "operator.fullname" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
         tier: {{ .Values.global.namespaceTier }}
-        app: {{ .Values.operator.name }}
+        app: {{ template "operator.fullname" . }}
       {{- if $components.otelCollector.enabled }}
         otel: enabled
       {{- end }}
@@ -57,7 +57,7 @@ spec:
         runAsUser: 65532
         fsGroup: 65532
       containers:
-        - name: {{ .Values.operator.name }}
+        - name: {{ template "operator.fullname" . }}
           image: "{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}"
           imagePullPolicy: {{ .Values.operator.image.pullPolicy }}
           securityContext:
@@ -180,7 +180,7 @@ spec:
                 path: "capabilities.json"
         - name: config
           configMap:
-            name: {{ .Values.operator.name }}
+            name: {{ template "operator.fullname" . }}
             items:
             - key: "config.json"
               path: "config.json"
@@ -196,7 +196,7 @@ spec:
 {{- if .Values.operator.volumes }}
 {{ toYaml .Values.operator.volumes | indent 8 }}
 {{- end }}
-      serviceAccountName: {{ .Values.operator.name }}
+      serviceAccountName: {{ template "operator.fullname" . }}
       automountServiceAccountToken: true
       nodeSelector:
       {{- if .Values.operator.nodeSelector }}

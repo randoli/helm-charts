@@ -54,12 +54,12 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the Kubescape Storage Auth Reader RoleBinding to use
 */}}
 {{- define "storage.authReaderRoleBindingName" -}}
-  {{- .Values.storage.name | printf "%s-auth-reader" }}
+  {{- printf "%s-%s-auth-reader" .Release.Name .Values.storage.name }}
 {{- end }}
 
 {{/*
 Create the name of the Kubescape Storage Auth Reader ClusterRoleBinding to use
 */}}
 {{- define "storage.authDelegatorClusterRoleBindingName" -}}
-  {{- .Values.storage.name | printf "%s:system:auth-delegator" }}
+  {{- printf "%s-%s:system:auth-delegator" .Release.Name .Values.storage.name }}
 {{- end }}

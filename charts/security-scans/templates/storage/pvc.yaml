@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: kubescape-{{ .Values.storage.name }}
+  name: kubescape-{{ template "storage.fullname" . }}
   namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     kubescape.io/ignore: "true"

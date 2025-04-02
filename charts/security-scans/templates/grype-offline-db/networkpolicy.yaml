@@ -20,7 +20,7 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/instance: {{ include "randoli-agent.namespace" . }}
-              app.kubernetes.io/name: {{ .Values.kubevuln.name }}
+              app.kubernetes.io/name: {{ template "kubevuln.fullname" . }}
               tier: {{ .Values.global.namespaceTier }}
       ports:
         - port: 8080

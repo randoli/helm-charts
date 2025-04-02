@@ -3,10 +3,10 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ .Values.kubescape.name }}-monitor
+  name: {{ template "kubescape.fullname" . }}-monitor
   namespace: {{ .Values.kubescape.serviceMonitor.namespace | default (include "randoli-agent.namespace" .) }}
   labels:
-    app: {{ .Values.kubescape.name }}
+    app: {{ template "kubescape.fullname" . }}
     kubescape.io/ignore: "true"
     {{- with .Values.kubescape.labels }}
     {{- toYaml . | nindent 4 }}
@@ -17,7 +17,7 @@ spec:
       -  {{ include "randoli-agent.namespace" . }}
   selector:
     matchLabels:
-      app: {{ .Values.kubescape.name }}
+      app: {{ template "kubescape.fullname" . }}
   endpoints:
     - port: http
       path: /v1/metrics

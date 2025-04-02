@@ -39,7 +39,7 @@ apiVersion: batch/v1
                 args: 
                   - -method=post
                   - -scheme=http
-                  - -host={{ .Values.operator.name }}:{{ .Values.operator.service.port }}
+                  - -host={{ template "operator.fullname" . }}:{{ .Values.operator.service.port }}
                   - -path=v1/triggerAction
                   - -headers=Content-Type:application/json
                   - -path-body=/home/ks/request-body.json

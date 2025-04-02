@@ -12,19 +12,19 @@ roleRef:
   name: system:auth-delegator
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.storage.name }}
+  name: {{ template "storage.fullname" . }}
   namespace: {{ include "randoli-agent.namespace" . }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Values.storage.name }}
+  name: {{ template "storage.fullname" . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Values.storage.name }}
+  name: {{ template "storage.fullname" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ .Values.storage.name }}
+    name: {{ template "storage.fullname" . }}
     namespace: {{ include "randoli-agent.namespace" . }}
 {{- end }}

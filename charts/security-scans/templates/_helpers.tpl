@@ -82,3 +82,42 @@ clamAV:
 {{- define "randoli-agent.namespace" -}}
   {{ .Values.namespace | default .Release.Namespace }}
 {{- end -}}
+
+{{/*
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "kubescape.fullname" -}}
+{{- printf "%s-%s" .Release.Name .Values.kubescape.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+
+{{/*
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "operator.fullname" -}}
+{{- printf "%s-%s" .Release.Name .Values.operator.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+
+{{/*
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "kubevuln.fullname" -}}
+{{- printf "%s-%s" .Release.Name .Values.kubevuln.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+
+{{/*
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "storage.fullname" -}}
+{{- printf "%s-%s" .Release.Name .Values.storage.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
