@@ -1,10 +1,10 @@
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
-  name: randoli-otel 
+  name: "{{ .Release.Name }}-otel"
 spec:
   mode: deployment
-  serviceAccount: randoli-otel-collector
+  serviceAccount: {{ .Release.Name }}-otel-collector
   upgradeStrategy: automatic
   config:
     receivers:

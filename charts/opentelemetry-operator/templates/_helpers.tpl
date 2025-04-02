@@ -63,7 +63,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Selector labels
 */}}
 {{- define "opentelemetry-operator.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "opentelemetry-operator.name" . }}
+app.kubernetes.io/name: {{ include "opentelemetry-operator.fullname" . }}
 {{- end }}
 
 {{/*
@@ -71,7 +71,7 @@ Create the name of the service account to use
 */}}
 {{- define "opentelemetry-operator.serviceAccountName" -}}
 {{- if .Values.manager.serviceAccount.create }}
-{{- default (include "opentelemetry-operator.name" .) .Values.manager.serviceAccount.name }}
+{{- default (include "opentelemetry-operator.fullname" .) .Values.manager.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.manager.serviceAccount.name }}
 {{- end }}

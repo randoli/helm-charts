@@ -1,5 +1,5 @@
 fullnameOverride: "rok-vector"
-nameOverride: ""
+nameOverride: "rok-vector"
 namespaceOverride: ""
 
 replicaCount: 1
