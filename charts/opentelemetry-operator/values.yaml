@@ -10,7 +10,7 @@ nameOverride: ""
 
 ## Fully override the name (excludes the chart's release name).
 ##
-fullnameOverride: "randoli-rok-otel"
+fullnameOverride: "rok-otel"
 
 ## Reference one or more secrets to be used when pulling images from authenticated repositories.
 imagePullSecrets: []

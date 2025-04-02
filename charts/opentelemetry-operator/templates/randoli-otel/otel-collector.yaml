@@ -1,11 +1,10 @@
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
-  name: randoli-otel 
+  name: "{{ .Release.Name }}-otel"
 spec:
   mode: deployment
-  replicas: 2
-  serviceAccount: randoli-otel-collector
+  serviceAccount: {{ .Release.Name }}-otel-collector
   upgradeStrategy: automatic
   config:
     receivers:
@@ -18,7 +17,7 @@ spec:
     exporters:
       ## Create an exporter to Jaeger using the standard `otlp` export format
       otlp:
-        endpoint: 'randoli-rok-jaeger-collector.{{ .Release.Namespace }}.svc:4317'
+        endpoint: '{{ .Release.Name }}-rok-jaeger-collector.{{ .Release.Namespace }}.svc:4317'
         tls:
           insecure: true
 

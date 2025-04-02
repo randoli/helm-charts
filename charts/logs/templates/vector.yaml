@@ -2,7 +2,7 @@
 apiVersion: observability.kaasops.io/v1alpha1
 kind: Vector
 metadata:
-  name: {{ .Values.vector.name }}
+  name: {{ template "chart.fullname" . }}
   namespace: {{ .Release.Namespace }}
 spec:
   useApiServerCache: {{ .Values.vector.useApiServerCache }}

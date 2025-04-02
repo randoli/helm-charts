@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: "{{ .Values.storage.name }}-test-connection"
+  name: "{{ template "storage.fullname" . }}-test-connection"
   labels:
     {{- include "kubescape-storage.labels" . | nindent 4 }}
   annotations:
@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: docker.io/busybox
       command: ['wget']
-      args: ['{{ .Values.storage.name }}:80']
+      args: ['{{ template "storage.fullname" . }}:80']
   restartPolicy: Never

@@ -17,10 +17,10 @@ data:
   {{- if .Values.global.opencost.url }}
   OPENCOST_BACKEND_URL: {{ .Values.global.opencost.url }}
   {{ else }}
-  OPENCOST_BACKEND_URL: http://randoli-cmk-opencost.{{ .Release.Namespace }}.svc:9003
+  OPENCOST_BACKEND_URL: http://{{ .Release.Name }}-cmk-opencost.{{ .Release.Namespace }}.svc:9003
   {{ end -}}
   {{- if .Values.global.prometheus.install }}
-  PROMETHEUS_URL: 'http://randoli-prometheus.{{ .Release.Namespace }}.svc:80'
+  PROMETHEUS_URL: 'http://{{ .Release.Name }}-prometheus.{{ .Release.Namespace }}.svc:80'
   {{ else }}
   PROMETHEUS_URL: {{ .Values.global.prometheus.url }}
   {{ end -}}
@@ -49,6 +49,6 @@ data:
   VECTOR_HTTP_SINKER_URL: 'http://{{ include "randoli-agent.fullname" . }}.{{ include "randoli-agent.namespace" . }}:8080/log-sink/'
   PROMETHEUS_INSTALL: '{{ .Values.global.prometheus.install }}'
   TEKTON_PIPELINE_ENABLED: '{{ .Values.tektonPipeline.enabled }}'
-  JAEGER_QUERY_SVC_GRPC: randoli-rok-jaeger-query.{{ .Release.Namespace }}:16685
-  JAEGER_QUERY_SVC_HTTP: http://randoli-rok-jaeger-query.{{ .Release.Namespace }}:16686
+  JAEGER_QUERY_SVC_GRPC: '{{ .Release.Name }}-rok-jaeger-query.{{ .Release.Namespace }}:16685'
+  JAEGER_QUERY_SVC_HTTP: http://{{ .Release.Name }}-rok-jaeger-query.{{ .Release.Namespace }}:16686
   PROMETHEUS_ALERTMANAGER_URL: http://{{ .Release.Name }}-alertmanager.{{ .Release.Namespace }}:9093

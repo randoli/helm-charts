@@ -6,12 +6,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.kubescape.name }}
+  name: {{ template "kubescape.fullname" . }}
   namespace: {{ include "randoli-agent.namespace" . }}
   labels:
-    app.kubernetes.io/name: {{ .Values.kubescape.name }}
+    app.kubernetes.io/name: {{ template "kubescape.fullname" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    app: {{ .Values.kubescape.name }}
+    app: {{ template "kubescape.fullname" . }}
     tier: {{ .Values.global.namespaceTier }}
     kubescape.io/ignore: "true"
     kubescape.io/tier: "core"
@@ -26,7 +26,7 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.kubescape.name }}
+      app.kubernetes.io/name: {{ template "kubescape.fullname" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       tier: {{ .Values.global.namespaceTier }}
   template:
@@ -48,11 +48,11 @@ spec:
       {{- end }}
       labels:
         kubescape.io/tier: "core"
-        app.kubernetes.io/name: {{ .Values.kubescape.name }}
+        app.kubernetes.io/name: {{ template "kubescape.fullname" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
         tier: {{ .Values.global.namespaceTier }}
-        app: {{ .Values.kubescape.name }}
+        app: {{ template "kubescape.fullname" . }}
       {{- if $components.otelCollector.enabled }}
         otel: enabled
       {{- end }}
@@ -100,7 +100,7 @@ spec:
         - name: RULE_PROCESSING_GOMAXPROCS
           value: "{{ .Values.kubescape.ruleProcessingConcurrency }}"
         - name: KS_DEFAULT_CONFIGMAP_NAME
-          value: "{{ .Values.kubescape.name }}-config"
+          value: "{{ template "kubescape.fullname" . }}-config"
         - name: KS_DEFAULT_CONFIGMAP_NAMESPACE
           valueFrom:
             fieldRef:
@@ -230,7 +230,7 @@ spec:
 {{- if .Values.kubescape.volumes }}
 {{ toYaml .Values.kubescape.volumes | indent 6 }}
 {{- end }}
-      serviceAccountName: {{ .Values.kubescape.name }}
+      serviceAccountName: {{ template "kubescape.fullname" . }}
       automountServiceAccountToken: true
       nodeSelector:
       {{- if .Values.kubescape.nodeSelector }}

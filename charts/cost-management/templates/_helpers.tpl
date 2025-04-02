@@ -19,7 +19,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 */}}
 {{- define "opencost.fullname" -}}
   {{- if .Values.fullnameOverride -}}
-    {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+    {{-  printf "%s-%s" .Release.Name .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
   {{- else -}}
     {{- $name := default .Chart.Name .Values.nameOverride -}}
     {{- if contains $name .Release.Name -}}
@@ -83,7 +83,7 @@ Only change done by Randoli
 */}}
 {{- define "opencost.prometheusServerEndpoint" -}}
   {{- if .Values.global.prometheus.install -}}
-    {{- printf "http://randoli-prometheus.%s.svc:80" .Release.Namespace -}}
+    {{- printf "http://%s-prometheus.%s.svc:80" .Release.Name .Release.Namespace -}}
   {{- else if .Values.global.prometheus.url -}}
     {{ tpl .Values.global.prometheus.url . }}
   {{- else if .Values.opencost.prometheus.external.enabled -}}

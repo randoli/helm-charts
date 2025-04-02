@@ -191,7 +191,7 @@ imageScanning:
 # kubescape scanner - https://github.com/kubescape/kubescape
 kubescape:
 
-  name: randoli-rok-kubescape
+  name: rok-kubescape
 
   image:
     # -- source code: https://github.com/kubescape/kubescape/tree/master/httphandler (public repo)
@@ -244,7 +244,7 @@ kubescape:
 operator:
 
   # operator Deployment name
-  name: randoli-rok-kubescape-operator
+  name: rok-kubescape-operator
 
   image:
     # -- source code: https://github.com/kubescape/operator
@@ -285,7 +285,7 @@ kubevuln:
   verbose: ""
 
   # kubevuln Deployment name
-  name: randoli-rok-kubevuln
+  name: rok-kubevuln
 
   image:
     # -- source code: https://github.com/kubescape/kubevuln
@@ -437,7 +437,7 @@ hostScanner:
 storage:
 
   # Values or the Aggregated APIServer
-  name: "randoli-rok-kubescape-storage"
+  name: "rok-kubescape-storage"
 
   image:
     # -- source code: https://github.com/kubescape/storage

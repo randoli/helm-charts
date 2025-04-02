@@ -74,9 +74,9 @@ metadata:
     {{- include "chart.labels" . | nindent 4 }}
 subjects:
   - kind: ServiceAccount
-    name: {{ .Values.vector.name }}-agent
+    name: {{ .Release.Name}}-{{ template "chart.fullname" . }}-agent
   - kind: ServiceAccount
-    name: {{ .Values.vector.name }}-configcheck
+    name: {{ .Release.Name}}-{{ template "chart.fullname" . }}-configcheck
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role

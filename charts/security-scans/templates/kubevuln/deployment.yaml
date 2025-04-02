@@ -5,12 +5,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.kubevuln.name }}
+  name: {{ template "kubevuln.fullname" . }}
   namespace: {{ include "randoli-agent.namespace" . }}
   labels:
-    app.kubernetes.io/name: {{ .Values.kubevuln.name }}
+    app.kubernetes.io/name: {{ template "kubevuln.fullname" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    app: {{ .Values.kubevuln.name }}
+    app: {{ template "kubevuln.fullname" . }}
     tier: {{ .Values.global.namespaceTier }}
     kubescape.io/ignore: "true"
     kubescape.io/tier: "core"
@@ -21,7 +21,7 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.kubevuln.name }}
+      app.kubernetes.io/name: {{ template "kubevuln.fullname" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       tier: {{ .Values.global.namespaceTier }}
   template:
@@ -34,11 +34,11 @@ spec:
       {{- end }}
       labels:
         kubescape.io/tier: "core"
-        app.kubernetes.io/name: {{ .Values.kubevuln.name }}
+        app.kubernetes.io/name: {{ template "kubevuln.fullname" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
         tier: {{ .Values.global.namespaceTier }}
-        app: {{ .Values.kubevuln.name }}
+        app: {{ template "kubevuln.fullname" . }}
       {{- if $components.otelCollector.enabled }}
         otel: enabled
       {{- end }}
@@ -51,7 +51,7 @@ spec:
         runAsUser: 65532
         fsGroup: 65532
       containers:
-        - name: {{ .Values.kubevuln.name }}
+        - name: {{ template "kubevuln.fullname" . }}
           image: "{{ .Values.kubevuln.image.repository }}:{{ .Values.kubevuln.image.tag }}"
           imagePullPolicy: {{ .Values.kubevuln.image.pullPolicy }}
           securityContext:
@@ -160,7 +160,7 @@ spec:
 {{- if .Values.kubevuln.volumes }}
 {{ toYaml .Values.kubevuln.volumes | indent 8 }}
 {{- end }}
-      serviceAccountName: {{ .Values.kubevuln.name }}
+      serviceAccountName: {{ template "kubevuln.fullname" . }}
       automountServiceAccountToken: true
       nodeSelector:
       {{- if .Values.kubevuln.nodeSelector }}

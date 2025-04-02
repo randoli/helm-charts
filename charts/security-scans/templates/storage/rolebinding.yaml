@@ -14,6 +14,6 @@ roleRef:
   name: "extension-apiserver-authentication-reader"
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.storage.name }}
+  name: {{ template "storage.fullname" . }}
   namespace: {{ include "randoli-agent.namespace" . }}
 {{- end }}

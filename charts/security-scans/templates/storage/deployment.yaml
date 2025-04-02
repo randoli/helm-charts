@@ -3,7 +3,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.storage.name }}
+  name: {{ template "storage.fullname" . }}
   namespace: {{ include "randoli-agent.namespace" . }}
   labels:
     kubescape.io/ignore: "true"
@@ -30,7 +30,7 @@ spec:
       imagePullSecrets:
       - name: {{ toYaml .Values.imagePullSecrets }}
       {{- end }}
-      serviceAccountName: {{ .Values.storage.name }}
+      serviceAccountName: {{ template "storage.fullname" . }}
       securityContext:
         runAsUser: 65532
         fsGroup: 65532
@@ -89,7 +89,7 @@ spec:
         - name: "data"
           {{- if eq .Values.configurations.persistence "enable" }}
           persistentVolumeClaim:
-            claimName: kubescape-{{ .Values.storage.name }}
+            claimName: kubescape-{{ template "storage.fullname" . }}
           {{- else }}
           emptyDir: {}
           {{- end }}

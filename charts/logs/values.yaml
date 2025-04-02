@@ -1,5 +1,5 @@
-fullnameOverride: "randoli-rok-vector"
-nameOverride: ""
+fullnameOverride: "rok-vector"
+nameOverride: "rok-vector"
 namespaceOverride: ""
 
 replicaCount: 1
@@ -72,7 +72,7 @@ args:
 
 vector:
   enable: true
-  name: "randoli-rok-vector"
+  name: "rok-vector"
   useApiServerCache: false
   agent:
     image: timberio/vector:0.41.X-distroless-libc
