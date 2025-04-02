@@ -17,7 +17,7 @@ spec:
     exporters:
       ## Create an exporter to Jaeger using the standard `otlp` export format
       otlp:
-        endpoint: 'randoli-rok-jaeger-collector.{{ .Release.Namespace }}.svc:4317'
+        endpoint: '{{ .Release.Name }}-rok-jaeger-collector.{{ .Release.Namespace }}.svc:4317'
         tls:
           insecure: true
 
