@@ -6,7 +6,7 @@
 nameOverride: ""
 
 # Provide a name to substitute for the full names of resources
-fullnameOverride: "randoli-prometheus-pushgateway"
+fullnameOverride: "prometheus-pushgateway"
 
 # Provide a namespace to substitude for the namespace on resources
 namespaceOverride: ""

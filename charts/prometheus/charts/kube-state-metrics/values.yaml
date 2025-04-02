@@ -1,5 +1,5 @@
 # Default values for kube-state-metrics.
-fullnameOverride: "randoli-kube-state-metrics"
+fullnameOverride: "kube-state-metrics"
 prometheusScrape: true
 image:
   registry: registry.k8s.io

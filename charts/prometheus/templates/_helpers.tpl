@@ -49,7 +49,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 */}}
 {{- define "prometheus.fullname" -}}
 {{- if .Values.fullnameOverride -}}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s" .Release.Name .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- $name := default .Chart.Name .Values.nameOverride -}}
 {{- if contains $name .Release.Name -}}
@@ -89,7 +89,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 */}}
 {{- define "prometheus.server.fullname" -}}
 {{- if .Values.server.fullnameOverride -}}
-{{- .Values.server.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s" .Release.Name .Values.server.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- $name := default .Chart.Name .Values.nameOverride -}}
 {{- if contains $name .Release.Name -}}

@@ -12,7 +12,7 @@ If release name contains chart name it will be used as a full name.
 */}}
 {{- define "opentelemetry-operator.fullname" -}}
 {{- if .Values.fullnameOverride }}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- printf "%s-%s" .Release.Name .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else }}
 {{- $name := default .Chart.Name .Values.nameOverride }}
 {{- if contains $name .Release.Name }}
@@ -179,10 +179,10 @@ The image to use for opentelemetry-operator.
 {{- end }}
 
 
-## Get Protheus URL
+## Get Prometheus URL
 {{- define "prometheus-server-endpoint" -}}
   {{- if .Values.global.prometheus.install -}}
-    {{- printf "http://randoli-prometheus.%s.svc:80" .Release.Namespace -}}
+    {{- printf "http://%s-prometheus.%s.svc:80" .Release.Name .Release.Namespace -}}
   {{- else if .Values.global.prometheus.url -}}
     {{ tpl .Values.global.prometheus.url . }}
   {{- end -}}

@@ -7,16 +7,7 @@
 {{- end -}}
 
 {{- define "randoli-agent.fullname" -}}
-{{- if .Values.fullnameOverride -}}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
+  {{- printf "%s-agent" .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
@@ -50,7 +41,7 @@ Create the name of the service account to use
 
 {{- define "prometheus-server-endpoint" -}}
   {{- if .Values.global.prometheus.install -}}
-    {{- printf "http://randoli-prometheus.%s.svc:80" .Release.Namespace -}}
+    {{- printf "http://%s-prometheus.%s.svc:80" .Release.Name .Release.Namespace -}}
   {{- else if .Values.global.prometheus.url -}}
     {{ tpl .Values.global.prometheus.url . }}
   {{- end -}}

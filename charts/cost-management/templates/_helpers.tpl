@@ -83,7 +83,7 @@ Only change done by Randoli
 */}}
 {{- define "opencost.prometheusServerEndpoint" -}}
   {{- if .Values.global.prometheus.install -}}
-    {{- printf "http://randoli-prometheus.%s.svc:80" .Release.Namespace -}}
+    {{- printf "http://%s-prometheus.%s.svc:80" .Release.Name .Release.Namespace -}}
   {{- else if .Values.global.prometheus.url -}}
     {{ tpl .Values.global.prometheus.url . }}
   {{- else if .Values.opencost.prometheus.external.enabled -}}
