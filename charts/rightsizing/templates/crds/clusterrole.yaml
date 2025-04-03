@@ -1,7 +1,7 @@
 apiVersion: {{ include "common.capabilities.rbac.apiVersion" . }}
 kind: ClusterRole
 metadata:
-  name: {{ include "vertical-pod-autoscaler.crds.fullname" . }}
+  name: {{ .Release.Name }}-{{ include "vertical-pod-autoscaler.crds.fullname" . }}
   labels:
     {{- include "vertical-pod-autoscaler.crds.labels" . | nindent 4 }}
     {{- if .Values.commonLabels }}

@@ -3,7 +3,7 @@
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ .Values.kubescape.name }}
+  name: {{ .Release.Name }}-{{ .Values.kubescape.name }}
   labels:
     kubescape.io/ignore: "true"
 rules:

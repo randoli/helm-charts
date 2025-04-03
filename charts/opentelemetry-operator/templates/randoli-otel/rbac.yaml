@@ -7,7 +7,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: randoli-otel-collector-clusterrole
+  name: {{ .Release.Name }}-otel-collector-clusterrole
 rules:
 - apiGroups: [""]
   resources: ["pods"]
@@ -19,12 +19,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: randoli-otel-collector-clusterrolebinding
+  name: {{ .Release.Name }}--otel-collector-clusterrolebinding
 subjects:
 - kind: ServiceAccount
   name: randoli-otel-collector
   namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
-  name: randoli-otel-collector-clusterrole
+  name: {{ .Release.Name }}-randoli-otel-collector-clusterrole
   apiGroup: rbac.authorization.k8s.io

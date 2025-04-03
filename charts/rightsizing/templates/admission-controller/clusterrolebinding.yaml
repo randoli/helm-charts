@@ -2,7 +2,7 @@
 apiVersion: {{ include "common.capabilities.rbac.apiVersion" . }}
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "vertical-pod-autoscaler.admissionController.fullname" . }}
+  name: {{ .Release.Name }}-{{ include "vertical-pod-autoscaler.admissionController.fullname" . }}
   labels:
     {{- include "vertical-pod-autoscaler.admissionController.labels" . | nindent 4 }}
     {{- if .Values.commonLabels }}
@@ -15,7 +15,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "vertical-pod-autoscaler.admissionController.fullname" . }}
+  name: {{ .Release.Name }}-{{ include "vertical-pod-autoscaler.admissionController.fullname" . }}
 subjects:
   - kind: ServiceAccount
     name: {{ include "vertical-pod-autoscaler.admissionController.serviceAccountName" . }}

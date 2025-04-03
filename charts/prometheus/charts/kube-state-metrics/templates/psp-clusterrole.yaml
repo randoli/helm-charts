@@ -4,7 +4,7 @@ kind: ClusterRole
 metadata:
   labels:
     {{- include "kube-state-metrics.labels" . | indent 4 }}
-  name: psp-{{ template "kube-state-metrics.fullname" . }}
+  name: {{ .Release.Name }}-psp-{{ template "kube-state-metrics.fullname" . }}
 rules:
 {{- $kubeTargetVersion := default .Capabilities.KubeVersion.GitVersion .Values.kubeTargetVersionOverride }}
 {{- if semverCompare "> 1.15.0-0" $kubeTargetVersion }}

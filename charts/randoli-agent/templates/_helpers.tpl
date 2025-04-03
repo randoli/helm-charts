@@ -93,10 +93,10 @@ false
 {{- end -}}
 
 
-{{- define "observability.secutiry.mode" -}}
+{{- define "observability.security.mode" -}}
 {{- $security := .Values.observability.security | default dict }}
 {{- if and (or (not (hasKey $security "enabled")) $security.enabled ) .Values.tags.observability -}}
-{{.Values.observability.security.mode}}
+{{.Values.observability.security.mode }}
 {{- else -}}
 OFF
 {{- end -}}

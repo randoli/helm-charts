@@ -28,7 +28,7 @@ data:
   TLS_ENABLED: 'true'
   RIGHTSIZING_RECOMMENDATIONS_ENABLED: '{{ .Values.tags.costManagement }}'
   RIGHTSIZING_INSTALL_VPA: '{{ include "enable.vpa.operator" . }}'
-  SECURITY_SCANS_MODE: '{{ include "observability.secutiry.mode" . }}'
+  SECURITY_SCANS_MODE: '{{ include "observability.security.mode" . }}'
   SECURITY_SCANS_CRON_SPEC: '{{ .Values.observability.security.cronSpec }}'
   SECURITY_SCANS_INSTALL_KUBESCAPE: '{{ include "enable.security" . }}'
   ENABLE_DEFAULT_TIMELINE_PROMETHEUS_QUERIES: '{{ .Values.anomalyDetection.defaultsQueries.enabled }}'

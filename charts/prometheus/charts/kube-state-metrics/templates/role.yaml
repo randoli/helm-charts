@@ -10,7 +10,7 @@ kind: ClusterRole
 metadata:
   labels:
     {{- include "kube-state-metrics.labels" $ | indent 4 }}
-  name: {{ template "kube-state-metrics.fullname" $ }}
+  name: "{{ $.Release.Name }}-{{ template "kube-state-metrics.fullname" $ }}"
 {{- if eq $.Values.rbac.useClusterRole false }}
   namespace: {{ . }}
 {{- end }}
