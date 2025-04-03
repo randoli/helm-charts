@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "randoli-agent.fullname" . }}-crb
+  name: {{ .Release.Name }}-{{ include "randoli-agent.fullname" . }}-crb
   labels:
     {{- include "labels" . | nindent 4 }}
 subjects:
