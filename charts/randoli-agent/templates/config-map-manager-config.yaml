@@ -28,6 +28,8 @@ data:
   TLS_ENABLED: 'true'
   RIGHTSIZING_RECOMMENDATIONS_ENABLED: '{{ .Values.tags.costManagement }}'
   RIGHTSIZING_INSTALL_VPA: '{{ include "enable.vpa.operator" . }}'
+  RIGHTSIZING_MIN_POD_CPU_MILLICORES: '{{ index .Values.rightsizing.recommender.extraArgs "pod-recommendation-min-cpu-millicores" }}'
+  RIGHTSIZING_MIN_POD_RAM_MB: '{{ index .Values.rightsizing.recommender.extraArgs "pod-recommendation-min-memory-mb" }}'
   SECURITY_SCANS_MODE: '{{ include "observability.security.mode" . }}'
   SECURITY_SCANS_CRON_SPEC: '{{ .Values.observability.security.cronSpec }}'
   SECURITY_SCANS_INSTALL_KUBESCAPE: '{{ include "enable.security" . }}'

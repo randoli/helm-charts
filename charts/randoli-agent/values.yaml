@@ -48,6 +48,12 @@ costManagement:
   vpaOperator: 
     #enabled: false
 
+rightsizing:
+   recommender:
+     extraArgs:
+       pod-recommendation-min-cpu-millicores: 25
+       pod-recommendation-min-memory-mb: 25
+
 tags:
   observability: false
   costManagement: false
