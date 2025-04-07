@@ -19,12 +19,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Release.Name }}--otel-collector-clusterrolebinding
+  name: {{ .Release.Name }}-otel-collector-clusterrolebinding
 subjects:
 - kind: ServiceAccount
   name: randoli-otel-collector
   namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
-  name: {{ .Release.Name }}-randoli-otel-collector-clusterrole
+  name: {{ .Release.Name }}-otel-collector-clusterrole
   apiGroup: rbac.authorization.k8s.io
