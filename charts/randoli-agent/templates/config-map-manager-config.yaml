@@ -53,4 +53,4 @@ data:
   TEKTON_PIPELINE_ENABLED: '{{ .Values.tektonPipeline.enabled }}'
   JAEGER_QUERY_SVC_GRPC: randoli-rok-jaeger-query.{{ .Release.Namespace }}:16685
   JAEGER_QUERY_SVC_HTTP: http://randoli-rok-jaeger-query.{{ .Release.Namespace }}:16686
-  PROMETHEUS_ALERTMANAGER_URL: http://{{ .Release.Name }}-alertmanager.{{ .Release.Namespace }}:9093
+  PROMETHEUS_ALERTMANAGER_URL: http://randoli-alerts.{{ .Release.Namespace }}:9093
