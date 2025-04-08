@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "opentelemetry-operator.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller-manager
-  name: {{ template "opentelemetry-operator.fullname" . }}-manager
+  name: {{ .Release.Name }}-{{ template "opentelemetry-operator.fullname" . }}-manager
 rules:
   - apiGroups:
       - ""
@@ -285,7 +285,7 @@ metadata:
   labels:
     {{- include "opentelemetry-operator.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller-manager
-  name: {{ template "opentelemetry-operator.fullname" . }}-metrics
+  name: {{ .Release.Name }}-{{ template "opentelemetry-operator.fullname" . }}-metrics
 rules:
   - nonResourceURLs:
       - /metrics
@@ -298,7 +298,7 @@ metadata:
   labels:
     {{- include "opentelemetry-operator.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller-manager
-  name: {{ template "opentelemetry-operator.fullname" . }}-proxy
+  name: {{ .Release.Name }}-{{ template "opentelemetry-operator.fullname" . }}-proxy
 rules:
   - apiGroups:
       - authentication.k8s.io

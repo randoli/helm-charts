@@ -4,7 +4,7 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     {{- include "prometheus.server.labels" . | nindent 4 }}
-  name: {{ include "prometheus.clusterRoleName" . }}
+  name: {{ .Release.Name }}-{{ include "prometheus.clusterRoleName" . }}
 subjects:
   - kind: ServiceAccount
     name: {{ template "prometheus.serviceAccountName.server" . }}

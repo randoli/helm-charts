@@ -2,7 +2,7 @@
 apiVersion: {{ include "common.capabilities.rbac.apiVersion" . }}
 kind: ClusterRole
 metadata:
-  name: {{ include "vertical-pod-autoscaler.updater.fullname" . }}
+  name: {{ .Release.Name }}-{{ include "vertical-pod-autoscaler.updater.fullname" . }}
   labels:
     {{- include "vertical-pod-autoscaler.updater.labels" . | nindent 4 }}
     {{- if .Values.commonLabels }}

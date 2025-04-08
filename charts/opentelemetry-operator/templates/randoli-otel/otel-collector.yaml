@@ -4,6 +4,7 @@ metadata:
   name: randoli-otel 
 spec:
   mode: deployment
+  replicas: 2
   serviceAccount: randoli-otel-collector
   upgradeStrategy: automatic
   config:

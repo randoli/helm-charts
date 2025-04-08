@@ -28,7 +28,9 @@ data:
   TLS_ENABLED: 'true'
   RIGHTSIZING_RECOMMENDATIONS_ENABLED: '{{ .Values.tags.costManagement }}'
   RIGHTSIZING_INSTALL_VPA: '{{ include "enable.vpa.operator" . }}'
-  SECURITY_SCANS_MODE: '{{ include "observability.secutiry.mode" . }}'
+  RIGHTSIZING_MIN_POD_CPU_MILLICORES: '{{ index .Values.rightsizing.recommender.extraArgs "pod-recommendation-min-cpu-millicores" }}'
+  RIGHTSIZING_MIN_POD_RAM_MB: '{{ index .Values.rightsizing.recommender.extraArgs "pod-recommendation-min-memory-mb" }}'
+  SECURITY_SCANS_MODE: '{{ include "observability.security.mode" . }}'
   SECURITY_SCANS_CRON_SPEC: '{{ .Values.observability.security.cronSpec }}'
   SECURITY_SCANS_INSTALL_KUBESCAPE: '{{ include "enable.security" . }}'
   ENABLE_DEFAULT_TIMELINE_PROMETHEUS_QUERIES: '{{ .Values.anomalyDetection.defaultsQueries.enabled }}'
@@ -51,4 +53,4 @@ data:
   TEKTON_PIPELINE_ENABLED: '{{ .Values.tektonPipeline.enabled }}'
   JAEGER_QUERY_SVC_GRPC: randoli-rok-jaeger-query.{{ .Release.Namespace }}:16685
   JAEGER_QUERY_SVC_HTTP: http://randoli-rok-jaeger-query.{{ .Release.Namespace }}:16686
-  PROMETHEUS_ALERTMANAGER_URL: http://{{ .Release.Name }}-alertmanager.{{ .Release.Namespace }}:9093
+  PROMETHEUS_ALERTMANAGER_URL: http://randoli-alerts.{{ .Release.Namespace }}:9093

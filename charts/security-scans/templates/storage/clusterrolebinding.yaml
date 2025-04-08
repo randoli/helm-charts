@@ -3,7 +3,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "storage.authDelegatorClusterRoleBindingName" . | quote }}
+  name: {{ .Release.Name }}-{{ include "storage.authDelegatorClusterRoleBindingName" . | quote }}
   labels:
     kubescape.io/ignore: "true"
 roleRef:
@@ -18,11 +18,11 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Values.storage.name }}
+  name: {{ .Release.Name }}-{{ .Values.storage.name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Values.storage.name }}
+  name: {{ .Release.Name }}-{{ .Values.storage.name }}
 subjects:
   - kind: ServiceAccount
     name: {{ .Values.storage.name }}
