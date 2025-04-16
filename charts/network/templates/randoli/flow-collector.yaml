@@ -1,0 +1,28 @@
+apiVersion: flows.netobserv.io/v1beta2
+kind: FlowCollector
+metadata:
+  name: cluster
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade
+spec:
+  namespace: netobserv
+  consolePlugin:
+    advanced:
+      env:
+        TEST_CONSOLE: "true"
+  prometheus:
+    querier:
+      manual:
+        url: http://randoli-prometheus.{{ .Release.Namespace }}.svc.cluster.local:80
+  loki:
+    enable: false
+  exporters:
+  - type: OpenTelemetry
+    openTelemetry:
+      targetHost: "randoli-otel-collector.{{ .Release.Namespace }}.svc.cluster.local"
+      targetPort: 4317
+      protocol: grpc
+      logs:
+        enable: false
+      metrics:
+        enable: true

@@ -38,12 +38,6 @@ dependencies:
     condition: observability.security.enabled
     tags:
      - observability
-  - name: network
-    repository: https://randoli.github.io/helm-charts
-    version: 0.1.6
-    condition: observability.pixie.enabled
-    tags:
-     - observability
   - name: logs
     repository: https://randoli.github.io/helm-charts
     version: 0.0.40
@@ -62,3 +56,9 @@ dependencies:
     condition: observability.tracing.enabled
     tags:
      - observability
+  - name: network
+    version: 1.8.2
+    repository: https://randoli.github.io/helm-charts
+    condition: observability.netobserv.enabled
+    tags:
+    - observability     

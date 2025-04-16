@@ -13,17 +13,13 @@ global:
     tlsInsecureSkipVerify: true
     tlsCertConfigmapName: ""
     tlsCertConfigmapKey: ""
-
   alerts:
     slack:
       channel: 
       api_url: 
-
   secrets:
     cert: randoli-agent-cert
     config: randoli-agent-secret
-
-
 observability:
   otel:
     operator: 
@@ -41,8 +37,8 @@ observability:
     imagePullSecrets: ""
   tracing:  
     #enabled: false
-  pixie: 
-    enabled: false
+  netobserv: 
+    #enabled: false
 
 costManagement:
   vpaOperator: 
@@ -154,5 +150,15 @@ tracing:
     enabled: false
   query:
     enabled: false
+
+cert-manager:
+  enabled: false
+  crds: 
+    enabled: true
+  #namespace: "cert-manager"  
+
+network:
+  standaloneConsole:
+    enable: true
 
   
