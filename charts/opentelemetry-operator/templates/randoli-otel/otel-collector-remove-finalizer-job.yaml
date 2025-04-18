@@ -4,7 +4,7 @@ metadata:
   name: randoli-otel-remove-finalizer
   annotations:
     "helm.sh/hook": pre-delete
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-delete-policy": hook-succeeded
 spec:
   #backoffLimit: 1
   #activeDeadlineSeconds: 60
