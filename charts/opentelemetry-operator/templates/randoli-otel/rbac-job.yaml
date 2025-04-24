@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-cr-applier
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-otel-cr-applier-role
+rules:
+- apiGroups: ["opentelemetry.io"]
+  resources: ["opentelemetrycollectors", "targetallocators", "instrumentations"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["namespaces", "pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-cr-applier-binding
+subjects:
+- kind: ServiceAccount
+  name: otel-cr-applier
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ .Release.Name }}-otel-cr-applier-role
+  apiGroup: rbac.authorization.k8s.io
