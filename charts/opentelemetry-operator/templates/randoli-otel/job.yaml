@@ -22,11 +22,8 @@ spec:
           echo "⏳ Waiting for Operator pod..."
           kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=opentelemetry-operator,app.kubernetes.io/component=controller-manager -n {{ .Release.Namespace }} --timeout=120s
           echo "✅ Operator is ready. Applying CRs..."
-          sleep 10
-          #kubectl apply -f /crs/target-allocator.yaml -n {{ .Release.Namespace }}
           kubectl apply -f /crs/otel-collector.yaml -n {{ .Release.Namespace }}
           kubectl apply -f /crs/instrumentation.yaml -n {{ .Release.Namespace }}
-          sleep 10
         volumeMounts:
         - name: crs
           mountPath: /crs
