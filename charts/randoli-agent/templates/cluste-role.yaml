@@ -16,6 +16,7 @@ rules:
       - namespaces
       - services
       - persistentvolumes
+      - endpoints
   - verbs:
       - list
     apiGroups:

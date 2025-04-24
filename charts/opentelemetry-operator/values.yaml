@@ -42,7 +42,7 @@ manager:
     tag: ""
   collectorImage:
     repository: "otel/opentelemetry-collector-k8s"
-    tag: 0.117.0
+    tag: 0.122.1
   opampBridgeImage:
     repository: ""
     tag: ""
@@ -79,13 +79,13 @@ manager:
   # The featureGatesMap will enable or disable specific feature gates in the operator as well as deploy any prerequisites for the feature gate.
   # If this property is not an empty map, the featureGates property will be ignored.
   featureGatesMap: {}
-    # operator.targetallocator.mtls: false
-    # operator.targetallocator.fallbackstrategy: false
-    # operator.collector.targetallocatorcr: false
-    # operator.sidecarcontainers.native: false
-    # operator.observability.prometheus: false
-    # operator.golang.flags: false
-    # operator.collector.default.config: false
+  # operator.targetallocator.mtls: false
+  # operator.targetallocator.fallbackstrategy: false
+  # operator.collector.targetallocatorcr: false
+  # operator.sidecarcontainers.native: false
+  # operator.observability.prometheus: false
+  # operator.golang.flags: false
+  # operator.collector.default.config: false
   ports:
     metricsPort: 8080
     webhookPort: 9443
@@ -109,11 +109,11 @@ manager:
 
   # Extra definitions of environment variables.
   extraEnvs: []
-    # - name: GOMEMLIMIT
-    #   valueFrom:
-    #     resourceFieldRef:
-    #       containerName: manager
-    #       resource: limits.memory
+  # - name: GOMEMLIMIT
+  #   valueFrom:
+  #     resourceFieldRef:
+  #       containerName: manager
+  #       resource: limits.memory
 
   # -- Create the manager ServiceAccount
   serviceAccount:
@@ -168,8 +168,7 @@ manager:
   createRbacPermissions: false
   ## List of additional cli arguments to configure the manager
   ## for example: --labels, etc.
-  extraArgs:
-    - --enable-go-instrumentation=true
+  extraArgs: []
 
   ## Enable leader election mechanism for protecting against split brain if multiple operator pods/replicas are started.
   ## See more at https://docs.openshift.com/container-platform/4.10/operators/operator_sdk/osdk-leader-election.html
@@ -205,11 +204,14 @@ manager:
 
   ## Container specific securityContext
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
-  securityContext: {}
-  # allowPrivilegeEscalation: false
-  # capabilities:
-  #   drop:
-  #   - ALL
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
 
 ## Provide OpenTelemetry Operator kube-rbac-proxy container image.
 ##
@@ -235,11 +237,14 @@ kubeRBACProxy:
 
   ## Container specific securityContext
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
-  securityContext: {}
-  # allowPrivilegeEscalation: false
-  # capabilities:
-  #   drop:
-  #   - ALL
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
 
 ## Admission webhooks make sure only requests with correctly formatted rules will get into the Operator.
 ## They also enable the sidecar injection for OpenTelemetryCollector and Instrumentation CR's
@@ -312,7 +317,9 @@ admissionWebhooks:
   serviceAnnotations: {}
 
   ## Secret annotations
-  secretAnnotations: {}
+  secretAnnotations:
+    "helm.sh/hook": "pre-install,pre-upgrade"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
   ## Secret labels
   secretLabels: {}
 
@@ -334,7 +341,8 @@ clusterRole:
 
 affinity: {}
 tolerations: []
-nodeSelector: {}
+nodeSelector:
+  kubernetes.io/os: linux
 topologySpreadConstraints: []
 hostNetwork: false
 
@@ -349,7 +357,26 @@ securityContext:
   runAsUser: 65532
   fsGroup: 65532
 
+# Determines how the operator pod mounts the service account token and also
+# sets the corresponding field in the associated service account object.
+# - When set to `true` (default), the service account token is automatically
+#   mounted to the pod, and the service account object will have the
+#   `automountServiceAccountToken` field set to `true`.
+# - When set to `false`, automounting of the service account token is disabled,
+#   and the token is manually mounted using a volume and volumeMounts in
+#   the pod spec by the chart. This also updates the `automountServiceAccountToken`
+#   field in the service account object to `false`.
+automountServiceAccountToken: true
+
 testFramework:
   image:
     repository: busybox
     tag: latest
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
