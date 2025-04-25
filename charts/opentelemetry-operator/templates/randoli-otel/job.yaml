@@ -55,11 +55,9 @@ data:
         targetCPUUtilization: 90
       resources:
         requests:
-          memory: "2000Mi"
-          cpu: "300m"
+          memory: "500Mi"
         limits:
-          memory: "2500Mi"
-          cpu: "500m"
+          memory: "1000Mi"
       config:
         receivers:
           otlp:
