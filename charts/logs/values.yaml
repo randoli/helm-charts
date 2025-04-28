@@ -36,7 +36,7 @@ securityContext: {}
 
 podSecurityContext: {}
 
-tolerations: {}
+tolerations: []
 
 resources:
   limits:

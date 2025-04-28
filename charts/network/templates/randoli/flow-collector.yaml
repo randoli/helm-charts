@@ -13,7 +13,7 @@ spec:
   prometheus:
     querier:
       manual:
-        url: http://randoli-prometheus.{{ .Release.Namespace }}.svc.cluster.local:80
+        url: {{ include "prometheus-server-endpoint" . }}
   loki:
     enable: false
   exporters:
