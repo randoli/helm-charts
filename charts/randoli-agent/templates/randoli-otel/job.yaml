@@ -1,3 +1,4 @@
+{{- if eq (include "apply-open-telemetry-crs" . | trim) "true" -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -308,5 +309,6 @@ data:
           # Go autoinstrumentation uses http/proto by default
           # so data must be sent to 4318 instead of 4317.
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4318       
+            value: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4318
+{{end}}             
 ---
