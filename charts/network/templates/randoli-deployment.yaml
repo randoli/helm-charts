@@ -120,3 +120,7 @@ spec:
           emptyDir: {}
         - name: webhook-certs
           emptyDir: {}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}    

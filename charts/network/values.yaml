@@ -5,3 +5,5 @@ certManager:
     name: ""
 standaloneConsole:
   enable: false
+
+tolerations: []

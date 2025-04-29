@@ -1,3 +1,4 @@
+{{- if eq (include "apply-open-telemetry-crs" . | trim) "true" -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -32,6 +33,9 @@ spec:
       - name: crs
         configMap:
           name: otel-crs
+      {{- with .Values.tolerations }}
+      tolerations: {{ toYaml . | nindent 8 }}
+      {{- end }}        
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -44,6 +48,9 @@ data:
     metadata:
       name: randoli-otel
     spec:
+      {{- with .Values.tolerations }}
+      tolerations: {{ toYaml . | nindent 8 }}
+      {{- end }}  
       upgradeStrategy: automatic
       mode: statefulset
       hostNetwork: true
@@ -258,28 +265,15 @@ data:
               processors: [memory_limiter, resource, batch]
               exporters: [debug]
       targetAllocator:
+        {{- with .Values.tolerations }}
+        tolerations: {{ toYaml . | nindent 10 }}
+        {{- end }} 
         enabled: true
         prometheusCR:
           enabled: true
           serviceMonitorSelector: {}
           podMonitorSelector: {}
         serviceAccount: opentelemetry-targetallocator
-  target-allocator.yaml: |
-    apiVersion: opentelemetry.io/v1alpha1
-    kind: TargetAllocator
-    metadata:
-      name: randoli-prom-ta
-    spec:
-      allocationStrategy: consistent-hashing
-      filterStrategy: relabel-config
-      ipFamilyPolicy: SingleStack
-      managementState: managed
-      prometheusCR:
-        enabled: true
-        podMonitorSelector: {}
-        scrapeInterval: 30s
-        serviceMonitorSelector: {}
-      serviceAccount: opentelemetry-targetallocator
   instrumentation.yaml: |
     apiVersion: opentelemetry.io/v1alpha1
     kind: Instrumentation
@@ -315,5 +309,6 @@ data:
           # Go autoinstrumentation uses http/proto by default
           # so data must be sent to 4318 instead of 4317.
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4318       
+            value: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4318
+{{end}}             
 ---

@@ -113,3 +113,19 @@ true
 false
 {{- end -}}
 {{- end -}}
+
+
+# Scenarios
+# 1 - otel enabled (based on tags)
+# 2 - otel enabled based on values
+# 3 - otel disabled but apply crs is true
+# 4 - otel disabled and applycrs is false
+
+{{- define "apply-open-telemetry-crs" -}}
+{{- $opentelemetryoperator := .Values.observability.otel.operator | default dict }}
+{{- if or  (default false $opentelemetryoperator.enabled) .Values.observability.otel.applyCRs .Values.tags.observability -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
