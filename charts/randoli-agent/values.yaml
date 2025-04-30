@@ -24,7 +24,7 @@ observability:
   otel:
     operator: 
       #enabled: false
-    applyCRs: false  
+    #applyCRs: false  
   logs:
     analyzers:
       enabled: true
