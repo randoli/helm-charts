@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ .Release.Name }}-{{ include "randoli-agent.fullname" . }}-secret-role
+  name: {{ .Release.Name }}-{{ include "randoli-agent.fullname" . }}-role
   namespace: {{ include "randoli-agent.namespace" . }}
 rules:
   - apiGroups:
@@ -15,9 +15,9 @@ rules:
   - apiGroups:
       - ''
     resources:
-      - secrets
+      - configmaps
     resourceNames:
-      - randoli-rok-notification-secret
+      - randoli-alerts
     verbs: 
       - get
       - update
