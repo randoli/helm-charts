@@ -50,7 +50,8 @@ data:
     spec:
       {{- with .Values.tolerations }}
       tolerations: {{ toYaml . | nindent 8 }}
-      {{- end }}  
+      {{- end }}
+      image: docker.io/otel/opentelemetry-collector-k8s:0.122.1  
       upgradeStrategy: automatic
       mode: statefulset
       hostNetwork: true
@@ -155,8 +156,8 @@ data:
               action: insert
           memory_limiter:
             check_interval: 5s
-            limit_mib: 2000
-            spike_limit_mib: 500
+            limit_mib: 500
+            spike_limit_mib: 256
           batch:
             send_batch_max_size: 10000
             timeout: 5s
@@ -184,7 +185,7 @@ data:
             include:
               match_type: regexp
               attributes:
-                - key: http.request.method
+                - key: http.method
                   value: .+ # Match any non-empty value for http.method
           attributes/db:
             actions:
