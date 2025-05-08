@@ -104,7 +104,7 @@ manager:
   ## Adds additional environment variables. This property will be deprecated. Please use extraEnvs instead.
   ## e.g ENV_VAR: env_value
   env:
-    ENABLE_WEBHOOKS: "false"
+    ENABLE_WEBHOOKS: "true"
 
 
   # Extra definitions of environment variables.
@@ -168,7 +168,8 @@ manager:
   createRbacPermissions: false
   ## List of additional cli arguments to configure the manager
   ## for example: --labels, etc.
-  extraArgs: []
+  extraArgs:
+    - --enable-go-instrumentation=true
 
   ## Enable leader election mechanism for protecting against split brain if multiple operator pods/replicas are started.
   ## See more at https://docs.openshift.com/container-platform/4.10/operators/operator_sdk/osdk-leader-election.html
@@ -249,7 +250,7 @@ kubeRBACProxy:
 ## Admission webhooks make sure only requests with correctly formatted rules will get into the Operator.
 ## They also enable the sidecar injection for OpenTelemetryCollector and Instrumentation CR's
 admissionWebhooks:
-  create: false
+  create: true
   servicePort: 443
   failurePolicy: Fail
   secretName: ""
@@ -295,7 +296,7 @@ admissionWebhooks:
   ## certManager must be disabled and autoGenerateCert must be enabled.
   ## If true and certManager.enabled is false, Helm will automatically create a self-signed cert and secret for you.
   autoGenerateCert:
-    enabled: false
+    enabled: true
     # If set to true, new webhook key/certificate is generated on helm upgrade.
     recreate: true
     # Cert period time in days. The default is 365 days.

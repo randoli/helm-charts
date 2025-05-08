@@ -8,6 +8,7 @@ metadata:
 data:
   AGENT_CONTROLLER_DIAL_TIMEOUT: 10000ms
   APP_NAME: randoli-agent
+  CONSOLE_URL: https://console.insights.randoli.io
   CLIENT_CERT_PATH: /app/certs/client-cert.pem
   CLIENT_PRIVATE_KEY_PATH: /app/certs/client-key.pem
   CONTEXT_PATH: /
