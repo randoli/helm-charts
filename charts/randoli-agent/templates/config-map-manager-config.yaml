@@ -54,3 +54,5 @@ data:
   JAEGER_QUERY_SVC_GRPC: randoli-rok-jaeger-query.{{ .Release.Namespace }}:16685
   JAEGER_QUERY_SVC_HTTP: http://randoli-rok-jaeger-query.{{ .Release.Namespace }}:16686
   PROMETHEUS_ALERTMANAGER_URL: http://randoli-alerts.{{ .Release.Namespace }}:9093
+  TRACE_STORAGE_BACKEND_TYPE: JAEGER
+  TRACE_STORAGE_BACKEND_URL: http://randoli-rok-jaeger-query.{{ .Release.Namespace }}:16686
