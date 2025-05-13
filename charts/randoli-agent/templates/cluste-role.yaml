@@ -86,6 +86,12 @@ rules:
       - autoscaling.k8s.io
     resources:
       - verticalpodautoscalers
+  - verbs:
+      - list
+    apiGroups:
+      - autoscaling.k8s.io
+    resources:
+      - verticalpodautoscalercheckpoints
 {{- if ne .Values.observability.security.mode "OFF" }}
   - verbs:
       - get

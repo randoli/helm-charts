@@ -1,4 +1,3 @@
-{{- if .Values.config.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -20,4 +19,4 @@ data:
   {{- end }}
   {{- include "prometheus.alerts.route" . | nindent 4 -}}
   {{- include "prometheus.alerts.receiver" . | nindent 4 -}}
-{{- end }}
+

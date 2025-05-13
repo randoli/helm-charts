@@ -1,0 +1,33 @@
+{{- if .Values.config.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: randoli-alerts-cm-applier
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-alerts-cm-applier-role
+rules:
+- verbs: ["get", "delete"]
+  apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["{{ include "alertmanager.fullname" . }}"]
+- verbs: ["create"]
+  apiGroups: [""]
+  resources: ["configmaps"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: randoli-alerts-cm-applier-binding
+subjects:
+- kind: ServiceAccount
+  name: randoli-alerts-cm-applier
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ .Release.Name }}-alerts-cm-applier-role
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}  
+
