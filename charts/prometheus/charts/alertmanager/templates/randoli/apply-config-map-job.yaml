@@ -1,0 +1,45 @@
+{{- if .Values.config.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: apply-randoli-alerts-cm
+  annotations:
+    helm.sh/hook: post-install
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 3 
+  template:
+    spec:
+      serviceAccountName: randoli-alerts-cm-applier
+      containers:
+      - name: apply-cm
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "⏳ Applying randoli alerts Config Map..."
+          kubectl apply -f /cms/configmap.yaml
+          echo "✅ Randoli alerts Config Map Applied"
+        volumeMounts:
+        - name: cms
+          mountPath: /cms
+      restartPolicy: Never
+      volumes:
+      - name: cms
+        configMap:
+          name: randoli-alerts-cms
+      {{- with .Values.tolerations }}
+      tolerations: {{ toYaml . | nindent 8 }}
+      {{- end }}        
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: randoli-alerts-cms
+data:
+  configmap.yaml: |-
+{{ tpl (.Files.Get "files/randoli/configmap.yaml") . | nindent 4 }}
+{{- end }}

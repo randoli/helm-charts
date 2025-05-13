@@ -1,8 +1,8 @@
-{{- if eq (include "apply-open-telemetry-crs" . | trim) "true" -}}
+{{- if .Values.config.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: delete-otel-crs
+  name: delete-randoli-alerts-cm
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
@@ -10,20 +10,19 @@ spec:
   backoffLimit: 1
   template:
     spec:
-      serviceAccountName: otel-cr-applier
+      serviceAccountName: randoli-alerts-cm-applier
       containers:
-      - name: apply-crs
+      - name: delete-cms
         image: bitnami/kubectl:latest
         command:
         - /bin/bash
         - -c
         - |
-          echo "⏳ Deleting Otel CRs..."
-          kubectl delete opentelemetrycollector randoli-otel -n {{ .Release.Namespace }}
-          kubectl delete instrumentation otel-instrumentation -n {{ .Release.Namespace }}
+          echo "⏳ Deleting Randoli Alerts CMs..."
+          kubectl delete configmap {{ include "alertmanager.fullname" . }} -n {{ .Release.Namespace }}
+          echo "✅ Randoli alerts Config Map Deleted"  
       restartPolicy: Never
       {{- with .Values.tolerations }}
       tolerations: {{ toYaml . | nindent 8 }}
-      {{- end }} 
-{{ end }}      
----
+      {{- end }}
+{{- end }}  
