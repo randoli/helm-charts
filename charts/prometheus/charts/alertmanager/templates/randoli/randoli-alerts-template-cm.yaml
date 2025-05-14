@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: randoli-alert-templates
+  namespace: {{ include "alertmanager.namespace" . }}
+data:
+  randoli_email.tmpl: |-
+{{ .Files.Get "files/randoli/randoli_email.tmpl" | indent 4 }}
+
+  randoli_slack.tmpl: |-
+{{ .Files.Get "files/randoli/randoli_slack.tmpl" | indent 4 }}
