@@ -1,0 +1,101 @@
+{{ define "randoli.email.subject" }}
+[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }} in {{ .CommonLabels.deployment }} ({{ .CommonLabels.cluster }})
+{{ end }}
+
+{{ define "randoli.email.body" }}
+<html>
+<head>
+  <style>
+    /* Fallback fluid container */
+    .container { width:100% !important; max-width:600px; margin:0 auto; }
+    /* Responsive button */
+    .button { display:inline-block; width:100%; max-width:200px; text-align:center; }
+    @media only screen and (max-width: 480px) {
+      .container { padding: 0 10px !important; }
+      .button { width:100% !important; }
+    }
+  </style>
+</head>
+<body style="margin:0; padding:0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px 0;">
+    <tr>
+      <td align="center">
+
+        <!-- Top Logo -->
+        <table class="container" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+          <tr><td align="center">
+            <img src="https://cdn.prod.website-files.com/66e2aa7f74a05584d1dc32d8/67b4ede66602c10c41838925_logo_48px.png"
+                 alt="Randoli Logo"
+                 style="display:block; max-width:100%; height:auto; max-height:60px;">
+          </td></tr>
+        </table>
+
+        <!-- Main Card -->
+        <table class="container" cellpadding="0" cellspacing="0"
+               style="background-color:#ffffff; border-radius:8px; overflow:hidden;
+                      box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #007398; padding:20px; text-align:center;">
+              <h1 style="color:#ffffff; margin:0; font-size:24px;">
+                [{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:20px; color:#333333; font-size:14px; line-height:1.6;">
+
+              <p><strong>Alert Summary</strong></p>
+              <table width="100%" cellpadding="5" cellspacing="0"
+                     style="border-collapse:collapse; margin-bottom:20px;">
+                <tbody>
+                  <tr>
+                    <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Cluster</td>
+                    <td style="border-bottom:1px solid #eeeeee;">{{ .CommonLabels.cluster }}</td>
+                  </tr>
+                  <tr>
+                    <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Namespace</td>
+                    <td style="border-bottom:1px solid #eeeeee;">{{ .CommonLabels.namespace }}</td>
+                  </tr>
+                  <tr>
+                    <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Deployment</td>
+                    <td style="border-bottom:1px solid #eeeeee;">{{ .CommonLabels.deployment }}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:bold;">Description</td>
+                    <td>{{ .CommonAnnotations.description }}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Button -->
+              <p style="text-align:center; margin:30px 0;">
+                <a href="{{ .CommonAnnotations.sourceUrl }}"
+                   class="button"
+                   style="padding:12px 24px; background-color:#007398; color:#ffffff;
+                          text-decoration:none; border-radius:4px; font-weight:bold;">
+                  View {{ .CommonLabels.alertType }}
+                </a>
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#f4f4f4; padding:10px 20px;
+                       font-size:12px; color:#777777; text-align:center;">
+              This is an automated notification from Randoli App Insights. Please do not reply.
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+{{ end }}

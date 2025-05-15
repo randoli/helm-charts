@@ -1,0 +1,14 @@
+{{ define "randoli.slack.title" }}
+[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }} in {{ .CommonLabels.deployment }} ({{ .CommonLabels.cluster }})
+{{ end }}
+
+{{ define "randoli.slack.text" }}
+*Cluster:* {{ .CommonLabels.cluster }}
+*Namespace:* {{ .CommonLabels.namespace }}
+*Deployment:* {{ .CommonLabels.deployment }}
+*Description:* {{ .CommonAnnotations.description }}
+{{ end }}
+
+{{ define "randoli.slack.footer" }}
+Occurred At {{ .CommonAnnotations.occurredAt }}
+{{ end }}

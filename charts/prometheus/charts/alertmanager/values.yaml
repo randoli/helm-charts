@@ -359,15 +359,16 @@ templates: {}
 #   alertmanager.tmpl: |-
 
 ## Optionally specify extra list of additional volumeMounts
-extraVolumeMounts: []
-  # - name: extras
-  #   mountPath: /usr/share/extras
-  #   readOnly: true
+extraVolumeMounts:
+  - name: randoli-alert-templates
+    mountPath: /randoli/templates
+    readOnly: true
 
 ## Optionally specify extra list of additional volumes
-extraVolumes: []
-  # - name: extras
-  #   emptyDir: {}
+extraVolumes: 
+  - name: randoli-alert-templates
+    configMap:
+      name: randoli-alert-templates
 
 ## Optionally specify extra environment variables to add to alertmanager container
 extraEnv: []
