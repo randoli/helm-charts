@@ -111,8 +111,8 @@ spec:
           action: insert
       memory_limiter:
         check_interval: 5s
-        limit_mib: 500
-        spike_limit_mib: 256
+        limit_mib: 900
+        spike_limit_mib: 200
       batch:
         send_batch_max_size: 10000
         timeout: 5s
