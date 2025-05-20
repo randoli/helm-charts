@@ -105,7 +105,7 @@ rules:
       - vulnerabilitymanifestsummaries
       - vulnerabilitymanifests
       - vulnerabilitysummaries
-{{ end }}
+{{- end }}
 {{- if and .Values.tags.observability .Values.observability.logs.analyzers.enabled }}
   - verbs:
       - create
@@ -120,7 +120,7 @@ rules:
     resources:
       - vectorpipelines
       - clustervectorpipelines
-{{ end }}
+{{- end }}
 {{- if .Values.tektonPipeline.enabled }}
   - verbs:
       - list
@@ -132,4 +132,4 @@ rules:
       - pipelineruns
       - pipelines
       - taskruns
-{{ end }}
+{{- end }}
