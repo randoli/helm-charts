@@ -1,9 +1,11 @@
 # -- Overwrite the default name of the chart
 nameOverride: "opencost"
 # -- Overwrite all resources name created by the chart
-fullnameOverride: "randoli-cmk-opencost"
+fullnameOverride: "randoli-cmk-cost"
 # -- Override the deployment namespace
 namespaceOverride: ""
+# -- Override the default name of cluster - Can be found in /etc/kubernetes/admin.conf: clusters -> cluster -> name
+clusterName: "cluster.local"
 
 loglevel: info
 
@@ -95,6 +97,8 @@ service:
   labels: {}
   # --  Kubernetes Service type
   type: ClusterIP
+  # -- NodePort if service type is NodePort
+  nodePort: {}
   # -- extra ports.  Useful for sidecar pods such as oauth-proxy
   extraPorts: []
     # - name: oauth-proxy
@@ -103,6 +107,8 @@ service:
     # - name: oauth-metrics
     #   port: 8082
     #   targetPort: 8082
+  # -- LoadBalancer Source IP CIDR if service type is LoadBalancer and cloud provider supports this
+  loadBalancerSourceRanges: []
 
 # Create cluster role policies
 rbac:
@@ -124,10 +130,9 @@ opencost:
       # -- Exporter container image registry
       registry: docker.io
       # -- Exporter container image name
-      repository: randoli/opencost
+      repository: randoli/cost
       # -- Exporter container image tag
-      # @default -- `""` (use appVersion in Chart.yaml)
-      tag: "1.112.1"
+      tag: "1.114.0"
       # -- Exporter container image pull policy
       pullPolicy: IfNotPresent
       # -- Override the full image name for development purposes
@@ -143,7 +148,6 @@ opencost:
         memory: '55Mi'
       # -- CPU/Memory resource limits
       limits:
-        cpu: '999m'
         memory: '1Gi'
     # Startup probe configuration
     startupProbe:
@@ -217,6 +221,31 @@ opencost:
     # -- Any extra environment variables you would like to pass on to the pod
     extraEnv: {}
       # FOO: BAR
+      # For example, if accessing mimir directly and getting 401 Unauthorized
+      # PROMETHEUS_HEADER_X_SCOPE_ORGID: anonymous
+    apiIngress:
+      # -- Ingress for OpenCost API
+      enabled: false
+      # -- Ingress controller which implements the resource
+      ingressClassName: ""
+      # -- Annotations for Ingress resource
+      annotations: {}
+        # kubernetes.io/tls-acme: "true"
+      # -- A list of host rules used to configure the Ingress
+      # @default -- See [values.yaml](values.yaml)
+      hosts:
+        - host: example.local
+          paths:
+            - path: /
+              pathType: Prefix
+      # -- Redirect ingress to an extraPort defined on the service such as oauth-proxy
+      servicePort: http
+      # servicePort: oauth-proxy
+      # -- Ingress TLS configuration
+      tls: []
+        #  - secretName: chart-example-tls
+        #    hosts:
+        #      - chart-example.local
   customPricing:
     # -- Enables custom pricing configuration
     enabled: false
@@ -263,14 +292,14 @@ opencost:
 
   metrics:
     kubeStateMetrics:
-      # -- Enable emission of pod annotations
-      emitPodAnnotations: ""
-      # -- Enable emission of namespace annotations
-      emitNamespaceAnnotations: ""
-      # -- Enable emission of KSM v1 metrics
-      emitKsmV1Metrics: false
-      # -- Enable only emission of KSM v1 metrics that do not exist in KSM 2 by default
-      emitKsmV1MetricsOnly: false
+      # -- (bool) Enable emission of pod annotations
+      emitPodAnnotations: ~
+      # -- (bool) Enable emission of namespace annotations
+      emitNamespaceAnnotations: ~
+      # -- (bool) Enable emission of KSM v1 metrics
+      emitKsmV1Metrics: ~
+      # -- (bool) Enable only emission of KSM v1 metrics that do not exist in KSM 2 by default
+      emitKsmV1MetricsOnly: ~
 
     serviceMonitor:
       # -- Create ServiceMonitor resource for scraping metrics using PrometheusOperator
@@ -305,6 +334,8 @@ opencost:
     config:
       # -- Enables creating the metrics.json configuration as a ConfigMap
       enabled: false
+      # -- Customize the configmap name used for metrics
+      configmapName: custom-metrics
       # -- List of metrics to be disabled
       disabledMetrics: []
       # - <metric-to-be-disabled>
@@ -313,6 +344,8 @@ opencost:
   prometheus:
     # -- Secret name that contains credentials for Prometheus
     secret_name: ~
+    # -- Existing secret name that contains credentials for Prometheus
+    existingSecretName: ~
     # -- Prometheus Basic auth username
     username: ""
     # -- Key in the secret that references the username
@@ -324,6 +357,8 @@ opencost:
     # -- Prometheus Bearer token
     bearer_token: ""
     bearer_token_key: DB_BEARER_TOKEN
+    # -- If true, opencost will use kube-rbac-proxy to authenticate with in cluster Prometheus for openshift
+    kubeRBACProxy: false
     external:
       # -- Use external Prometheus (eg. Grafana Cloud)
       enabled: false
@@ -333,11 +368,13 @@ opencost:
       # -- Use in-cluster Prometheus
       enabled: true
       # -- Service name of in-cluster Prometheus
-      serviceName: "{{.Release.Name }}-prometheus-server"
+      serviceName: prometheus-server
       # -- Namespace of in-cluster Prometheus
-      namespaceName: "{{.Release.Namespace}}"
+      namespaceName: prometheus-system
       # -- Service port of in-cluster Prometheus
       port: 80
+      # -- Scheme to use for in-cluster Prometheus
+      scheme: http
     amp:
       # -- Use Amazon Managed Service for Prometheus (AMP)
       enabled: false  # If true, opencost will be configured to remote_write and query from Amazon Managed Service for Prometheus.
@@ -352,6 +389,7 @@ opencost:
         serviceName: my-thanos-query
         namespaceName: opencost
         port: 10901
+        scheme: http
       external:
         enabled: false
         url: 'https://thanos-query.example.com/thanos'
@@ -366,7 +404,7 @@ opencost:
       repository: opencost/opencost-ui
       # -- UI container image tag
       # @default -- `""` (use appVersion in Chart.yaml)
-      tag: "1.111.0"
+      tag: "1.114.0@sha256:09edc15c5f917c82a8a10f840595e7f3768e767546c19f05c2364378aa9883e0"
       # -- UI container image pull policy
       pullPolicy: IfNotPresent
       # -- Override the full image name for development purposes
@@ -378,11 +416,12 @@ opencost:
         memory: '55Mi'
       # -- CPU/Memory resource limits
       limits:
-        cpu: '999m'
         memory: '1Gi'
     # used in the default.nginx.conf if you want to switch for using with Docker
     # apiServer: 0.0.0.0
     uiPort: 9090
+    # Set to true to use IPv6
+    useIPv6: true
     # Liveness probe configuration
     livenessProbe:
       # -- Whether probe is enabled
@@ -422,6 +461,12 @@ opencost:
     # -- A list of volume mounts to be added to the pod
     extraVolumeMounts: []
 
+    # set to true to set upstream to use <service>.<namespace>.svc.cluster.local instead of just <service>.<namespace>
+    useDefaultFqdn: false
+
+    # Set the model fqdn to use for the upstream
+    # modelFqdn: opencost.opencost.svc.cluster.local:9003
+
     ingress:
       # -- Ingress for OpenCost UI
       enabled: false
@@ -444,6 +489,22 @@ opencost:
         #  - secretName: chart-example-tls
         #    hosts:
         #      - chart-example.local
+    route:
+      # -- OpenShift route for OpenCost UI
+      enabled: false
+      # -- Annotations for Ingress resource
+      annotations: {}
+        # haproxy.router.openshift.io/timeout: 1m
+      # @default -- See [values.yaml](values.yaml)
+      host: example.local
+      path:
+      # -- Redirect ingress to an extraPort defined on the service such as oauth-proxy
+      targetPort: http-ui
+      # targetPort: oauth-proxy
+      # -- Ingress TLS configuration
+      tls: []
+        # insecureEdgeTerminationPolicy: Redirect
+        # termination: edge
 
   sigV4Proxy:
     image: public.ecr.aws/aws-observability/aws-sigv4-proxy:latest
@@ -499,5 +560,22 @@ opencost:
     #       protocol: TCP
     #   resources: {}
 
+  platforms:
+    openshift:
+      # -- Enable OpenShift specific configurations
+      enabled: false
+      # OPTIONAL. The following configs only to be enabled when using a Prometheus instance already installed in the cluster.
+      # -- If true, the helm chart will create a ClusterRoleBinding to grant the OpenCost ServiceAccount access to query Prometheus.
+      createMonitoringClusterRoleBinding: false
+      # -- If true, create a Role and RoleBinding to allow Prometheus to list and watch OpenCost resources.
+      createMonitoringResourceReaderRoleBinding: false
+      # -- Name of the Prometheus serviceaccount to bind to the Resource Reader Role Binding.
+      monitoringServiceAccountName: prometheus-k8s
+      # -- Namespace of the Prometheus serviceaccount to bind to the Resource Reader Role Binding.
+      monitoringServiceAccountNamespace: openshift-monitoring
+      # -- If true, set Security Context Constraints on serviceaccount for read/write premissions
+      enableSCC: false
+      # -- If true, enable internal prom access
+      enablePromAccess: false
 # -- A list of volumes to be added to the pod
 extraVolumes: []

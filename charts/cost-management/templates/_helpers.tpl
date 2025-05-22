@@ -31,12 +31,23 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
+Allow the release namespace to be overridden
+*/}}
+{{- define "opencost.namespace" -}}
+  {{- if .Values.namespaceOverride -}}
+    {{- .Values.namespaceOverride -}}
+  {{- else -}}
+    {{- .Release.Namespace -}}
+  {{- end -}}
+{{- end -}}
+
+{{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
 {{- define "opencost.prometheus.secretname" -}}
-  {{- if .Values.global.prometheus.secretName -}}
-    {{- .Values.global.prometheus.secretName -}}
+  {{- if .Values.opencost.prometheus.secret_name -}}
+    {{- .Values.opencost.prometheus.secret_name -}}
   {{- else -}}
     {{- include "opencost.fullname" . -}}
   {{- end -}}
@@ -73,7 +84,7 @@ Create the name of the controller service account to use
   {{- if .Values.serviceAccount.create -}}
     {{- default (include "opencost.fullname" .) .Values.serviceAccount.name }}
   {{- else -}}
-    {{- default "default" .Values.serviceAccount.name }}
+    {{- default "opencost" .Values.serviceAccount.name }}
   {{- end -}}
 {{- end -}}
 
@@ -109,9 +120,20 @@ Check that either thanos external or internal is defined
   {{- else -}}
     {{- $host := .Values.opencost.prometheus.thanos.internal.serviceName }}
     {{- $ns := .Values.opencost.prometheus.thanos.internal.namespaceName }}
+    {{- $clusterName := .Values.clusterName }}
     {{- $port := .Values.opencost.prometheus.thanos.internal.port | int }}
-    {{- printf "http://%s.%s.svc.cluster.local:%d" $host $ns $port -}}
+    {{- $scheme := .Values.opencost.prometheus.thanos.internal.scheme | default "http"}}
+    {{- printf "%s://%s.%s.svc.%s:%d" $scheme $host $ns $clusterName $port -}}
   {{- end -}}
+{{- end -}}
+
+{{/*
+  Fail if both kube-rbac-proxy and bearer token are set
+*/}}
+{{- define "kubeRBACProxyBearerTokenCheck" -}}
+{{- if and .Values.opencost.prometheus.kubeRBACProxy .Values.opencost.prometheus.bearer_token }}
+  {{- fail "Both kubeRBACProxy and bearer_token are set. Please specify only one." -}}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -150,3 +172,51 @@ apiVersion: networking.k8s.io/v1
 apiVersion: networking.k8s.io/v1beta1
 {{- end }}
 {{- end -}}
+
+{{- define "opencost.imageTag" -}}
+{{ .Values.opencost.exporter.image.tag | default (printf "%s" .Chart.AppVersion) }}
+{{- end -}}
+
+{{- define "opencost.fullImageName" -}}
+{{- if .Values.opencost.exporter.image.fullImageName }}
+{{- .Values.opencost.exporter.image.fullImageName -}}
+{{- else}}
+{{- .Values.opencost.exporter.image.registry -}}/{{- .Values.opencost.exporter.image.repository -}}:{{- include "opencost.imageTag" . -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "opencostUi.imageTag" -}}
+{{- .Values.opencost.ui.image.tag | default (printf "%s" .Chart.AppVersion) -}}
+{{- end -}}
+
+{{- define "opencostUi.fullImageName" -}}
+{{- if .Values.opencost.ui.image.fullImageName }}
+{{- .Values.opencost.ui.image.fullImageName -}}
+{{- else}}
+{{- .Values.opencost.ui.image.registry -}}/{{- .Values.opencost.ui.image.repository -}}:{{- include "opencostUi.imageTag" . -}}
+{{- end -}}
+{{- end -}}
+
+
+{{- define "opencost.sccName" -}}
+{{include "opencost.fullname" .}}-scc
+{{- end -}}
+
+{{- /*
+  Compute a checksum based on the rendered content of specific ConfigMaps and Secrets.
+*/ -}}
+{{- define "configsChecksum" -}}
+{{- $files := list
+  "configmap-custom-pricing.yaml"
+  "configmap-frontend.yaml"
+  "configmap-metrics-config.yaml"
+  "secret.yaml"
+-}}
+{{- $checksum := "" -}}
+{{- range $files -}}
+  {{- $content := include (print $.Template.BasePath (printf "/%s" .)) $ -}}
+  {{- $checksum = printf "%s%s" $checksum $content | sha256sum -}}
+{{- end -}}
+{{- $checksum | sha256sum -}}
+{{- end -}}
+

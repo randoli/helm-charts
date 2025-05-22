@@ -1,12 +1,15 @@
 {{- include  "isPrometheusConfigValid" . }}
+{{- include  "kubeRBACProxyBearerTokenCheck" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "opencost.fullname" . }}
   labels: {{- include "opencost.labels" . | nindent 4 }}
-  {{- with .Values.annotations }}
-  annotations: {{- toYaml . | nindent 4 }}
-  {{- end }}
+  annotations:
+    checksum/configs: {{ include "configsChecksum" . }}
+    {{- with .Values.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   replicas: {{ .Values.opencost.exporter.replicas }}
   selector:
@@ -45,6 +48,20 @@ spec:
       {{- with.Values.opencost.topologySpreadConstraints }}
       topologySpreadConstraints: {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if (and .Values.plugins.enabled .Values.plugins.install.enabled )}}
+      initContainers:
+        - name: plugin-installer
+          image: {{ .Values.plugins.install.fullImageName }}
+          command: ["sh", "/install/install_plugins.sh"]
+      {{- with .Values.plugins.install.securityContext }}
+          securityContext: {{- toYaml . | nindent 12 }}
+      {{- end }}
+          volumeMounts:
+            - name: install-script
+              mountPath: /install
+            - name: plugins-dir
+              mountPath: {{ .Values.plugins.folder }}
+      {{- end }}
       containers:
         - name: {{ include "opencost.fullname" . }}
           {{- if .Values.opencost.exporter.image.fullImageName }}
@@ -58,14 +75,23 @@ spec:
           - --{{ . }}
           {{- end }}
           ports:
-            - containerPort: 9003
+            - containerPort: {{ .Values.opencost.exporter.apiPort }}
               name: http
           resources: {{- toYaml .Values.opencost.exporter.resources | nindent 12 }}
+          {{- if .Values.opencost.exporter.startupProbe.enabled }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.opencost.exporter.startupProbe.path }}
+              port: {{ .Values.opencost.exporter.apiPort }}
+            initialDelaySeconds: {{ .Values.opencost.exporter.startupProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.opencost.exporter.startupProbe.periodSeconds }}
+            failureThreshold: {{ .Values.opencost.exporter.startupProbe.failureThreshold }}
+          {{- end }}
           {{- if .Values.opencost.exporter.livenessProbe.enabled }}
           livenessProbe:
             httpGet:
-              path: /healthz
-              port: 9003
+              path: {{ .Values.opencost.exporter.livenessProbe.path }}
+              port: {{ .Values.opencost.exporter.apiPort }}
             initialDelaySeconds: {{ .Values.opencost.exporter.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.opencost.exporter.livenessProbe.periodSeconds }}
             failureThreshold: {{ .Values.opencost.exporter.livenessProbe.failureThreshold }}
@@ -73,8 +99,8 @@ spec:
           {{- if .Values.opencost.exporter.readinessProbe.enabled }}
           readinessProbe:
             httpGet:
-              path: /healthz
-              port: 9003
+              path: {{ .Values.opencost.exporter.readinessProbe.path }}
+              port: {{ .Values.opencost.exporter.apiPort }}
             initialDelaySeconds: {{ .Values.opencost.exporter.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.opencost.exporter.readinessProbe.periodSeconds }}
             failureThreshold: {{ .Values.opencost.exporter.readinessProbe.failureThreshold }}
@@ -83,12 +109,26 @@ spec:
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
           env:
-            - name: PROMETHEUS_SERVER_ENDPOINT
-              value: {{ include "opencost.prometheusServerEndpoint" . | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.loglevel }}
+            - name: CUSTOM_COST_ENABLED
+              value: {{ .Values.plugins.enabled | quote }}
+            - name: KUBECOST_NAMESPACE
+              value: {{ include "opencost.namespace" . }}
+            {{- if .Values.opencost.metrics.config.enabled }}
+            - name: METRICS_CONFIGMAP_NAME
+              value: {{ .Values.opencost.metrics.config.configmapName }}
+            {{- end }}
+            {{- if .Values.opencost.exporter.apiPort }}
+            - name: API_PORT
+              value: {{ .Values.opencost.exporter.apiPort | quote }}
+            {{- end }}
             {{- if .Values.opencost.carbonCost.enabled }}
             - name: CARBON_ESTIMATES_ENABLED
               value: {{ .Values.opencost.carbonCost.enabled | quote }}
             {{- end }}
+            - name: PROMETHEUS_SERVER_ENDPOINT
+              value: {{ include "opencost.prometheusServerEndpoint" . | quote }}
             {{- if .Values.opencost.exporter.cloudProviderApiKey }}
             - name: CLOUD_PROVIDER_API_KEY
               valueFrom:
@@ -113,25 +153,29 @@ spec:
                   key: AWS_SECRET_ACCESS_KEY
             {{- end }}
             # If username, password or bearer_token are defined, pull from secrets
-            {{- if or .Values.opencost.prometheus.username (and .Values.global.prometheus.secretName .Values.global.prometheus.usernameKey) }}
+            {{- if or .Values.opencost.prometheus.username_key (and .Values.global.prometheus.secretName .Values.global.prometheus.usernameKey) }}
             - name: DB_BASIC_AUTH_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "opencost.prometheus.secretname" . }}
+                  name: {{ .Values.opencost.prometheus.existingSecretName | default (include "opencost.prometheus.secretname" .) }}
                   key: {{ .Values.global.prometheus.usernameKey }}
             {{- end }}
-            {{- if or .Values.opencost.prometheus.password (and .Values.global.prometheus.secretName .Values.global.prometheus.passwordKey) }}
+            {{- if or .Values.opencost.prometheus.password_key (and .Values.global.prometheus.secretName .Values.global.prometheus.passwordKey) }}
             - name: DB_BASIC_AUTH_PW
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "opencost.prometheus.secretname" . }}
+                  name: {{ .Values.opencost.prometheus.existingSecretName | default (include "opencost.prometheus.secretname" .) }}
                   key: {{ .Values.global.prometheus.passwordKey }}
-            {{- else if or .Values.opencost.prometheus.bearer_token (and .Values.global.prometheus.secretName .Values.global.prometheus.bearerTokenKey) }}
+            {{- else if or .Values.opencost.prometheus.bearer_token_key (and .Values.global.prometheus.secretName .Values.global.prometheus.bearerTokenKey) }}
             - name: DB_BEARER_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "opencost.prometheus.secretname" . }}
+                  name: {{ .Values.opencost.prometheus.existingSecretName | default (include "opencost.prometheus.secretname" .) }}
                   key: {{ .Values.global.prometheus.bearerTokenKey }}
+            {{- end }}
+            {{- if .Values.opencost.prometheus.kubeRBACProxy }}
+            - name: KUBE_RBAC_PROXY_ENABLED
+              value: {{ (quote .Values.opencost.prometheus.kubeRBACProxy) }}
             {{- end }}
             {{- if and .Values.opencost.exporter.persistence.enabled .Values.opencost.exporter.csv_path }}
             - name: EXPORT_CSV_FILE
@@ -158,14 +202,6 @@ spec:
             - name: CONFIG_PATH
               value: {{ .Values.opencost.customPricing.configPath | quote }}
             {{- end }}
-            {{- if .Values.global.openshift.enabled }}
-            - name: PROM_NAMESPACE_LABEL
-              value: exported_namespace
-            - name: PROM_POD_LABEL
-              value: exported_pod
-            - name: PROM_CONTAINER_LABEL
-              value: exported_container
-            {{- end }}
             - name: DATA_RETENTION_DAILY_RESOLUTION_DAYS
               value: {{ .Values.opencost.dataRetention.dailyResolutionDays | quote }}
             - name: CLOUD_COST_ENABLED
@@ -180,18 +216,39 @@ spec:
               value: {{ .Values.opencost.cloudCost.runWindowDays | quote }}
             - name: INSECURE_SKIP_VERIFY
               value: {{ .Values.global.prometheus.tlsInsecureSkipVerify | quote }}
+            {{- if not (quote .Values.opencost.metrics.kubeStateMetrics.emitPodAnnotations | empty ) }}
+            - name: EMIT_POD_ANNOTATIONS_METRIC
+              value: {{ .Values.opencost.metrics.kubeStateMetrics.emitPodAnnotations | quote }}
+            {{- end }}
+            {{- if not (quote .Values.opencost.metrics.kubeStateMetrics.emitNamespaceAnnotations | empty ) }}
+            - name: EMIT_NAMESPACE_ANNOTATIONS_METRIC
+              value: {{ .Values.opencost.metrics.kubeStateMetrics.emitNamespaceAnnotations | quote }}
+            {{- end }}
+            {{- if not (quote .Values.opencost.metrics.kubeStateMetrics.emitKsmV1Metrics | empty ) }}
+            - name: EMIT_KSM_V1_METRICS
+              value: {{ .Values.opencost.metrics.kubeStateMetrics.emitKsmV1Metrics | quote }}
+            {{- end }}
+            {{- if not (quote .Values.opencost.metrics.kubeStateMetrics.emitKsmV1MetricsOnly | empty ) }}
+            - name: EMIT_KSM_V1_METRICS_ONLY
+              value: {{ .Values.opencost.metrics.kubeStateMetrics.emitKsmV1MetricsOnly | quote }}
+            {{- end }}
             # Add any additional provided variables
             {{- range $key, $value := .Values.opencost.exporter.extraEnv }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-          {{- if or .Values.opencost.exporter.persistence.enabled .Values.opencost.exporter.extraVolumeMounts .Values.opencost.customPricing.enabled .Values.opencost.cloudIntegrationSecret (and .Values.global.prometheus.tlsCertConfigmapName .Values.global.prometheus.tlsCertConfigmapKey)}}
+          {{- if or .Values.plugins.enabled .Values.opencost.exporter.persistence.enabled .Values.opencost.exporter.extraVolumeMounts .Values.opencost.customPricing.enabled .Values.opencost.cloudIntegrationSecret}}
           volumeMounts:
-            {{- if and .Values.global.prometheus.tlsCertConfigmapName .Values.global.prometheus.tlsCertConfigmapKey }}
-            - mountPath: /etc/ssl/certs/prometheus-service.crt
-              name: prometheus-tls-cert
-              subPath: prometheus-service.crt
+            {{- if .Values.plugins.enabled }}
+            - mountPath: /opt/opencost/plugin
+              name: plugins-dir
               readOnly: false
+            {{- range $key, $config := .Values.plugins.configs }}
+            - mountPath: /opt/opencost/plugin/config/{{$key}}_config.json
+              subPath: {{$key}}_config.json
+              name: plugins-config
+              readOnly: true
+            {{- end }}
             {{- end }}
             {{- if .Values.opencost.exporter.persistence.enabled }}
             - mountPath: /mnt/export
@@ -199,8 +256,15 @@ spec:
               readOnly: false
             {{- end }}
             {{- if .Values.opencost.customPricing.enabled }}
-            - mountPath: {{ .Values.opencost.customPricing.configPath }}
+            - mountPath: {{ .Values.opencost.customPricing.configPath }}/{{ include "opencost.configFileName" . }}.json
               name: custom-configs
+              subPath: {{ include "opencost.configFileName" . }}.json
+              readOnly: true
+            {{- end }}
+            {{- if .Values.opencost.metrics.config.enabled }}
+            - mountPath: {{ .Values.opencost.customPricing.configPath }}/metrics.json
+              name: custom-metrics
+              subPath: metrics.json
               readOnly: true
             {{- end }}
             {{- if .Values.opencost.cloudIntegrationSecret }}
@@ -213,25 +277,37 @@ spec:
           {{- end }}
         {{- if .Values.opencost.ui.enabled }}
         - name: opencost-ui
-          {{- if .Values.opencost.ui.image.fullImageName }}
-          image: {{ .Values.opencost.ui.image.fullImageName }}
-          {{- else}}
-          image: "{{ .Values.opencost.ui.image.registry }}/{{ .Values.opencost.ui.image.repository }}:{{ .Values.opencost.ui.image.tag | default (printf "prod-%s" .Chart.AppVersion) }}"
-          {{- end }}
+          image: {{ include "opencostUi.fullImageName" .}}
           imagePullPolicy: {{ .Values.opencost.ui.image.pullPolicy }}
           ports:
-            - containerPort: 9090
+            - containerPort: {{ .Values.opencost.ui.uiPort }}
               name: http-ui
+          env:
+          {{- with .Values.opencost.ui.extraEnv }}
           {{- with .Values.opencost.ui.extraEnv }}
           env:
-          {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- with .Values.opencost.ui.extraEnv }}
+          env:
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- if .Values.opencost.ui.apiServer }}
+            - name: API_SERVER
+              value: {{ .Values.opencost.ui.apiServer | quote }}
+            {{- end }}
+            {{- if .Values.opencost.exporter.apiPort }}
+            - name: API_PORT
+              value: {{ .Values.opencost.exporter.apiPort | quote }}
+            {{- end }}
+            {{- if .Values.opencost.ui.uiPort }}
+            - name: UI_PORT
+              value: {{ .Values.opencost.ui.uiPort | quote }}
+            {{- end }}
           resources: {{- toYaml .Values.opencost.ui.resources | nindent 12 }}
           {{- if .Values.opencost.ui.livenessProbe.enabled }}
           livenessProbe:
             httpGet:
-              path: /healthz
-              port: 9090
+              path: {{ .Values.opencost.ui.livenessProbe.path }}
+              port: {{ .Values.opencost.ui.uiPort }}
             initialDelaySeconds: {{ .Values.opencost.ui.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.opencost.ui.livenessProbe.periodSeconds }}
             failureThreshold: {{ .Values.opencost.ui.livenessProbe.failureThreshold }}
@@ -239,8 +315,8 @@ spec:
           {{- if .Values.opencost.ui.readinessProbe.enabled }}
           readinessProbe:
             httpGet:
-              path: /healthz
-              port: 9090
+              path: {{ .Values.opencost.ui.readinessProbe.path }}
+              port: {{ .Values.opencost.ui.uiPort }}
             initialDelaySeconds: {{ .Values.opencost.ui.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.opencost.ui.readinessProbe.periodSeconds }}
             failureThreshold: {{ .Values.opencost.ui.readinessProbe.failureThreshold }}
@@ -248,9 +324,17 @@ spec:
           {{- with .Values.opencost.ui.securityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
+          volumeMounts:
           {{- with .Values.opencost.ui.extraVolumeMounts }}
-          volumeMounts: {{- toYaml . | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
+            - name: opencost-ui-nginx-config-volume
+              mountPath: /etc/nginx/conf.d/default.nginx.conf
+              subPath: default.nginx.conf
+            {{- if .Values.opencost.platforms.openshift.enabled }}
+            - name: empty-var-www
+              mountPath: /var/www
+            {{- end }}
         {{- end }}
         {{- with .Values.opencost.extraContainers }}
           {{- toYaml . | nindent 8 }}
@@ -288,20 +372,29 @@ spec:
           {{- toYaml . | nindent 12 }}
           {{- end }}
         {{- end }}
-      {{- if or .Values.opencost.exporter.persistence.enabled .Values.extraVolumes .Values.opencost.customPricing.enabled .Values.opencost.cloudIntegrationSecret (and .Values.global.prometheus.tlsCertConfigmapName .Values.global.prometheus.tlsCertConfigmapKey)}}
+      {{- if or .Values.plugins.enabled .Values.opencost.exporter.persistence.enabled .Values.extraVolumes .Values.opencost.customPricing.enabled .Values.opencost.cloudIntegrationSecret .Values.opencost.ui.enabled }}
       volumes:
-        {{- if and .Values.global.prometheus.tlsCertConfigmapName .Values.global.prometheus.tlsCertConfigmapKey }}
-        - name: prometheus-tls-cert
+        {{- if .Values.plugins.enabled  }}
+        {{- if .Values.plugins.install.enabled}}
+        - name: install-script
           configMap:
-            name: {{ .Values.global.prometheus.tlsCertConfigmapName }}
-            items:
-              - key: {{ .Values.global.prometheus.tlsCertConfigmapKey }}
-                path: prometheus-service.crt
+            name: {{ template "opencost.fullname" . }}-install-plugins
+        {{- end }}
+        - name: plugins-dir
+          emptyDir: {}
+        - name: plugins-config
+          secret:
+            secretName:  {{ template "opencost.fullname" . }}-plugins-config
         {{- end }}
         {{- if .Values.opencost.customPricing.enabled }}
         - name: custom-configs
           configMap:
             name: {{ .Values.opencost.customPricing.configmapName }}
+        {{- end }}
+        {{- if .Values.opencost.metrics.config.enabled }}
+        - name: custom-metrics
+          configMap:
+            name: {{ .Values.opencost.metrics.config.configmapName }}
         {{- end }}
         {{- if .Values.opencost.exporter.persistence.enabled }}
         - name: opencost-export
@@ -316,6 +409,18 @@ spec:
               - key: cloud-integration.json
                 path: cloud-integration.json
           {{- end }}
+        {{- if .Values.opencost.ui.enabled }}
+        - name: opencost-ui-nginx-config-volume
+          configMap:
+            name: opencost-ui-nginx-config
+            items:
+              - key: nginx.conf
+                path: default.nginx.conf
+        {{- if .Values.opencost.platforms.openshift.enabled }}
+        - name: empty-var-www
+          emptyDir: {}
+        {{- end }}
+        {{- end }}
         {{- with .Values.extraVolumes }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
