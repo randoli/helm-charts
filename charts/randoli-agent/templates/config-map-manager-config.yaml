@@ -58,3 +58,5 @@ data:
   PROMETHEUS_ALERTMANAGER_URL: http://randoli-alerts.{{ .Release.Namespace }}:9093
   TRACE_STORAGE_BACKEND_TYPE: JAEGER
   TRACE_STORAGE_BACKEND_URL: http://randoli-rok-jaeger-query.{{ .Release.Namespace }}:16686
+  SUPERVISOR_AGENT_HTTP_URL: 'http://ai-agent/chat'
+  POPULATE_RES_INDEX_FROM_DB: ''

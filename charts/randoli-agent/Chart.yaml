@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: '1.15.0'
+appVersion: '1.16.0'
 description: Randoli Agent
 home: https://randoli.ca
 icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
@@ -13,7 +13,7 @@ maintainers:
 name: randoli-agent
 sources:
 - https://github.com/randoli/helm-charts
-version: 1.15.0
+version: 1.16.0
 dependencies:
   - name: opentelemetry-operator
     version: 0.86.4

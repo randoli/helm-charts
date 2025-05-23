@@ -33,3 +33,7 @@ spec:
       # so data must be sent to 4318 instead of 4317.
       - name: OTEL_EXPORTER_OTLP_ENDPOINT
         value: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4318
+      - name: OTEL_GO_AUTO_INCLUDE_DB_STATEMENT
+        value: "true"
+      - name: OTEL_GO_AUTO_PARSE_DB_STATEMENT
+        value: "true"  

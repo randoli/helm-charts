@@ -114,7 +114,8 @@ spec:
         limit_mib: 900
         spike_limit_mib: 200
       batch:
-        send_batch_max_size: 10000
+        send_batch_size: 512         # Preferred target batch size
+        send_batch_max_size: 1024    # Upper limit before forcing a send
         timeout: 5s
       k8sattributes:
         auth_type: "serviceAccount"
@@ -130,6 +131,12 @@ spec:
             - container.image.name
             - container.image.tag
             - k8s.container.name
+        pod_association:
+          - sources:
+            - from: resource_attribute
+              name: k8s.pod.ip
+          - sources:
+              - from: connection    
 
       # attributes processors to define the span type
       attributes/http:
@@ -209,6 +216,8 @@ spec:
           default: unknown
         - name: container.image
           default: unknown
+        - name: messaging.system
+        - name: http.status_code
 
     service:
       pipelines:
