@@ -152,21 +152,20 @@ spec:
                   name: {{ include "opencost.prometheus.secretname" . }}
                   key: AWS_SECRET_ACCESS_KEY
             {{- end }}
-            # If username, password or bearer_token are defined, pull from secrets
-            {{- if or .Values.opencost.prometheus.username_key (and .Values.global.prometheus.secretName .Values.global.prometheus.usernameKey) }}
+            {{- if and .Values.opencost.prometheus.username_key (or .Values.global.prometheus.secretName .Values.global.prometheus.usernameKey) }}
             - name: DB_BASIC_AUTH_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.opencost.prometheus.existingSecretName | default (include "opencost.prometheus.secretname" .) }}
                   key: {{ .Values.global.prometheus.usernameKey }}
             {{- end }}
-            {{- if or .Values.opencost.prometheus.password_key (and .Values.global.prometheus.secretName .Values.global.prometheus.passwordKey) }}
+            {{- if and .Values.opencost.prometheus.password_key (or .Values.global.prometheus.secretName .Values.global.prometheus.passwordKey) }}
             - name: DB_BASIC_AUTH_PW
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.opencost.prometheus.existingSecretName | default (include "opencost.prometheus.secretname" .) }}
                   key: {{ .Values.global.prometheus.passwordKey }}
-            {{- else if or .Values.opencost.prometheus.bearer_token_key (and .Values.global.prometheus.secretName .Values.global.prometheus.bearerTokenKey) }}
+            {{- else if and .Values.opencost.prometheus.bearer_token_key (or .Values.global.prometheus.secretName .Values.global.prometheus.bearerTokenKey) }}
             - name: DB_BEARER_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -283,11 +282,7 @@ spec:
             - containerPort: {{ .Values.opencost.ui.uiPort }}
               name: http-ui
           env:
-          {{- with .Values.opencost.ui.extraEnv }}
-          {{- with .Values.opencost.ui.extraEnv }}
-          env:
             {{- with .Values.opencost.ui.extraEnv }}
-          env:
               {{- toYaml . | nindent 12 }}
             {{- end }}
             {{- if .Values.opencost.ui.apiServer }}

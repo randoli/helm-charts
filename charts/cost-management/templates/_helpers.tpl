@@ -46,8 +46,8 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
 {{- define "opencost.prometheus.secretname" -}}
-  {{- if .Values.opencost.prometheus.secret_name -}}
-    {{- .Values.opencost.prometheus.secret_name -}}
+  {{- if .Values.global.prometheus.secretName -}}
+    {{- .Values.global.prometheus.secretName -}}
   {{- else -}}
     {{- include "opencost.fullname" . -}}
   {{- end -}}
