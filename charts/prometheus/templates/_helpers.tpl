@@ -242,7 +242,7 @@ RANDOLI - Define prometheus.opencost.url by getting the opencost url based on th
 {{- if .Values.global.opencost.url -}}
 {{- print .Values.global.opencost.url | replace "http://" ""  -}}
 {{- else -}}
-{{- printf "randoli-cmk-opencost.%s.svc:9003" .Release.Namespace -}}
+{{- printf "randoli-cmk-cost.%s.svc:9003" .Release.Namespace -}}
 {{- end -}}
 {{- end -}}
 

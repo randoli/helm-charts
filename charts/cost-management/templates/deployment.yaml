@@ -152,24 +152,24 @@ spec:
                   name: {{ include "opencost.prometheus.secretname" . }}
                   key: AWS_SECRET_ACCESS_KEY
             {{- end }}
-            {{- if and .Values.opencost.prometheus.username_key (or .Values.global.prometheus.secretName .Values.global.prometheus.usernameKey) }}
+            {{- if or .Values.opencost.prometheus.username_key (and .Values.global.prometheus.secretName .Values.global.prometheus.usernameKey) }}
             - name: DB_BASIC_AUTH_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.opencost.prometheus.existingSecretName | default (include "opencost.prometheus.secretname" .) }}
+                  name: {{ include "opencost.prometheus.secretname" . }}
                   key: {{ .Values.global.prometheus.usernameKey }}
             {{- end }}
-            {{- if and .Values.opencost.prometheus.password_key (or .Values.global.prometheus.secretName .Values.global.prometheus.passwordKey) }}
+            {{- if or .Values.opencost.prometheus.password_key (and .Values.global.prometheus.secretName .Values.global.prometheus.passwordKey) }}
             - name: DB_BASIC_AUTH_PW
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.opencost.prometheus.existingSecretName | default (include "opencost.prometheus.secretname" .) }}
+                  name: {{ include "opencost.prometheus.secretname" . }}
                   key: {{ .Values.global.prometheus.passwordKey }}
-            {{- else if and .Values.opencost.prometheus.bearer_token_key (or .Values.global.prometheus.secretName .Values.global.prometheus.bearerTokenKey) }}
+            {{- else if or .Values.opencost.prometheus.bearer_token_key (and .Values.global.prometheus.secretName .Values.global.prometheus.bearerTokenKey) }}
             - name: DB_BEARER_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.opencost.prometheus.existingSecretName | default (include "opencost.prometheus.secretname" .) }}
+                  name: {{ include "opencost.prometheus.secretname" . }}
                   key: {{ .Values.global.prometheus.bearerTokenKey }}
             {{- end }}
             {{- if .Values.opencost.prometheus.kubeRBACProxy }}

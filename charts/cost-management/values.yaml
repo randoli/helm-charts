@@ -349,14 +349,14 @@ opencost:
     # -- Prometheus Basic auth username
     username: ""
     # -- Key in the secret that references the username
-    username_key: DB_BASIC_AUTH_USERNAME
+    username_key: ""
     # -- Prometheus Basic auth password
     password: ""
     # -- Key in the secret that references the password
-    password_key: DB_BASIC_AUTH_PW
+    password_key: ""
     # -- Prometheus Bearer token
     bearer_token: ""
-    bearer_token_key: DB_BEARER_TOKEN
+    bearer_token_key: ""
     # -- If true, opencost will use kube-rbac-proxy to authenticate with in cluster Prometheus for openshift
     kubeRBACProxy: false
     external:
