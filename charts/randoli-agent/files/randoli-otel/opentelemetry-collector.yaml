@@ -166,7 +166,15 @@ spec:
             key: server.address
           - action: insert
             from_attribute: net.peer.name
-            key: server.address            
+            key: server.address
+      attributes/set_status_code:
+        actions:
+          - action: insert
+            from_attribute: http.status_code
+            key: randoli.status.code
+          - action: insert
+            from_attribute: http.response.status_code
+            key: randoli.status.code                  
       attributes/db:
         actions:
           - key: span.type
@@ -217,7 +225,6 @@ spec:
         - name: container.image
           default: unknown
         - name: messaging.system
-        - name: http.status_code
 
     service:
       pipelines:
@@ -232,6 +239,7 @@ spec:
             - attributes/http
             - attributes/http2
             - attributes/set_server_address
+            - attributes/set_status_code
             - attributes/db
             - attributes/kafka
             - batch
