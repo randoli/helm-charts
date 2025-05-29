@@ -119,7 +119,8 @@ extraVolumeMounts: []
   # - name: extra-queries
   #   mountPath: /prometheus
 
-securityContext: {}
+securityContext:
+  fsGroup: 1001
 
 serviceAccount:
   create: true
