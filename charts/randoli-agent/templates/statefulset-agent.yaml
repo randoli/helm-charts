@@ -123,9 +123,9 @@ spec:
       {{- with .Values.affinity }}
       affinity: {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with.Values.topologySpreadConstraints }}
+      {{- with .Values.topologySpreadConstraints }}
       topologySpreadConstraints: {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with.Values.securityContext }}
+      {{- with .Values.securityContext }}
       securityContext: {{- toYaml . | nindent 8 }}
       {{- end }}

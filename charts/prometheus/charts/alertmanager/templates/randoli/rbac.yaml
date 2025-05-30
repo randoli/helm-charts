@@ -4,7 +4,7 @@ kind: ServiceAccount
 metadata:
   name: randoli-alerts-cm-applier
   annotations:
-    helm.sh/hook-weight: "-4"
+    helm.sh/hook-weight: "-5"
     helm.sh/hook: pre-install,pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 ---
@@ -30,7 +30,7 @@ kind: RoleBinding
 metadata:
   name: randoli-alerts-cm-applier-binding
   annotations:
-    helm.sh/hook-weight: "-5"
+    helm.sh/hook-weight: "-4"
     helm.sh/hook: pre-install,pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 subjects:
