@@ -122,6 +122,8 @@ extraVolumeMounts: []
 securityContext:
   fsGroup: 1001
 
+storageClassName: 
+
 serviceAccount:
   create: true
   # If not set and create is true, a name is generated using the fullname template

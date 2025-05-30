@@ -5,6 +5,9 @@ metadata:
   labels:
     {{- include "labels" . | nindent 4 }}
 spec:
+  {{- if .Values.storageClassName }}
+  storageClassName: {{ .Values.storageClassName | quote }}
+  {{- end}}
   accessModes:
     - ReadWriteOnce
   resources:
