@@ -41,11 +41,7 @@ helm.sh/chart: {{ include "chartName" . }}
 Create the name of the service account to use
 */}}
 {{- define "randoli-agent.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create -}}
-    {{ default (include "randoli-agent.fullname" .) .Values.serviceAccount.name }}
-{{- else -}}
-    {{ default "default" .Values.serviceAccount.name }}
-{{- end -}}
+randoli-agent
 {{- end -}}
 
 {{- define "prometheus-server-endpoint" -}}

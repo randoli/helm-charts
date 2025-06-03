@@ -6,7 +6,7 @@ spec:
   {{- with .Values.tolerations }}
   tolerations: {{ toYaml . | nindent 8 }}
   {{- end }}
-  image: docker.io/otel/opentelemetry-collector-k8s:0.122.1  
+  image: docker.io/randoli/otelcol:v1.0.0
   upgradeStrategy: automatic
   mode: statefulset
   hostNetwork: true
@@ -15,12 +15,11 @@ spec:
     maxReplicas: 5
     minReplicas: 2
     targetMemoryUtilization: 85
-    targetCPUUtilization: 90
   resources:
     requests:
-      memory: "500Mi"
-    limits:
       memory: "1000Mi"
+    limits:
+      memory: "1500Mi"
   config:
     receivers:
       otlp:
@@ -46,69 +45,22 @@ spec:
             - action: labelmap
               regex: label_(.+)
               replacement: $$1
-
     exporters:
       ## Create an exporter to Jaeger using the standard `otlp` export format
       otlp/jaeger:
         endpoint: 'randoli-rok-jaeger-collector.{{ .Release.Namespace }}.svc:4317'
         tls:
           insecure: true
-
       ## Prometheus
       otlphttp:
         endpoint: "{{ include "prometheus-server-endpoint" . }}/api/v1/otlp"
-        
       debug:
         verbosity: basic
         sampling_initial: 5
         sampling_thereafter: 200
-
     processors:
       # Add new attributes to identify Kubernetes controller resource type and the name
-      transform/controller_resource:
-        error_mode: ignore
-        trace_statements:
-          - context: resource
-            error_mode: propagate
-            conditions:
-              - resource.attributes["k8s.deployment.name"] != nil
-            statements:
-              - set(resource.attributes["k8s.controller.name"], resource.attributes["k8s.deployment.name"])
-              - set(resource.attributes["k8s.controller.type"], "deployment")
-  
-          - context: resource
-            error_mode: propagate
-            conditions:
-              - resource.attributes["k8s.daemonset.name"] != nil
-            statements:
-              - set(resource.attributes["k8s.controller.name"], resource.attributes["k8s.daemonset.name"])
-              - set(resource.attributes["k8s.controller.type"], "daemonset")
-  
-          - context: resource
-            error_mode: propagate
-            conditions:
-              - resource.attributes["k8s.statefulset.name"] != nil
-            statements:
-              - set(resource.attributes["k8s.controller.name"], resource.attributes["k8s.statefulset.name"])
-              - set(resource.attributes["k8s.controller.type"], "statefulset")
-
-      #Construct the container name from available metadata. Only works if the container.name attribute is available in the incoming span
-      transform/container_image:
-        error_mode: ignore
-        trace_statements:
-          - context: resource
-            error_mode: propagate
-            conditions:
-              - resource.attributes["container.image.name"] != nil
-              - resource.attributes["container.image.tag"] != nil
-            statements:
-              - set(resource.attributes["container.image"], Concat([resource.attributes["container.image.name"], resource.attributes["container.image.tag"]], ":") )
-
-      resource:
-        attributes:
-        - key: service.instance.id
-          from_attribute: k8s.pod.uid
-          action: insert
+      randoli_otel_enricher: {}
       memory_limiter:
         check_interval: 5s
         limit_mib: 900
@@ -136,96 +88,9 @@ spec:
             - from: resource_attribute
               name: k8s.pod.ip
           - sources:
-              - from: connection    
-
-      # attributes processors to define the span type
-      attributes/http:
-        actions:
-          - key: span.type
-            value: http
-            action: insert
-        include:
-          match_type: regexp
-          attributes:
-            - key: http.method
-              value: .+ # Match any non-empty value for http.method
-      attributes/http2:
-        actions:
-          - action: insert
-            key: span.type
-            value: http
-        include:
-          attributes:
-            - key: http.request.method
-              value: .+
-          match_type: regexp
-      attributes/set_server_address:
-        actions:
-          - action: insert
-            from_attribute: net.host.name
-            key: server.address
-          - action: insert
-            from_attribute: net.peer.name
-            key: server.address
-      attributes/set_status_code:
-        actions:
-          - action: insert
-            from_attribute: http.status_code
-            key: randoli.status.code
-          - action: insert
-            from_attribute: http.response.status_code
-            key: randoli.status.code                  
-      attributes/db:
-        actions:
-          - key: span.type
-            value: database
-            action: insert
-        include:
-          match_type: regexp
-          attributes:
-            - key: db.system
-              value: .+ # Match any non-empty value for http.method
-      attributes/kafka:
-        actions:
-          - key: span.type
-            value: messaging
-            action: insert
-        include:
-          match_type: regexp
-          attributes:
-            - key: messaging.system
-              value: .+ # Match any non-empty value for http.method
-
-      metricstransform/netobserv:
-        transforms:
-          # rename all netobserv* metrics to randoli metrics format
-          # instead of regular $ use double dollar $$. Because $ is treated as a special character.
-          # wrap the group name/number with braces
-          - include: ^netobserv_(.*)$$
-            match_type: regexp
-            action: update
-            new_name: randoli.metrics.otel.netobserv.$${1}
-
+              - from: connection
     connectors:
-      spanmetrics:
-        dimensions:
-        - name: k8s.controller.name
-          default: unknown
-        - name: k8s.controller.type
-          default: unknown
-        - name: k8s.namespace.name
-          default: unknown
-        - name: span.type
-          default: unknown
-        - name: server.address
-        - name: k8s.pod.name
-          default: unknown
-        - name: k8s.container.name
-          default: unknown
-        - name: container.image
-          default: unknown
-        - name: messaging.system
-
+      spanmetrics: {}
     service:
       pipelines:
         traces:
@@ -233,29 +98,20 @@ spec:
           processors: 
             - memory_limiter
             - k8sattributes
-            - resource
-            - transform/controller_resource
-            - transform/container_image
-            - attributes/http
-            - attributes/http2
-            - attributes/set_server_address
-            - attributes/set_status_code
-            - attributes/db
-            - attributes/kafka
+            - randoli_otel_enricher
             - batch
           exporters: [debug, spanmetrics, otlp/jaeger]
         metrics:
           receivers: [otlp, prometheus, spanmetrics]
           processors:
             - memory_limiter
-            - resource
-            - metricstransform/netobserv
+            - randoli_otel_enricher
             - batch
           exporters: [debug, otlphttp]
         logs:
           receivers: [otlp]
-          processors: [memory_limiter, resource, batch]
-          exporters: [debug]
+          processors: [memory_limiter, batch]
+          exporters: [debug] 
   targetAllocator:
     {{- with .Values.tolerations }}
     tolerations: {{ toYaml . | nindent 10 }}

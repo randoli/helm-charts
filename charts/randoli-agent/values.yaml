@@ -59,7 +59,7 @@ tags:
 image:
   registry: docker.io
   repository: randoli/insights-agent
-  tag: "1.16"
+  tag: "1.16.3"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
