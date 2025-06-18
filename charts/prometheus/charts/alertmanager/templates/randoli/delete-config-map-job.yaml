@@ -19,8 +19,18 @@ spec:
         - -c
         - |
           echo "⏳ Deleting Randoli Alerts CMs..."
-          kubectl delete configmap {{ include "alertmanager.fullname" . }} -n {{ .Release.Namespace }}
-          echo "✅ Randoli alerts Config Map Deleted"  
+          set -e
+
+          NAMESPACE="{{ .Release.Namespace }}"
+          CONFIGMAP_NAME="{{ include "alertmanager.fullname" . }}"
+
+          # Check and delete ConfigMap if it exists
+          if kubectl get configmap "$CONFIGMAP_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
+            echo "Deleting ConfigMap $CONFIGMAP_NAME..."
+            kubectl delete configmap "$CONFIGMAP_NAME" -n "$NAMESPACE" --wait=true
+          else
+            echo "ConfigMap $CONFIGMAP_NAME not found, skipping."
+          fi
       restartPolicy: Never
       {{- with .Values.tolerations }}
       tolerations: {{ toYaml . | nindent 8 }}
