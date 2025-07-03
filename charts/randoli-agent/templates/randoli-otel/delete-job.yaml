@@ -19,8 +19,25 @@ spec:
         - -c
         - |
           echo "⏳ Deleting Otel CRs..."
-          kubectl delete opentelemetrycollector randoli-otel -n {{ .Release.Namespace }}
-          kubectl delete instrumentation otel-instrumentation -n {{ .Release.Namespace }}
+          set -e
+
+          NAMESPACE="{{ .Release.Namespace }}"
+
+          # Delete OpenTelemetryCollector if exists
+          if kubectl get opentelemetrycollector randoli-otel -n "$NAMESPACE" > /dev/null 2>&1; then
+            echo "Deleting OpenTelemetryCollector randoli-otel..."
+            kubectl delete opentelemetrycollector randoli-otel -n "$NAMESPACE" --wait=true
+          else
+            echo "OpenTelemetryCollector randoli-otel not found, skipping."
+          fi
+
+          # Delete Instrumentation if exists
+          if kubectl get instrumentation otel-instrumentation -n "$NAMESPACE" > /dev/null 2>&1; then
+            echo "Deleting Instrumentation otel-instrumentation..."
+            kubectl delete instrumentation otel-instrumentation -n "$NAMESPACE" --wait=true
+          else
+            echo "Instrumentation otel-instrumentation not found, skipping."
+          fi
       restartPolicy: Never
       {{- with .Values.tolerations }}
       tolerations: {{ toYaml . | nindent 8 }}
