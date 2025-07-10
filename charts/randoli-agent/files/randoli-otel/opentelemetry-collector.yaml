@@ -9,7 +9,6 @@ spec:
   image: docker.io/randoli/otelcol:v1.0.0
   upgradeStrategy: automatic
   mode: statefulset
-  hostNetwork: true
   serviceAccount: randoli-otel-collector
   autoscaler:
     maxReplicas: 5

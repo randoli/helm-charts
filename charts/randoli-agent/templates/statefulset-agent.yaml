@@ -39,6 +39,8 @@ spec:
               - key: client-key.pem
                 path: client-key.pem
             defaultMode: 420
+        - name: shared-migrations
+          emptyDir: {}    
         {{- if and .Values.global.prometheus.tlsCertConfigmapName .Values.global.prometheus.tlsCertConfigmapKey }}
         - name: prometheus-tls-cert
           configMap:
@@ -50,6 +52,41 @@ spec:
         {{- if .Values.extraVolumes }}
           {{- toYaml .Values.extraVolumes | nindent 8}}
         {{- end }}
+      
+      initContainers:
+        - name: init
+          {{- with .Values.image }}
+          image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{ .digest }}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "copying migrations..."
+              cp -r /migration-scripts/* /migrations/
+              cp -r /migrate /migrations/migrate
+          volumeMounts:
+            - name: shared-migrations
+              mountPath: /migrations
+            - name: agent-pv
+              mountPath: /persistence
+        - name: migrate-db
+          image: datacatering/duckdb:v1.2.0
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "waiting for migration scripts..." &&
+              while [ ! -f /migrations/migrate ]; do sleep 1; done
+              chmod +x /migrations/migrate
+              ln -s /duckdb /bin/duckdb
+
+              echo "running migrations..."
+              /migrations/migrate /persistence/agent.db
+          volumeMounts:
+            - name: shared-migrations
+              mountPath: /migrations
+            - name: agent-pv
+              mountPath: /persistence
       containers:
         - name: randoli-agent
           {{- with .Values.image }}
@@ -86,8 +123,18 @@ spec:
             {{- if .Values.extraVolumeMounts }}
               {{- toYaml .Values.extraVolumeMounts | nindent 12 }} 
             {{- end }}
-          {{- if or .Values.extraEnv .Values.global.prometheus.secretName }}
           env:
+            - name: FLIGHT_SQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "randoli-agent.fullname" . }}-db
+                  key: username
+            - name: FLIGHT_SQL_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "randoli-agent.fullname" . }}-db
+                  key: password
+          {{- if or .Values.extraEnv .Values.global.prometheus.secretName }}
             {{- if and .Values.global.prometheus.secretName .Values.global.prometheus.usernameKey }}
             - name: PROMETHEUS_USERNAME
               valueFrom:
@@ -112,6 +159,41 @@ spec:
               {{- toYaml .Values.extraEnv | nindent 12 }}
             {{- end }}
           {{- end }}
+        - name: gizmosql
+          image: ghcr.io/gizmodata/gizmosql:latest
+          ports:
+          - containerPort: 31337
+          volumeMounts:
+          - name: agent-pv
+            mountPath: /persistence
+          env:
+          - name: GIZMOSQL_PATH
+            value: /persistence/agent.db
+          - name: GIZMOSQL_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "randoli-agent.fullname" . }}-db
+                key: username
+          - name: GIZMOSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "randoli-agent.fullname" . }}-db
+                key: password
+          - name: DATABASE_BACKEND
+            value: duckdb
+          - name: DATABASE_FILENAME
+            value: /persistence/agent.db
+          - name: TLS_ENABLED
+            value: "0"
+          - name: SECRET_KEY
+            value: "randoli_db_test"
+          - name: INIT_SQL_COMMANDS
+            value: |
+              SET memory_limit = '1GB';
+              SET threads TO 3;
+              CREATE SCHEMA IF NOT EXISTS insights_agent;
+              SET schema='insights_agent';
+              SET search_path='insights_agent';
       serviceAccountName: {{ template "randoli-agent.serviceAccountName" . }}
       serviceAccount: {{ template "randoli-agent.serviceAccountName" . }}
       {{- with .Values.tolerations }}
