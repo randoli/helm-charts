@@ -246,6 +246,17 @@ RANDOLI - Define prometheus.opencost.url by getting the opencost url based on th
 {{- end -}}
 {{- end -}}
 
+{{/*
+RANDOLI - Define prometheus.networkCostMetrics.url by getting the network cost metrics url based on the agent installations 
+*/}}
+{{- define "prometheus.networkCostMetrics.url" -}}
+{{- if .Values.global.networkCostMetrics.url -}}
+{{- print .Values.global.networkCostMetrics.url | replace "http://" ""  -}}
+{{- else -}}
+{{- printf "randoli-cmk-opencost.%s.svc:8080" .Release.Namespace -}}
+{{- end -}}
+{{- end -}}
+
 
 # {{/*
 # RANDOLI - Define AlertManager Route 
