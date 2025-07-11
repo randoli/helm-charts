@@ -91,22 +91,40 @@ spec:
 {{- end }}
       serviceAccountName: {{ .Values.prometheusExporter.name }}
       automountServiceAccountToken: true
-      nodeSelector:
-      {{- if .Values.prometheusExporter.nodeSelector }}
-      {{- toYaml .Values.prometheusExporter.nodeSelector | nindent 8 }}
-      {{- else if .Values.customScheduling.nodeSelector }}
-      {{- toYaml .Values.customScheduling.nodeSelector | nindent 8 }}
-      {{- end }}
-      affinity:
-      {{- if .Values.prometheusExporter.affinity }}
-      {{- toYaml .Values.prometheusExporter.affinity | nindent 8 }}
-      {{- else if .Values.customScheduling.affinity }}
-      {{- toYaml .Values.customScheduling.affinity | nindent 8 }}
-      {{- end }}
+      {{- if or .Values.prometheusExporter.tolerations .Values.customScheduling.tolerations .Values.global.tolerations }}
       tolerations:
-      {{- if .Values.prometheusExporter.tolerations }}
-      {{- toYaml .Values.prometheusExporter.tolerations | nindent 8 }}
-      {{- else if .Values.customScheduling.tolerations }}
-      {{- toYaml .Values.customScheduling.tolerations | nindent 8 }}
+        {{- with .Values.prometheusExporter.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.customScheduling.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.prometheusExporter.nodeSelector .Values.customScheduling.nodeSelector .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- with .Values.prometheusExporter.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.customScheduling.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.prometheusExporter.affinity .Values.customScheduling.affinity .Values.global.affinity }}
+      affinity:
+        {{- with .Values.prometheusExporter.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.customScheduling.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
       {{- end }}
 {{- end }}

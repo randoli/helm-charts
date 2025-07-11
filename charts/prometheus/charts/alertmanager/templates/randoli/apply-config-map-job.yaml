@@ -31,8 +31,32 @@ spec:
       - name: cms
         configMap:
           name: randoli-alerts-cms
-      {{- with .Values.tolerations }}
-      tolerations: {{ toYaml . | nindent 8 }}
+      {{- if or .Values.tolerations .Values.global.tolerations }}
+      tolerations:
+        {{- with .Values.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.nodeSelector .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- with .Values.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.affinity .Values.global.affinity }}
+      affinity:
+        {{- with .Values.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
       {{- end }}        
 ---
 apiVersion: v1

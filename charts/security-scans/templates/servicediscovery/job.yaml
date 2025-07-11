@@ -82,22 +82,41 @@ spec:
           secretName: {{ .Values.global.proxySecretName }}
       {{- end }}
       serviceAccountName: {{ .Values.serviceDiscovery.name }}
-      nodeSelector:
-      {{- if .Values.serviceDiscovery.nodeSelector }}
-      {{- toYaml .Values.serviceDiscovery.nodeSelector | nindent 8 }}
-      {{- else if .Values.customScheduling.nodeSelector }}
-      {{- toYaml .Values.customScheduling.nodeSelector | nindent 8 }}
-      {{- end }}
-      affinity:
-      {{- if .Values.serviceDiscovery.affinity }}
-      {{- toYaml .Values.serviceDiscovery.affinity | nindent 8 }}
-      {{- else if .Values.customScheduling.affinity }}
-      {{- toYaml .Values.customScheduling.affinity | nindent 8 }}
-      {{- end }}
+
+      {{- if or .Values.serviceDiscovery.tolerations .Values.customScheduling.tolerations .Values.global.tolerations }}
       tolerations:
-      {{- if .Values.serviceDiscovery.tolerations }}
-      {{- toYaml .Values.serviceDiscovery.tolerations | nindent 8 }}
-      {{- else if .Values.customScheduling.tolerations }}
-      {{- toYaml .Values.customScheduling.tolerations | nindent 8 }}
+        {{- with .Values.serviceDiscovery.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.customScheduling.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.serviceDiscovery.nodeSelector .Values.customScheduling.nodeSelector .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- with .Values.serviceDiscovery.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.customScheduling.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.serviceDiscovery.affinity .Values.customScheduling.affinity .Values.global.affinity }}
+      affinity:
+        {{- with .Values.serviceDiscovery.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.customScheduling.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
       {{- end }}
 {{- end }}

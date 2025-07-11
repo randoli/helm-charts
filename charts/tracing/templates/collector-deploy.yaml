@@ -214,16 +214,32 @@ spec:
           secret:
             secretName: {{ .Values.storage.elasticsearch.tls.secretName }}
        {{- end }}
-    {{- with .Values.collector.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-    {{- with .Values.collector.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
-    {{- with .Values.collector.tolerations }}
+
+    {{- if or .Values.collector.tolerations .Values.global.tolerations }}
       tolerations:
+        {{- with .Values.collector.tolerations }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
     {{- end }}
+    {{- if or .Values.collector.nodeSelector .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- with .Values.collector.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+    {{- end }}
+    {{- if or .Values.collector.affinity .Values.global.affinity }}
+      affinity:
+        {{- with .Values.collector.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+    {{- end }}  
 {{- end -}}
