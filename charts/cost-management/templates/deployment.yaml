@@ -33,14 +33,32 @@ spec:
       securityContext: {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ template "opencost.serviceAccountName" . }}
-      {{- with .Values.opencost.tolerations }}
-      tolerations: {{- toYaml . | nindent 8 }}
+      {{- if or .Values.opencost.tolerations .Values.global.tolerations }}
+      tolerations:
+        {{- with .Values.opencost.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
       {{- end }}
-      {{- with .Values.opencost.nodeSelector }}
-      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- if or .Values.opencost.nodeSelector .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- with .Values.opencost.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
       {{- end }}
-      {{- with .Values.opencost.affinity }}
-      affinity: {{- toYaml . | nindent 8 }}
+      {{- if or .Values.opencost.affinity .Values.global.affinity }}
+      affinity:
+        {{- with .Values.opencost.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
       {{- end }}
       {{- with.Values.opencost.topologySpreadConstraints }}
       topologySpreadConstraints: {{- toYaml . | nindent 8 }}

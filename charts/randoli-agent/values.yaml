@@ -20,6 +20,14 @@ global:
   secrets:
     cert: randoli-agent-cert
     config: randoli-agent-secret
+  nodeSelector:
+  affinity:
+  tolerations:
+  daemonsets:
+    nodeSelector:
+    affinity:
+    tolerations: 
+
 observability:
   otel:
     operator: 
@@ -59,7 +67,7 @@ tags:
 image:
   registry: docker.io
   repository: randoli/insights-agent
-  tag: "1.16"
+  tag: "1.17"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'

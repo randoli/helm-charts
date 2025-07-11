@@ -235,18 +235,31 @@ containers:
       {{- with .Values.extraVolumeMounts }}
       {{- toYaml . | nindent 6 }}
       {{- end }}
-{{- with .Values.nodeSelector }}
-nodeSelector:
-  {{- toYaml . | nindent 2 }}
-{{- end }}
-{{- with .Values.tolerations }}
+{{- if or .Values.tolerations .Values.global.tolerations }}
 tolerations:
+  {{- with .Values.tolerations }}
   {{- toYaml . | nindent 2 }}
+  {{- end }}
+  {{- with .Values.global.tolerations }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }} 
 {{- end }}
-{{- if or .Values.podAntiAffinity .Values.affinity }}
+{{- if or .Values.nodeSelector .Values.global.nodeSelector }}
+nodeSelector:
+  {{- with .Values.nodeSelector }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  {{- with .Values.global.nodeSelector }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }} 
+{{- end }}
+{{- if or .Values.podAntiAffinity .Values.affinity .Values.global.affinity }}
 affinity:
 {{- end }}
   {{- with .Values.affinity }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  {{- with .Values.global.affinity }}
   {{- toYaml . | nindent 2 }}
   {{- end }}
   {{- if eq .Values.podAntiAffinity "hard" }}

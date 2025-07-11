@@ -56,23 +56,43 @@ apiVersion: batch/v1
 {{- end }}
               restartPolicy: Never
               automountServiceAccountToken: false
-              nodeSelector:
-              {{- if .Values.kubevulnScheduler.nodeSelector }}
-              {{- toYaml .Values.kubevulnScheduler.nodeSelector | nindent 16 }}
-              {{- else if .Values.customScheduling.nodeSelector }}
-              {{- toYaml .Values.customScheduling.nodeSelector | nindent 16 }}
-              {{- end }}
-              affinity:
-              {{- if .Values.kubevulnScheduler.affinity }}
-              {{- toYaml .Values.kubevulnScheduler.affinity | nindent 16 }}
-              {{- else if .Values.customScheduling.affinity }}
-              {{- toYaml .Values.customScheduling.affinity | nindent 16 }}
-              {{- end }}
+
+              
+              {{- if or .Values.kubevulnScheduler.tolerations .Values.customScheduling.tolerations .Values.global.tolerations }}
               tolerations:
-              {{- if .Values.kubevulnScheduler.tolerations }}
-              {{- toYaml .Values.kubevulnScheduler.tolerations | nindent 16 }}
-              {{- else if .Values.customScheduling.tolerations }}
-              {{- toYaml .Values.customScheduling.tolerations | nindent 16 }}
+                {{- with .Values.kubevulnScheduler.tolerations }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .Values.customScheduling.tolerations }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .Values.global.tolerations }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }} 
+              {{- end }}
+              {{- if or .Values.kubevulnScheduler.nodeSelector .Values.customScheduling.nodeSelector .Values.global.nodeSelector }}
+              nodeSelector:
+                {{- with .Values.kubevulnScheduler.nodeSelector }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .Values.customScheduling.nodeSelector }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .Values.global.nodeSelector }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }} 
+              {{- end }}
+              {{- if or .Values.kubevulnScheduler.affinity .Values.customScheduling.affinity .Values.global.affinity }}
+              affinity:
+                {{- with .Values.kubevulnScheduler.affinity }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .Values.customScheduling.affinity }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .Values.global.affinity }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }} 
               {{- end }}
               volumes:
                 - name: "request-body-volume" # placeholder
