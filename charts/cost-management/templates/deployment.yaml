@@ -216,7 +216,7 @@ spec:
           imagePullPolicy: {{ .Values.global.networkCostMetrics.image.pullPolicy }}
           ports:
             - containerPort: 8080
-              name: http-network-cost-metrics
+              name: http-metrics
           env:
             - name: METRIC_GENERATION_INTERVAL
               value: {{ .Values.global.networkCostMetrics.metricGenerationInterval }}
