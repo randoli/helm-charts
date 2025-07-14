@@ -138,20 +138,35 @@ spec:
           secret:
             secretName: {{ .secretName }}
     {{- end }}
-    {{- with .Values.allInOne.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
     {{- with .Values.allInOne.topologySpreadConstraints }}
       topologySpreadConstraints:
       {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.allInOne.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
-    {{- with .Values.allInOne.tolerations }}
+    {{- if or .Values.allInOne.tolerations .Values.global.tolerations }}
       tolerations:
+        {{- with .Values.allInOne.tolerations }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
     {{- end }}
+    {{- if or .Values.allInOne.nodeSelector .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- with .Values.allInOne.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+    {{- end }}
+    {{- if or .Values.allInOne.affinity .Values.global.affinity }}
+      affinity:
+        {{- with .Values.allInOne.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+    {{- end }}  
 {{- end -}}

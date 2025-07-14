@@ -60,3 +60,4 @@ data:
   TRACE_STORAGE_BACKEND_URL: http://randoli-rok-jaeger-query.{{ .Release.Namespace }}:16686
   SUPERVISOR_AGENT_HTTP_URL: 'http://ai-agent/chat'
   POPULATE_RES_INDEX_FROM_DB: ''
+  FLIGHT_SQL_HOST: {{ include "randoli-agent.fullname" . }}.{{ .Release.Namespace }}:31337
