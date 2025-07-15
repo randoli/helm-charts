@@ -97,6 +97,17 @@ spec:
           image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{ .digest }}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
           {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - |
+              echo "Waiting for the FlightSQL server to be ready..."
+              while ! nc -z localhost 31337; do
+                sleep 1
+              done
+              echo "Starting agent..."
+              exec /tmp/guvnor
+          command:
+            - /bin/sh
+            - -c
           envFrom:
             - secretRef:
                 name: {{ .Values.global.secrets.config }}
