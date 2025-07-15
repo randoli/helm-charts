@@ -164,7 +164,7 @@ spec:
             {{- end }}
           {{- end }}
         - name: gizmosql
-          image: ghcr.io/gizmodata/gizmosql:latest
+          image: ghcr.io/gizmodata/gizmosql:v1.9.12
           ports:
           - containerPort: 31337
           volumeMounts:
