@@ -82,6 +82,10 @@ spec:
 
               echo "running migrations..."
               /migrations/migrate /persistence/agent.db
+
+              echo "setting up permissions..."
+              chown :1001 /persistence/agent.db
+              chmod 660 /persistence/agent.db
           volumeMounts:
             - name: shared-migrations
               mountPath: /migrations
