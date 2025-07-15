@@ -1,10 +1,9 @@
-{{- if eq (include "apply-open-telemetry-crs" . | trim) "true" -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: apply-otel-crs
+  name: apply-agent-manifests
   annotations:
-    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook: pre-install
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 spec:
   completions: 1
@@ -12,27 +11,28 @@ spec:
   backoffLimit: 3 
   template:
     spec:
-      serviceAccountName: otel-cr-applier
+      serviceAccountName: agent-manifests-applier
       containers:
-      - name: apply-crs
+      - name: apply-manifests
         image: docker.io/bitnami/kubectl:1.33.1
         command:
         - /bin/bash
         - -c
         - |
-          echo "⏳ Waiting for Operator pod..."
-          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=opentelemetry-operator,app.kubernetes.io/component=controller-manager -n {{ .Release.Namespace }} --timeout=120s
-          echo "✅ Operator is ready. Applying CRs..."
-          kubectl apply -f /crs/otel-collector.yaml -n {{ .Release.Namespace }}
-          kubectl apply -f /crs/instrumentation.yaml -n {{ .Release.Namespace }}
-        volumeMounts:
-        - name: crs
-          mountPath: /crs
+          echo "⏳ Applying Agent Mafinests..."
+          set -e
+
+          NAMESPACE="{{ .Release.Namespace }}"
+          SECRET_NAME="{{ include "randoli-agent.fullname" . }}-db"
+
+          # Create Secret only if it exists
+          if kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
+            echo "Secret $SECRET_NAME already exists, skipping"
+          else
+            echo "Creating secret $SECRET_NAME..."
+            kubectl create secret generic $SECRET_NAME -n "$NAMESPACE" --from-literal=username=admin --from-literal=password=$(openssl rand -base64 16)
+          fi
       restartPolicy: Never
-      volumes:
-      - name: crs
-        configMap:
-          name: otel-crs
       {{- if or .Values.tolerations .Values.global.tolerations }}
       tolerations:
         {{- with .Values.tolerations }}
@@ -59,16 +59,4 @@ spec:
         {{- with .Values.global.affinity }}
         {{- toYaml . | nindent 8 }}
         {{- end }} 
-      {{- end }}         
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: otel-crs
-data:
-  otel-collector.yaml: |-
-{{ tpl (.Files.Get "files/randoli-otel/opentelemetry-collector.yaml") . | nindent 4 }}
-  instrumentation.yaml: |-
-{{ tpl (.Files.Get "files/randoli-otel/instrumentation.yaml") . | nindent 4 }}
-{{end}}             
----
+      {{- end }}
