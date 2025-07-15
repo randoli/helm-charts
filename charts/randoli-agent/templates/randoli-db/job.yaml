@@ -25,7 +25,7 @@ spec:
           NAMESPACE="{{ .Release.Namespace }}"
           SECRET_NAME="{{ include "randoli-agent.fullname" . }}-db"
 
-          # Create Secret only if it exists
+          # Create Secret only if it doesn't exists
           if kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
             echo "Secret $SECRET_NAME already exists, skipping"
           else
