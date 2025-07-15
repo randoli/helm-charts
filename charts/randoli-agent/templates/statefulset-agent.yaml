@@ -82,6 +82,10 @@ spec:
 
               echo "running migrations..."
               /migrations/migrate /persistence/agent.db
+
+              echo "setting up permissions..."
+              chown :1001 /persistence/agent.db
+              chmod 660 /persistence/agent.db
           volumeMounts:
             - name: shared-migrations
               mountPath: /migrations
@@ -93,6 +97,17 @@ spec:
           image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{ .digest }}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
           {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - |
+              echo "Waiting for the FlightSQL server to be ready..."
+              while ! nc -z localhost 31337; do
+                sleep 1
+              done
+              echo "Starting agent..."
+              exec /tmp/guvnor
+          command:
+            - /bin/sh
+            - -c
           envFrom:
             - secretRef:
                 name: {{ .Values.global.secrets.config }}
@@ -160,7 +175,7 @@ spec:
             {{- end }}
           {{- end }}
         - name: gizmosql
-          image: ghcr.io/gizmodata/gizmosql:latest
+          image: ghcr.io/gizmodata/gizmosql:v1.9.12
           ports:
           - containerPort: 31337
           volumeMounts:
