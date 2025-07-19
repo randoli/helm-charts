@@ -21,6 +21,7 @@ dependencies:
     condition: observability.otel.operator.enabled
     tags:
      - observability
+     - costManagement
   - name: prometheus
     repository: https://randoli.github.io/helm-charts
     version: 26.0.1
@@ -62,3 +63,4 @@ dependencies:
     condition: observability.netobserv.enabled
     tags:
     - observability     
+    - costManagement

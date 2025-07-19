@@ -18,6 +18,9 @@ spec:
     - name: http
       port: 9003
       targetPort: 9003
+    - name: http-metrics
+      port: 8080
+      targetPort: 8080
     {{- if .Values.opencost.ui.enabled }}
     - name: http-ui
       port: 9090

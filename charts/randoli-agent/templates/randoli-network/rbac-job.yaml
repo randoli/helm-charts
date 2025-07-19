@@ -1,0 +1,43 @@
+{{- if eq (include "apply-network-crs" . | trim) "true" -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: network-cr-applier
+  annotations:
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook: post-install,post-upgrade,pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-network-cr-applier-role
+  annotations:
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook: post-install,post-upgrade,pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+rules:
+- apiGroups: ["flows.netobserv.io"]
+  resources: ["flowmetrics", "flowcollectors"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["namespaces", "pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: network-cr-applier-binding
+  annotations:
+    helm.sh/hook-weight: "-4"
+    helm.sh/hook: post-install,post-upgrade,pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+subjects:
+- kind: ServiceAccount
+  name: network-cr-applier
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ .Release.Name }}-network-cr-applier-role
+  apiGroup: rbac.authorization.k8s.io
+{{end}}
