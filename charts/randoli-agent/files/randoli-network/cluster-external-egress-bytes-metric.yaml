@@ -3,10 +3,7 @@
 apiVersion: flows.netobserv.io/v1alpha1
 kind: FlowMetric
 metadata:
-  annotations:
-    "helm.sh/hook": post-install, post-upgrade
   name: flowmetric-cluster-external-egress-traffic
-  namespace: netobserv
 spec:
   metricName: cluster_external_egress_bytes_total
   type: Counter

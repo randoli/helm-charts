@@ -3,10 +3,7 @@
 apiVersion: flows.netobserv.io/v1alpha1
 kind: FlowMetric
 metadata:
-  annotations:
-    "helm.sh/hook": post-install, post-upgrade 
   name: flowmetric-pod-egress-traffic
-  namespace: netobserv
 spec:
   metricName: pod_egress_bytes_total
   type: Counter
