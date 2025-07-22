@@ -2,8 +2,6 @@ apiVersion: flows.netobserv.io/v1beta2
 kind: FlowCollector
 metadata:
   name: cluster
-  annotations:
-    "helm.sh/hook": post-install, post-upgrade
 spec:
   namespace: netobserv
   consolePlugin:
@@ -16,6 +14,8 @@ spec:
         url: {{ include "prometheus-server-endpoint" . }}
   loki:
     enable: false
+  processor:
+    addZone: true
   exporters:
   - type: OpenTelemetry
     openTelemetry:

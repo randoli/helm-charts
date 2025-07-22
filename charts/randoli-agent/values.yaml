@@ -1,4 +1,13 @@
 global:
+  networkCostMetrics:
+    image:
+      registry: docker.io
+      repository: randoli/network-cost-metrics
+      tag: "1.0.0"
+      pullPolicy: Always
+    metricGenerationInterval: 2m
+    prometheusTimeout: 30s
+    url:
   opencost:
     url: 
   openshift:

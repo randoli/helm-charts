@@ -1,0 +1,78 @@
+{{- if eq (include "apply-network-crs" . | trim) "true" -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: delete-network-crs
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      serviceAccountName: network-cr-applier
+      containers:
+      - name: apply-crs
+        image: docker.io/bitnami/kubectl:1.33.1
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "⏳ Deleting Network CRs..."
+          set -e
+
+          NAMESPACE="netobserv"
+
+          # Delete Pod FlowMetric if exists
+          if kubectl get flowmetric flowmetric-pod-egress-traffic -n "$NAMESPACE" > /dev/null 2>&1; then
+            echo "Deleting FlowMetric flowmetric-pod-egress-traffic..."
+            kubectl delete flowmetric flowmetric-pod-egress-traffic -n "$NAMESPACE" --wait=true
+          else
+            echo "FlowMetric flowmetric-pod-egress-traffic not found, skipping."
+          fi
+
+          # Delete Cluster External FlowMetric if exists
+          if kubectl get flowmetric flowmetric-cluster-external-egress-traffic -n "$NAMESPACE" > /dev/null 2>&1; then
+            echo "Deleting FlowMetric flowmetric-cluster-external-egress-traffic..."
+            kubectl delete flowmetric flowmetric-cluster-external-egress-traffic -n "$NAMESPACE" --wait=true
+          else
+            echo "FlowMetric flowmetric-cluster-external-egress-traffic not found, skipping."
+          fi
+
+          # Delete FlowCollector if exists
+          if kubectl get flowcollector cluster > /dev/null 2>&1; then
+            echo "Deleting FlowCollector cluster..."
+            kubectl delete flowcollector cluster --wait=true
+          else
+            echo "FlowCollector cluster not found, skipping."
+          fi
+      restartPolicy: Never
+      {{- if or .Values.tolerations .Values.global.tolerations }}
+      tolerations:
+        {{- with .Values.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.nodeSelector .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- with .Values.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.affinity .Values.global.affinity }}
+      affinity:
+        {{- with .Values.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}  
+{{ end }}      
+---
