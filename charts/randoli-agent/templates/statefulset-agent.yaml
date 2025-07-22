@@ -200,6 +200,8 @@ spec:
             value: /persistence/agent.db
           - name: TLS_ENABLED
             value: "0"
+          - name: PRINT_QUERIES
+            value: "0"
           - name: SECRET_KEY
             value: "randoli_db_test"
           - name: INIT_SQL_COMMANDS
