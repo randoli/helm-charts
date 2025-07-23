@@ -41,7 +41,8 @@ observability:
   otel:
     operator: 
       #enabled: false
-    #applyCRs: false  
+    #applyCRs: false
+    applyTargetAllocator: true  
   logs:
     analyzers:
       enabled: true
@@ -57,6 +58,7 @@ observability:
     #enabled: false
   netobserv: 
     #enabled: false
+    #applyCRs: false
 
 costManagement:
   vpaOperator: 

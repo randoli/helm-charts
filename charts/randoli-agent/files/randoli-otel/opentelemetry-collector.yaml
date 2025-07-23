@@ -135,6 +135,7 @@ spec:
           receivers: [otlp]
           processors: [memory_limiter, batch]
           exporters: [debug] 
+  {{- if .Values.observability.otel.applyTargetAllocator}}
   targetAllocator:
     {{- with .Values.tolerations }}
     tolerations: {{ toYaml . | nindent 10 }}
@@ -142,6 +143,16 @@ spec:
     enabled: true
     prometheusCR:
       enabled: true
-      serviceMonitorSelector: {}
+      serviceMonitorSelector:
+        matchExpressions:
+          - key: app
+            operator: NotIn
+            values:
+              - "flowlogs-pipeline"
+          - key: netobserv-managed
+            operator: NotIn
+            values:
+              - "true"    
       podMonitorSelector: {}
     serviceAccount: opentelemetry-targetallocator
+  {{- end }}  

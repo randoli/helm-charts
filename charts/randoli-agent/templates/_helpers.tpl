@@ -122,9 +122,7 @@ false
 
 {{- define "apply-network-crs" -}}
 {{- $netobserv := .Values.observability.netobserv | default dict }}
-{{- if and (or (empty $netobserv) $netobserv.enabled ) (or .Values.tags.observability .Values.tags.costManagement) -}}
-true
-{{- else if eq (default false $netobserv.enabled) true  -}}
+{{- if and (or (not (hasKey $netobserv "applyCRs")) $netobserv.applyCRs ) (or .Values.tags.observability .Values.tags.costManagement) -}}
 true
 {{- else -}}
 false

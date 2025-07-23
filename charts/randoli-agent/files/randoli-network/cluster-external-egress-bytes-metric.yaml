@@ -9,7 +9,7 @@ spec:
   type: Counter
   valueField: Bytes
   direction: Egress
-  labels: [SrcK8S_Name,SrcK8S_Type,SrcK8S_Namespace,SrcK8S_OwnerName]
+  labels: [SrcK8S_Name,SrcK8S_Type,SrcK8S_Namespace,SrcK8S_OwnerName,DstAddr]
   filters:
   - field: DstSubnetLabel
     matchType: Absence
