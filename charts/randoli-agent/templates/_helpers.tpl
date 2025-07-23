@@ -113,7 +113,16 @@ false
 
 {{- define "apply-open-telemetry-crs" -}}
 {{- $otel := .Values.observability.otel | default dict }}
-{{- if and (or (not (hasKey $otel "applyCRs")) $otel.applyCRs ) .Values.tags.observability -}}
+{{- if and (or (not (hasKey $otel "applyCRs")) $otel.applyCRs ) (or .Values.tags.observability .Values.tags.costManagement) -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{- define "apply-network-crs" -}}
+{{- $netobserv := .Values.observability.netobserv | default dict }}
+{{- if and (or (not (hasKey $netobserv "applyCRs")) $netobserv.applyCRs ) (or .Values.tags.observability .Values.tags.costManagement) -}}
 true
 {{- else -}}
 false

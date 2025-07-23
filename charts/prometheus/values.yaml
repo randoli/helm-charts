@@ -1236,6 +1236,12 @@ extraScrapeConfigs: |
     metrics_path: "/metrics"
     static_configs:
       - targets: ['{{ include "prometheus.opencost.url" . }}']
+  - job_name: 'network-cost-metrics'
+    scrape_interval: 1m
+    scrape_timeout: 10s
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ['{{ include "prometheus.networkCostMetrics.url" . }}']
 
 # Adds option to add alert_relabel_configs to avoid duplicate alerts in alertmanager
 # useful in H/A prometheus with different external labels but the same alerts
