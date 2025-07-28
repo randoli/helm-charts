@@ -128,3 +128,11 @@ true
 false
 {{- end -}}
 {{- end -}}
+
+{{- define "trace-storage-url" -}}
+{{- if not (empty .Values.observability.traceConfig.url)  -}}
+{{ .Values.observability.traceConfig.storage.url }}
+{{- else -}}
+{{- printf "http://randoli-rok-jaeger-query.%s:16686" .Release.Namespace -}}
+{{- end -}}
+{{- end -}}
