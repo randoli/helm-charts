@@ -149,6 +149,19 @@ spec:
                 secretKeyRef:
                   name: {{ include "randoli-agent.fullname" . }}-db
                   key: password
+          {{- if .Values.observability.traceConfig.opensearch.secretName }}
+            - name: OPENSEARCH_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.observability.traceConfig.opensearch.secretName }}
+                  key: {{ .Values.observability.traceConfig.opensearch.usernameKeyRef }}
+            - name: OPENSEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.observability.traceConfig.opensearch.secretName }}
+                  key: {{ .Values.observability.traceConfig.opensearch.usernameKeyRef }}      
+         
+          {{- end }}        
           {{- if or .Values.extraEnv .Values.global.prometheus.secretName }}
             {{- if and .Values.global.prometheus.secretName .Values.global.prometheus.usernameKey }}
             - name: PROMETHEUS_USERNAME

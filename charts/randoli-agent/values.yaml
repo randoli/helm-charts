@@ -59,6 +59,17 @@ observability:
   netobserv: 
     #enabled: false
     #applyCRs: false
+  traceConfig:
+    storage:
+      type: JAEGER
+      url:
+    opensearch:
+      spanIndexPattern:
+      rootSpanIndexPattern: 
+      skipTlsVerify: false
+      secretName:
+      usernameKeyRef: 
+      passwordKeyRef: 
 
 costManagement:
   vpaOperator: 

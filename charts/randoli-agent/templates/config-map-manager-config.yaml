@@ -56,8 +56,15 @@ data:
   JAEGER_QUERY_SVC_GRPC: randoli-rok-jaeger-query.{{ .Release.Namespace }}:16685
   JAEGER_QUERY_SVC_HTTP: http://randoli-rok-jaeger-query.{{ .Release.Namespace }}:16686
   PROMETHEUS_ALERTMANAGER_URL: http://randoli-alerts.{{ .Release.Namespace }}:9093
-  TRACE_STORAGE_BACKEND_TYPE: JAEGER
-  TRACE_STORAGE_BACKEND_URL: http://randoli-rok-jaeger-query.{{ .Release.Namespace }}:16686
+  TRACE_STORAGE_BACKEND_TYPE: '{{ .Values.observability.traceConfig.storage.type }}'
+  TRACE_STORAGE_BACKEND_URL: {{ include "trace-storage-url" . }}
   SUPERVISOR_AGENT_HTTP_URL: 'http://ai-agent/chat'
   POPULATE_RES_INDEX_FROM_DB: ''
   FLIGHT_SQL_HOST: {{ include "randoli-agent.fullname" . }}.{{ .Release.Namespace }}:31337
+  {{- if .Values.observability.traceConfig.opensearch.spanIndexPattern }}
+  OPENSEARCH_SPANS_INDEX_PATTERN: {{ .Values.observability.traceConfig.opensearch.spanIndexPattern }}
+  {{- end }}
+  {{- if .Values.observability.traceConfig.opensearch.rootSpanIndexPattern }}
+  OPENSEARCH_ROOT_SPAN_INDEX_PATTERN: {{ .Values.observability.traceConfig.opensearch.rootSpanIndexPattern }}
+  {{- end }}
+  OPENSEARCH_SKIP_TLS_VERIFY: '{{ .Values.observability.traceConfig.opensearch.skipTlsVerify }}'
