@@ -1,6 +1,6 @@
-{{ define "randoli.email.subject" }}
-[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }} in {{ .CommonLabels.deployment }} ({{ .CommonLabels.cluster }})
-{{ end }}
+{{ define "randoli.email.subject" -}}
+[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ if .CommonLabels.deployment }} in {{ .CommonLabels.deployment }}{{ else if .CommonLabels.node }} on {{ .CommonLabels.node }}{{ end }}{{ with .CommonLabels.cluster }} ({{ . }}){{ end }}
+{{- end }}
 
 {{ define "randoli.email.body" }}
 <html>
@@ -52,22 +52,36 @@
               <table width="100%" cellpadding="5" cellspacing="0"
                      style="border-collapse:collapse; margin-bottom:20px;">
                 <tbody>
+                  {{ with .CommonLabels.cluster }}
                   <tr>
                     <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Cluster</td>
-                    <td style="border-bottom:1px solid #eeeeee;">{{ .CommonLabels.cluster }}</td>
+                    <td style="border-bottom:1px solid #eeeeee;">{{ . }}</td>
                   </tr>
+                  {{ end }}
+                  {{ with .CommonLabels.namespace }}
                   <tr>
                     <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Namespace</td>
-                    <td style="border-bottom:1px solid #eeeeee;">{{ .CommonLabels.namespace }}</td>
+                    <td style="border-bottom:1px solid #eeeeee;">{{ . }}</td>
                   </tr>
+                  {{ end }}
+                  {{ with .CommonLabels.deployment }}
                   <tr>
                     <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Deployment</td>
-                    <td style="border-bottom:1px solid #eeeeee;">{{ .CommonLabels.deployment }}</td>
+                    <td style="border-bottom:1px solid #eeeeee;">{{ . }}</td>
                   </tr>
+                  {{ end }}
+                  {{ with .CommonLabels.node }}
+                  <tr>
+                    <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Node</td>
+                    <td style="border-bottom:1px solid #eeeeee;">{{ . }}</td>
+                  </tr>
+                  {{ end }}
+                  {{ with .CommonAnnotations.description }}
                   <tr>
                     <td style="font-weight:bold;">Description</td>
-                    <td>{{ .CommonAnnotations.description }}</td>
+                    <td>{{ . }}</td>
                   </tr>
+                  {{ end }}
                 </tbody>
               </table>
 
