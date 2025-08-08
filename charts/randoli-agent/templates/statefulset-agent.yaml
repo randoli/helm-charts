@@ -219,11 +219,17 @@ spec:
             value: "randoli_db_test"
           - name: INIT_SQL_COMMANDS
             value: |
-              SET memory_limit = '1GB';
+              SET memory_limit = '2GB';
               SET threads TO 3;
               CREATE SCHEMA IF NOT EXISTS insights_agent;
               SET schema='insights_agent';
               SET search_path='insights_agent';
+          resources:
+            limits:
+              memory: 2Gi
+            requests:
+              cpu: 50m
+              memory: 256Mi    
       serviceAccountName: {{ template "randoli-agent.serviceAccountName" . }}
       serviceAccount: {{ template "randoli-agent.serviceAccountName" . }}
       {{- if or .Values.tolerations .Values.global.tolerations }}
