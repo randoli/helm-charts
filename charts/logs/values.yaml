@@ -78,7 +78,7 @@ vector:
     image: timberio/vector:0.41.X-distroless-libc
     resources:
       limits:
-        memory: 1Gi
+        memory: 2Gi
       requests:
         cpu: 50m
         memory: 192Mi
