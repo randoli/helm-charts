@@ -219,7 +219,7 @@ spec:
             value: "randoli_db_test"
           - name: INIT_SQL_COMMANDS
             value: |
-              SET memory_limit = {{ .Values.db.flightEngine.memoryLimit | quotes }};
+              SET memory_limit = {{ .Values.db.flightEngine.memoryLimit | squote }};
               SET threads TO {{ .Values.db.flightEngine.threads }};
               CREATE SCHEMA IF NOT EXISTS insights_agent;
               SET schema='insights_agent';
