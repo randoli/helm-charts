@@ -111,6 +111,17 @@ resources:
     cpu: 50m
     memory: 512Mi
 
+db:
+  resources:
+    limits:
+      memory: 2Gi
+    requests:
+      cpu: 50m
+      memory: 256Mi
+  flightEngine:
+    memoryLimit: 1500MB
+    threads: 2
+
 anomalyDetection:
   # Defaults anomaly detection list contains detections for:
   # - memory usage spikes
