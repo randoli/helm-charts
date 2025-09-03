@@ -229,8 +229,6 @@ prometheus:
             - k8s.replicaset.name
             - k8s.statefulset.name
             # custom attributes
-            - cloud.availability_zone
-            - cloud.region
             - host.id
             - host.name
             - host.type
