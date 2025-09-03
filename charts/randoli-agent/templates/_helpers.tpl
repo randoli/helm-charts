@@ -91,7 +91,7 @@ false
 
 {{- define "observability.security.mode" -}}
 {{- $security := .Values.observability.security | default dict }}
-{{- if and (or (not (hasKey $security "enabled")) $security.enabled ) .Values.tags.observability -}}
+{{- if or $security.enabled .Values.tags.observability -}}
 {{.Values.observability.security.mode }}
 {{- else -}}
 OFF
@@ -130,7 +130,7 @@ false
 {{- end -}}
 
 {{- define "trace-storage-url" -}}
-{{- if not (empty .Values.observability.traceConfig.url)  -}}
+{{- if not (empty .Values.observability.traceConfig.storage.url)  -}}
 {{ .Values.observability.traceConfig.storage.url }}
 {{- else -}}
 {{- printf "http://randoli-rok-jaeger-query.%s:16686" .Release.Namespace -}}

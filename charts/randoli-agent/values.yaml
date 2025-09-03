@@ -22,35 +22,6 @@ global:
     tlsInsecureSkipVerify: true
     tlsCertConfigmapName: ""
     tlsCertConfigmapKey: ""
-    serverFiles:
-      prometheus.yml:
-        otlp:
-          promote_resource_attributes:
-            - service.instance.id
-            - service.name
-            - service.namespace
-            - cloud.availability_zone
-            - cloud.region
-            - container.name
-            - deployment.environment.name
-            - k8s.cluster.name
-            - k8s.container.name
-            - k8s.cronjob.name
-            - k8s.daemonset.name
-            - k8s.deployment.name
-            - k8s.job.name
-            - k8s.namespace.name
-            - k8s.pod.name
-            - k8s.replicaset.name
-            - k8s.statefulset.name
-            # custom attributes
-            - cloud.availability_zone
-            - cloud.region
-            - host.id
-            - host.name
-            - host.type
-            - cloud.platform
-            - cloud.provider
   alerts:
     slack:
       channel: 
@@ -138,7 +109,7 @@ resources:
     memory: 2Gi
   requests:
     cpu: 50m
-    memory: 512Mi
+    memory: 1Gi
 
 db:
   resources:
@@ -146,7 +117,7 @@ db:
       memory: 2Gi
     requests:
       cpu: 50m
-      memory: 256Mi
+      memory: 1Gi
   flightEngine:
     memoryLimit: 1500MB
     threads: 2
@@ -234,5 +205,36 @@ cert-manager:
 network:
   standaloneConsole:
     enable: true
+
+prometheus:
+  serverFiles:
+      prometheus.yml:
+        otlp:
+          promote_resource_attributes:
+            - service.instance.id
+            - service.name
+            - service.namespace
+            - cloud.availability_zone
+            - cloud.region
+            - container.name
+            - deployment.environment.name
+            - k8s.cluster.name
+            - k8s.container.name
+            - k8s.cronjob.name
+            - k8s.daemonset.name
+            - k8s.deployment.name
+            - k8s.job.name
+            - k8s.namespace.name
+            - k8s.pod.name
+            - k8s.replicaset.name
+            - k8s.statefulset.name
+            # custom attributes
+            - cloud.availability_zone
+            - cloud.region
+            - host.id
+            - host.name
+            - host.type
+            - cloud.platform
+            - cloud.provider    
 
   

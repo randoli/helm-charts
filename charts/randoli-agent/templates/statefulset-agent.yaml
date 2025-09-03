@@ -159,7 +159,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.observability.traceConfig.opensearch.secretName }}
-                  key: {{ .Values.observability.traceConfig.opensearch.usernameKeyRef }}      
+                  key: {{ .Values.observability.traceConfig.opensearch.passwordKeyRef }}      
          
           {{- end }}        
           {{- if or .Values.extraEnv .Values.global.prometheus.secretName }}
