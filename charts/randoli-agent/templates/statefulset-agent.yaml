@@ -219,17 +219,13 @@ spec:
             value: "randoli_db_test"
           - name: INIT_SQL_COMMANDS
             value: |
-              SET memory_limit = '2GB';
-              SET threads TO 3;
+              SET memory_limit = {{ .Values.db.flightEngine.memoryLimit | squote }};
+              SET threads TO {{ .Values.db.flightEngine.threads }};
               CREATE SCHEMA IF NOT EXISTS insights_agent;
               SET schema='insights_agent';
               SET search_path='insights_agent';
           resources:
-            limits:
-              memory: 2Gi
-            requests:
-              cpu: 50m
-              memory: 256Mi    
+            {{- toYaml .Values.db.resources | nindent 12 }}
       serviceAccountName: {{ template "randoli-agent.serviceAccountName" . }}
       serviceAccount: {{ template "randoli-agent.serviceAccountName" . }}
       {{- if or .Values.tolerations .Values.global.tolerations }}
