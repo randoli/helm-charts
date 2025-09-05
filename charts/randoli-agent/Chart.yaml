@@ -13,7 +13,7 @@ maintainers:
 name: randoli-agent
 sources:
 - https://github.com/randoli/helm-charts
-version: 1.17.4
+version: 1.17.5
 dependencies:
   - name: opentelemetry-operator
     version: 0.86.4
