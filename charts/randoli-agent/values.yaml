@@ -74,6 +74,19 @@ observability:
 costManagement:
   vpaOperator: 
     #enabled: false
+  opencost:
+    metrics:
+      kubeStateMetrics:
+        emitKsmV1Metrics: "false"
+        emitKsmV1MetricsOnly: "true"
+    exporter:
+      extraVolumeMounts:
+        - name: metrics-config-volume
+          mountPath: /var/configs
+  extraVolumes:
+    - name: metrics-config-volume
+      configMap:
+        name: randoli-cost-metrics-config
 
 rightsizing:
    recommender:
