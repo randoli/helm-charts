@@ -47,7 +47,7 @@ dependencies:
      - observability
   - name: cost-management
     repository: https://randoli.github.io/helm-charts
-    version: 1.41.0
+    version: 1.42.0
     alias: costManagement
     tags:
      - costManagement

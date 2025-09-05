@@ -115,7 +115,10 @@ spec:
                   key: CLOUD_PROVIDER_API_KEY
             {{- end }}
             - name: CLUSTER_ID
-              value: {{ .Values.opencost.exporter.defaultClusterId | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secrets.config }}
+                  key: CLUSTER_NAME
             {{- if .Values.opencost.exporter.aws.access_key_id }}
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
