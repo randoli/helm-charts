@@ -3,15 +3,16 @@ apiVersion: v1
 metadata:
   name: ks-capabilities
   namespace: {{ include "randoli-agent.namespace" . }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    app: ks-capabilities
-    tier: {{ .Values.global.namespaceTier }}
-    kubescape.io/ignore: "true"
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" "ks-capabilities" "tier" .Values.global.namespaceTier) | nindent 4 }}
     kubescape.io/tier: "core"
 data:
   capabilities: |
     {
       "capabilities": {{- .Values.capabilities | toJson }},
       "components": {{- include "components" . | fromYaml | toJson }},
-      "configurations": {{- .Values.configurations | toJson }}
+      "configurations": {{- .Values.configurations | toJson }} ,
+      "serviceScanConfig" : {{- .Values.serviceScanConfig | toJson }}
     }

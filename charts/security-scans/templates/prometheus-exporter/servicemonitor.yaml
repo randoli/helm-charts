@@ -1,17 +1,26 @@
 {{- $components := fromYaml (include "components" .) }}
-{{- if $components.prometheusExporter.enabled }}
+{{- if and .Values.kubescape.serviceMonitor.enabled $components.prometheusExporter.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Values.prometheusExporter.name }}
   namespace: {{ include "randoli-agent.namespace" . }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    app: {{ .Values.prometheusExporter.name }}
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.prometheusExporter.name "tier" .Values.global.namespaceTier) | nindent 4 }}
+    {{- with .Values.kubescape.serviceMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
+  endpoints:
+  - interval: 60s
+    path: /metrics
+    targetPort: 8080
   namespaceSelector:
     matchNames:
       -  {{ include "randoli-agent.namespace" . }}
   selector:
     matchLabels:
-      app: {{ .Values.prometheusExporter.name }}
+      {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.prometheusExporter.name) | nindent 6 }}
 {{ end }}

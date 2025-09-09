@@ -7,12 +7,10 @@ kind: Deployment
 metadata:
   name: {{ .Values.synchronizer.name }}
   namespace: {{ include "randoli-agent.namespace" . }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    app.kubernetes.io/name: {{ .Values.synchronizer.name }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app: {{ .Values.synchronizer.name }}
-    tier: {{ .Values.global.namespaceTier }}
-    kubescape.io/ignore: "true"
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.synchronizer.name "tier" .Values.global.namespaceTier) | nindent 4 }}
     kubescape.io/tier: "core"
 spec:
   replicas: 1
@@ -21,12 +19,12 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.synchronizer.name }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      tier: {{ .Values.global.namespaceTier }}
+      {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.synchronizer.name) | nindent 6 }}
   template:
     metadata:
       annotations:
+        {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 8 }}
+        {{- with .Values.synchronizer.podAnnotations }}{{- toYaml . | nindent 8 }}{{- end }}
         checksum/synchronizer-configmap: {{ $checksums.synchronizerConfig }}
         checksum/cloud-secret: {{ $checksums.cloudSecret }}
         checksum/cloud-config: {{ $checksums.cloudConfig }}
@@ -34,23 +32,64 @@ spec:
         checksum/proxy-config: {{ $checksums.proxySecret }}
       {{- end }}
       labels:
+        {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.synchronizer.name "tier" .Values.global.namespaceTier) | nindent 8 }}
+        {{- with .Values.synchronizer.podLabels }}{{- toYaml . | nindent 8 }}{{- end }}
         kubescape.io/tier: "core"
-        app.kubernetes.io/name: {{ .Values.synchronizer.name }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        tier: {{ .Values.global.namespaceTier }}
-        app: {{ .Values.synchronizer.name }}
       {{- if $components.otelCollector.enabled }}
         otel: enabled
       {{- end }}
     spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-      - name: {{ toYaml .Values.imagePullSecrets }}
+      {{- if kindIs "string" .Values.imagePullSecrets }}
+      - name: {{ .Values.imagePullSecrets }}
+      {{- else }}
+      {{- range .Values.imagePullSecrets }}
+      - name: {{ . }}
+      {{- end }}
+      {{- end }}
       {{- end }}
       securityContext:
+        seccompProfile:
+          type: RuntimeDefault
         runAsUser: 65532
         fsGroup: 65532
+      {{- if $components.serviceDiscovery.enabled }}
+      initContainers:
+        - name: {{ .Values.serviceDiscovery.urlDiscovery.name }}
+          image: "{{ .Values.serviceDiscovery.urlDiscovery.image.repository }}:{{ .Values.serviceDiscovery.urlDiscovery.image.tag }}"
+          imagePullPolicy: {{ .Values.serviceDiscovery.urlDiscovery.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          resources:
+{{ toYaml .Values.serviceDiscovery.resources | indent 14 }}
+          env:
+      {{- if ne .Values.global.httpsProxy "" }}
+            - name: HTTPS_PROXY
+              value: "{{ .Values.global.httpsProxy }}"
+            - name : no_proxy
+              value: "{{ $no_proxy_envar_list }}"
+      {{- end }}
+          args:
+            - -method=get
+            - -scheme=https
+            - -host={{ .Values.server }}
+            - -path=api/v2/servicediscovery
+            - -path-output=/data/services.json
+      {{- if .Values.serviceDiscovery.urlDiscovery.insecureSkipTLSVerify }}
+            - -skip-ssl-verify=true
+      {{- end}}
+          volumeMounts:
+            - name: services
+              mountPath: /data
+      {{- if ne .Values.global.proxySecretFile "" }}
+            - name: proxy-secret
+              mountPath: /etc/ssl/certs/proxy.crt
+              subPath: proxy.crt
+      {{- end }}
+      {{- end }}
       containers:
         - name: {{ .Values.synchronizer.name }}
           image: "{{ .Values.synchronizer.image.repository }}:{{ .Values.synchronizer.image.tag }}"
@@ -63,15 +102,24 @@ spec:
             httpGet:
               path: /healthz
               port: 7888
-            initialDelaySeconds: 3
-            periodSeconds: 3
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 10
           resources:
 {{ toYaml .Values.synchronizer.resources | indent 12 }}
           env:
             - name: HELM_RELEASE
-              value: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+              value: kubescape-operator-{{ .Chart.Version | replace "+" "_" }}
             - name: GOMEMLIMIT
-              value: "{{ .Values.synchronizer.resources.requests.memory }}B"
+              valueFrom:
+                resourceFieldRef:
+                  resource: limits.memory
+                  divisor: '1'
+            - name: GOMAXPROCS
+              valueFrom:
+                resourceFieldRef:
+                  resource: limits.cpu
+                  divisor: '1'
             - name: KS_LOGGER_LEVEL
               value: "{{ .Values.logger.level }}"
             - name: KS_LOGGER_NAME
@@ -87,7 +135,11 @@ spec:
                   name: {{ $components.cloudSecret.name }}
                   key: account
             - name: OTEL_COLLECTOR_SVC
-              value: "otel-collector:4317"
+              value: "otel-collector:4318"
+            {{- end }}
+            {{- if .Values.configurations.otelUrl }}
+            - name: OTEL_COLLECTOR_SVC
+              value: {{ .Values.configurations.otelUrl }}
             {{- end }}
             {{- if ne .Values.global.httpsProxy "" }}
             - name: HTTPS_PROXY
@@ -105,10 +157,22 @@ spec:
               readOnly: true
               subPath: "clusterData.json"
             {{- if $components.serviceDiscovery.enabled }}
-            - name: {{ .Values.global.cloudConfig }}
+            - name: "services"
               mountPath: /etc/config/services.json
               readOnly: true
               subPath: "services.json"
+            {{- end }}
+            {{- if .Values.global.overrideDefaultCaCertificates.enabled }}
+            - name: custom-ca-certificates
+              mountPath: /etc/ssl/certs/ca-certificates.crt
+              subPath: ca-certificates.crt
+            {{- end }}
+            {{- if .Values.global.extraCaCertificates.enabled }}
+            {{- range $key, $value := (lookup "v1" "Secret" (include "randoli-agent.namespace" .) .Values.global.extraCaCertificates.secretName).data }}
+            - name: extra-ca-certificates
+              mountPath: /etc/ssl/certs/{{ $key }}
+              subPath: {{ $key }}
+            {{- end }}
             {{- end }}
             - name: config
               mountPath: /etc/config/config.json
@@ -134,16 +198,26 @@ spec:
           secret:
             secretName: {{ .Values.global.proxySecretName }}
       {{- end }}
+      {{- if .Values.global.overrideDefaultCaCertificates.enabled }}
+        - name: custom-ca-certificates
+          secret:
+            secretName: {{ $components.customCaCertificates.name }}
+      {{- end }}
+      {{- if .Values.global.extraCaCertificates.enabled }}
+        - name: extra-ca-certificates
+          secret:
+            secretName: {{ .Values.global.extraCaCertificates.secretName }}
+      {{- end }}
         - name: {{ .Values.global.cloudConfig }}
           configMap:
             name: {{ .Values.global.cloudConfig }}
             items:
             - key: "clusterData"
               path: "clusterData.json"
-            {{- if $components.serviceDiscovery.enabled }}
-            - key: "services"
-              path: "services.json"
-            {{- end }}
+      {{- if $components.serviceDiscovery.enabled }}
+        - name: "services"
+          emptyDir: {}
+      {{- end }}
         - name: config
           configMap:
             name: {{ .Values.synchronizer.name }}
@@ -158,41 +232,22 @@ spec:
 {{- end }}
       serviceAccountName: {{ .Values.synchronizer.name }}
       automountServiceAccountToken: true
-
-      {{- if or .Values.synchronizer.tolerations .Values.customScheduling.tolerations .Values.global.tolerations }}
-      tolerations:
-        {{- with .Values.synchronizer.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.customScheduling.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
-      {{- end }}
-      {{- if or .Values.synchronizer.nodeSelector .Values.customScheduling.nodeSelector .Values.global.nodeSelector }}
       nodeSelector:
-        {{- with .Values.synchronizer.nodeSelector }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.customScheduling.nodeSelector }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.nodeSelector }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
+      {{- if .Values.synchronizer.nodeSelector }}
+      {{- toYaml .Values.synchronizer.nodeSelector | nindent 8 }}
+      {{- else if .Values.customScheduling.nodeSelector }}
+      {{- toYaml .Values.customScheduling.nodeSelector | nindent 8 }}
       {{- end }}
-      {{- if or .Values.synchronizer.affinity .Values.customScheduling.affinity .Values.global.affinity }}
       affinity:
-        {{- with .Values.synchronizer.affinity }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.customScheduling.affinity }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.affinity }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
+      {{- if .Values.synchronizer.affinity }}
+      {{- toYaml .Values.synchronizer.affinity | nindent 8 }}
+      {{- else if .Values.customScheduling.affinity }}
+      {{- toYaml .Values.customScheduling.affinity | nindent 8 }}
+      {{- end }}
+      tolerations:
+      {{- if .Values.synchronizer.tolerations }}
+      {{- toYaml .Values.synchronizer.tolerations | nindent 8 }}
+      {{- else if .Values.customScheduling.tolerations }}
+      {{- toYaml .Values.customScheduling.tolerations | nindent 8 }}
       {{- end }}
 {{- end }}

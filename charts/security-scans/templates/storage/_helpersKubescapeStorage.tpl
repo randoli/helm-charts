@@ -1,56 +1,4 @@
 {{/*
-Expand the name of the chart.
-*/}}
-{{- define "kubescape-storage.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-{{- end }}
-
-{{/*
-Create a default fully qualified app name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-If release name contains chart name it will be used as a full name.
-*/}}
-{{- define "kubescape-storage.fullname" -}}
-{{- if .Values.fullnameOverride }}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- $name := default .Chart.Name .Values.nameOverride }}
-{{- if contains $name .Release.Name }}
-{{- .Release.Name | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
-{{- end }}
-{{- end }}
-{{- end }}
-
-{{/*
-Create chart name and version as used by the chart label.
-*/}}
-{{- define "kubescape-storage.chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-{{- end }}
-
-{{/*
-Common labels
-*/}}
-{{- define "kubescape-storage.labels" -}}
-helm.sh/chart: {{ include "kubescape-storage.chart" . }}
-{{ include "kubescape-storage.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-{{/*
-Selector labels
-*/}}
-{{- define "kubescape-storage.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "kubescape-storage.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
-{{/*
 Create the name of the Kubescape Storage Auth Reader RoleBinding to use
 */}}
 {{- define "storage.authReaderRoleBindingName" -}}
@@ -58,8 +6,37 @@ Create the name of the Kubescape Storage Auth Reader RoleBinding to use
 {{- end }}
 
 {{/*
-Create the name of the Kubescape Storage Auth Reader ClusterRoleBinding to use
-*/}}
+  Create the name of the Kubescape Storage Auth Reader ClusterRoleBinding to use
+  */}}
 {{- define "storage.authDelegatorClusterRoleBindingName" -}}
   {{- .Values.storage.name | printf "%s:system:auth-delegator" }}
 {{- end }}
+
+{{/*
+  Generate a private key and certificate pair for mTLS
+*/}}
+{{- define "storage.generateCerts.ca" -}}
+{{- if not .Values.global.storageCA -}}
+  {{- if .Values.unittest }}
+    {{- $ca := dict "Key" "mock-ca-key" "Cert" "mock-ca-cert" -}}
+    {{- $_ := set .Values.global "storageCA" $ca -}}
+  {{- else }}
+    {{- $cn := printf "%s-%s" .Values.storage.name (randAlphaNum 10) -}}
+    {{- $ca := genCA (printf "%s-ca" $cn) (int .Values.storage.mtls.certificateValidityInDays) -}}
+    {{- $_ := set .Values.global "storageCA" $ca -}}
+  {{- end -}}
+{{- end -}}
+{{- .Values.global.storageCA | toJson -}}
+{{- end -}}
+
+{{- define "storage.generateCerts.cert" -}}
+{{- if .Values.unittest }}
+  {{- $cert := dict "Key" "mock-cert-key" "Cert" "mock-cert-cert" -}}
+  {{- $cert | toJson -}}
+{{- else }}
+  {{- $cn := printf "%s.%s.svc-%s" .Values.storage.name (include "randoli-agent.namespace" .) (randAlphaNum 10) -}}
+  {{- $dnsNames := list (printf "%s.%s.svc" .Values.storage.name (include "randoli-agent.namespace" .)) (printf "%s.%s.svc.cluster.local" .Values.storage.name (include "randoli-agent.namespace" .)) -}}
+  {{- $cert := genSignedCert $cn nil $dnsNames (int .Values.storage.mtls.certificateValidityInDays) .Values.global.storageCA -}}
+  {{- $cert | toJson -}}
+{{- end -}}
+{{- end -}}

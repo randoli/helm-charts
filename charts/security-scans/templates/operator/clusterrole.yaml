@@ -4,19 +4,38 @@ kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ .Release.Name }}-{{ .Values.operator.name }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    kubescape.io/ignore: "true"
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.operator.name "tier" .Values.global.namespaceTier) | nindent 4 }}
 rules:
   - apiGroups: [""]
-    resources: ["pods", "nodes", "namespaces", "configmaps", "secrets", "services"]
+    resources: ["pods", "nodes", "namespaces", "configmaps", "services"]
     verbs: ["get", "watch", "list"]
+  {{- if .Values.global.enableClusterWideSecretAccess }}
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "watch", "list"]
+  {{- end }}
   - apiGroups: ["batch"]
     resources: ["jobs", "cronjobs"]
-    verbs: ["get", "watch", "list"]
+    verbs: ["get", "watch", "list", "create", "update", "delete" ,"patch"]
   - apiGroups: ["apps"]
     resources: ["deployments", "daemonsets", "statefulsets", "replicasets"]
     verbs: ["get", "watch", "list"]
   - apiGroups: ["spdx.softwarecomposition.kubescape.io"]
-    resources: ["vulnerabilitymanifests", "vulnerabilitymanifestsummaries", "workloadconfigurationscans", "workloadconfigurationscansummaries", "openvulnerabilityexchangecontainers", "sbomsyftfiltereds", "sbomsyfts"]
+    resources: ["vulnerabilitymanifests", "vulnerabilitymanifestsummaries", "workloadconfigurationscans", "workloadconfigurationscansummaries", "openvulnerabilityexchangecontainers", "applicationprofiles", "sbomsyfts"]
     verbs: ["get", "watch", "list", "delete"]
-{{- end }}
+  - apiGroups: ["kubescape.io"]
+    resources: ["runtimerulealertbindings"]
+    verbs: ["list", "watch", "get"]
+  - apiGroups: ["kubescape.io"]
+    resources: ["servicesscanresults"]
+    verbs: ["get", "watch", "list", "create", "update", "delete" ,"patch"]
+  - apiGroups: ["kubescape.io"]
+    resources: ["operatorcommands"]
+    verbs: ["get", "watch", "list"]
+  - apiGroups: ["kubescape.io"]
+    resources: ["operatorcommands/status"]
+    verbs: ["get", "watch", "list", "update", "patch"]
+  {{- end }}

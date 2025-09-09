@@ -1,0 +1,400 @@
+suite: Snapshot tests
+kubernetesProvider:
+  scheme:
+    "v1/Secret":
+      gvr:
+        version: v1
+        resource: secrets
+      namespaced: true
+  objects:
+    - kind: Secret
+      apiVersion: v1
+      metadata:
+        name: extra-certificates
+        namespace: kubescape
+      data:
+        cert1.pem: Zm9v
+        cert2.pem: Zm9v
+tests:
+  - it: all capabilities
+    asserts:
+      - matchSnapshot: {}
+    capabilities:
+      apiVersions:
+        - batch/v1
+    set:
+      unittest: true
+      account: 9e6c0c2c-6bd0-4919-815b-55030de7c9a0
+      accessKey: f304d73b-d43c-412b-82ea-e4c859493ce6
+      alertCRD:
+        installDefault: true
+      cloudProviderMetadata:
+        secretRef:
+          name: kubescape-secret
+          subscriptionIdKey: aksSubscriptionID
+          clientIdKey: aksClientID
+          clientSecretKey: aksClientSecret
+          tenantIdKey: aksTenantID
+          resourceGroupKey: aksResourceGroup
+      capabilities:
+        configurationScan: enable
+        continuousScan: enable
+        nodeScan: enable
+        vulnerabilityScan: enable
+        relevancy: enable
+        vexGeneration: enable
+        runtimeObservability: enable
+        networkPolicyService: enable
+        runtimeDetection: enable
+        httpDetection: enable
+        malwareDetection: enable
+        nodeProfileService: enable
+        nodeSbomGeneration: enable
+        scanEmbeddedSBOMs: enable
+        seccompProfileService: enable
+        autoUpgrading: enable
+        prometheusExporter: enable
+        admissionController: enable
+        manageWorkloads: enable
+        networkEventsStreaming: enable
+        syncSBOM: enable
+      excludeLabels:
+        foo: bar
+        baz: qux
+      server: api.armosec.io
+      configurations:
+        otelUrl: "otelCollector.svc.monitoring:4317"
+        excludeJsonPaths:
+          - ".containers[*].env[?(@.name==\"KUBECONFIG\")]"
+      clusterName: kind-kind
+      includeNamespaces: "my-namespace"
+      global:
+        httpsProxy: "https://foo:bar@baz:1234"
+        noProxy: "*.foo,bar.baz"
+        networkPolicy:
+          createEgressRules: true
+          enabled: true
+          apiServerPort: 443
+          httpsProxyIP: 1.1.1.1
+          httpsProxyPort: 1234
+        proxySecretFile: foo
+        overrideDefaultCaCertificates:
+          enabled: true
+          caCertificates: "foo"
+        openshift:
+          scc:
+            enabled: true
+      imagePullSecrets: [foo, bar]
+      grypeOfflineDB:
+        enabled: true
+        image:
+          tag: "latest"
+        podAnnotations:
+          foo: bar
+        podLabels:
+          bar: baz
+      nodeAgent.gke.allowlist:
+        enabled: true
+        name: armo-kubescape-node-agent-1.27
+      kubescape.serviceMonitor.enabled: true
+      kubescapeScheduler.scanSchedule: "1 2 3 4 5"
+      kubevuln.config.grypeDbPersistence: true
+      kubevuln.config.useDefaultMatchers: true
+      kubevulnScheduler.scanSchedule: "1 2 3 4 5"
+      nodeAgent.config.skipKernelVersionCheck: true
+      storage.forceVirtualCrds: true
+      storage.mtls.enabled: false
+      prometheusExporter:
+        enableWorkloadMetrics: true
+  - it: minimal capabilities
+    asserts:
+      - matchSnapshot: {}
+    capabilities:
+      apiVersions:
+        - batch/v1
+    set:
+      unittest: true
+      configurations.otelUrl: "otelCollector.svc.monitoring:4317"
+      clusterName: kind-kind
+      excludeNamespaces: ""
+      includeNamespaces: ""
+      kubescapeScheduler.scanSchedule: "1 2 3 4 5"
+      kubevulnScheduler.scanSchedule: "1 2 3 4 5"
+  - it: disable otel
+    asserts:
+      - matchSnapshot: {}
+    capabilities:
+      apiVersions:
+        - batch/v1
+    set:
+      unittest: true
+      account: 9e6c0c2c-6bd0-4919-815b-55030de7c9a0
+      accessKey: f304d73b-d43c-412b-82ea-e4c859493ce6
+      clusterName: kind-kind
+      kubescapeScheduler.scanSchedule: "1 2 3 4 5"
+      kubevulnScheduler.scanSchedule: "1 2 3 4 5"
+      server: api.armosec.io
+  - it: relevancy only
+    asserts:
+      - matchSnapshot: { }
+    capabilities:
+      majorVersion: 1
+      minorVersion: 29
+      apiVersions:
+        - batch/v1
+    set:
+      unittest: true
+      configurations.otelUrl: "otelCollector.svc.monitoring:4317"
+      clusterName: kind-kind
+      excludeNamespaces: ""
+      includeNamespaces: ""
+      kubescapeScheduler.scanSchedule: "1 2 3 4 5"
+      kubevulnScheduler.scanSchedule: "1 2 3 4 5"
+      capabilities:
+        configurationScan: enable
+        nodeScan: enable
+        nodeSbomGeneration: disable
+        scanEmbeddedSBOMs: disable
+        vulnerabilityScan: enable
+        relevancy: enable
+        vexGeneration: disable
+        runtimeObservability: disable
+        networkPolicyService: disable
+        networkEventsStreaming: disable
+        runtimeDetection: disable
+        httpDetection: disable
+        malwareDetection: disable
+        nodeProfileService: disable
+        admissionController: disable
+        seccompProfileService: disable
+        manageWorkloads: disable
+  - it: default capabilities
+    asserts:
+      - matchSnapshot: {}
+    capabilities:
+      apiVersions:
+        - batch/v1
+    set:
+      unittest: true
+      account: 9e6c0c2c-6bd0-4919-815b-55030de7c9a0
+      accessKey: f304d73b-d43c-412b-82ea-e4c859493ce6
+      alertCRD:
+        installDefault: true
+      capabilities:
+        configurationScan: enable
+        nodeScan: enable
+        vulnerabilityScan: enable
+        relevancy: enable
+        vexGeneration: disable
+        runtimeObservability: enable
+        networkPolicyService: enable
+        runtimeDetection: disable
+        httpDetection: disable
+        malwareDetection: disable
+        nodeProfileService: disable
+        autoUpgrading: disable
+        prometheusExporter: disable
+        admissionController: disable
+      server: api.armosec.io
+      clusterName: kind-kind
+      excludeNamespaces: "kubescape,kube-system,kube-public,kube-node-lease,kubeconfig,gmp-system,gmp-public"
+      global:
+        extraCaCertificates:
+          enabled: true
+          secretName: "extra-certificates"
+        networkPolicy:
+          createEgressRules: true
+          enabled: true
+          apiServerIP: "192.168.49.2"
+          apiServerPort: 8443
+        proxySecretFile: foo
+      grypeOfflineDB.enabled: true
+      kubescape.serviceMonitor.enabled: true
+      kubescapeScheduler.scanSchedule: "1 2 3 4 5"
+      kubevulnScheduler.scanSchedule: "1 2 3 4 5"
+  - it: with single private registry credentials
+    template: configs/private-registries-creds-secret.yaml
+    documentSelector:
+      path: metadata.name
+      value: kubescape-registry-scan-secrets
+    asserts:
+      - equal:
+          path: metadata.name
+          value: kubescape-registry-scan-secrets
+      - matchSnapshot: {}
+    capabilities:
+      apiVersions:
+        - batch/v1
+    set:
+      unittest: true
+      configurations.otelUrl: "otelCollector.svc.monitoring:4317"
+      clusterName: kind-kind
+      imageScanning:
+        privateRegistries:
+          credentials:
+            - registry: foo.example.com
+              username: bar
+              password: baz
+  - it: with multiple private registry credentials
+    template: configs/private-registries-creds-secret.yaml
+    documentSelector:
+      path: metadata.name
+      value: kubescape-registry-scan-secrets
+    asserts:
+      - equal:
+          path: metadata.name
+          value: kubescape-registry-scan-secrets
+      - matchSnapshot: {}
+    capabilities:
+      apiVersions:
+        - batch/v1
+    set:
+      unittest: true
+      configurations.otelUrl: "otelCollector.svc.monitoring:4317"
+      clusterName: kind-kind
+      imageScanning:
+        privateRegistries:
+          credentials:
+            - registry: foo.example.com
+              username: bar
+              password: baz
+              skipTlsVerify: true
+            - registry: test.example.com
+              username: xxx
+              password: yyy
+              insecure: true
+  - it: with image pull secret generated
+    template: configs/image-pull-secret.yaml
+    documentSelector:
+      path: metadata.name
+      value: quay-secret
+    asserts:
+      - equal:
+          path: metadata.name
+          value: quay-secret
+      - matchSnapshot: {}
+    capabilities:
+      apiVersions:
+        - batch/v1
+    set:
+      unittest: true
+      configurations.otelUrl: "otelCollector.svc.monitoring:4317"
+      clusterName: kind-kind
+      imagePullSecrets: quay-secret
+      imagePullSecret:
+        server: quay.io
+        username: foo
+        password: xxxxxxx
+  - it: multiple node agents
+    asserts:
+      - matchSnapshot: {}
+    capabilities:
+      apiVersions:
+        - batch/v1
+    set:
+      unittest: true
+      account: 9e6c0c2c-6bd0-4919-815b-55030de7c9a0
+      accessKey: f304d73b-d43c-412b-82ea-e4c859493ce6
+      alertCRD:
+        installDefault: true
+      cloudProviderMetadata:
+        secretRef:
+          name: kubescape-secret
+          subscriptionIdKey: aksSubscriptionID
+          clientIdKey: aksClientID
+          clientSecretKey: aksClientSecret
+          tenantIdKey: aksTenantID
+          resourceGroupKey: aksResourceGroup
+      capabilities:
+        configurationScan: enable
+        continuousScan: enable
+        nodeScan: enable
+        vulnerabilityScan: enable
+        relevancy: enable
+        vexGeneration: enable
+        runtimeObservability: enable
+        networkPolicyService: enable
+        runtimeDetection: enable
+        httpDetection: enable
+        malwareDetection: enable
+        nodeProfileService: enable
+        nodeSbomGeneration: enable
+        scanEmbeddedSBOMs: enable
+        seccompProfileService: enable
+        autoUpgrading: enable
+        prometheusExporter: enable
+        admissionController: enable
+        manageWorkloads: enable
+        networkEventsStreaming: enable
+        syncSBOM: enable
+      excludeLabels:
+        foo: bar
+        baz: qux
+      server: api.armosec.io
+      configurations:
+        otelUrl: "otelCollector.svc.monitoring:4317"
+        excludeJsonPaths:
+          - ".containers[*].env[?(@.name==\"KUBECONFIG\")]"
+      clusterName: kind-kind
+      includeNamespaces: "my-namespace"
+      global:
+        httpsProxy: "https://foo:bar@baz:1234"
+        noProxy: "*.foo,bar.baz"
+        networkPolicy:
+          createEgressRules: true
+          enabled: true
+          apiServerPort: 443
+          httpsProxyIP: 1.1.1.1
+          httpsProxyPort: 1234
+        proxySecretFile: foo
+        overrideDefaultCaCertificates:
+          enabled: true
+          caCertificates: "foo"
+        openshift:
+          scc:
+            enabled: true
+      imagePullSecrets: [foo, bar]
+      grypeOfflineDB:
+        enabled: true
+        image:
+          tag: "latest"
+        podAnnotations:
+          foo: bar
+        podLabels:
+          bar: baz
+      nodeAgent.gke.allowlist:
+        enabled: true
+        name: armo-kubescape-node-agent-1.27
+      nodeAgent.multipleDaemonSets:
+        enabled: true # set to true to enable multiple DaemonSets for the node-agent, with different configurations.
+        configurations:
+          - nodeSelector:
+              kubernetes.io/os: linux
+              doks.digitalocean.com/node-pool: pool-1
+            resources:
+              requests:
+                cpu: 300m
+                memory: 128Mi
+              limits:
+                cpu: 400m
+                memory: 512Mi
+          - nodeSelector:
+              kubernetes.io/os: linux
+              doks.digitalocean.com/node-pool: pool-2
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 200m
+                memory: 512Mi
+      kubescape.serviceMonitor.enabled: true
+      kubescapeScheduler.scanSchedule: "1 2 3 4 5"
+      kubevuln.config.grypeDbPersistence: true
+      kubevuln.config.useDefaultMatchers: true
+      kubevulnScheduler.scanSchedule: "1 2 3 4 5"
+      nodeAgent.config.skipKernelVersionCheck: true
+      storage.forceVirtualCrds: true
+      storage.mtls.enabled: false
+      prometheusExporter:
+        enableWorkloadMetrics: true

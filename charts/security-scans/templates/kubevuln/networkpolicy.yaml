@@ -5,15 +5,14 @@ kind: NetworkPolicy
 metadata:
   name: {{ .Values.kubevuln.name }}
   namespace: {{ include "randoli-agent.namespace" . }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    app: {{ .Values.kubevuln.name }}
-    tier: {{ .Values.global.namespaceTier }}
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.kubevuln.name "tier" .Values.global.namespaceTier) | nindent 4 }}
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.kubevuln.name }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      tier: {{ .Values.global.namespaceTier }}
+      {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.kubevuln.name) | nindent 6 }}
   policyTypes:
     - Ingress
   {{- if .Values.global.networkPolicy.createEgressRules }}
@@ -25,14 +24,13 @@ spec:
     - ports:
         - port: 443
           protocol: TCP
+{{ tpl (.Files.Get "assets/common-egress-rules.yaml") . | indent 4 }}
   {{- end }}
   ingress:
     - from:
         - podSelector:
             matchLabels:
-              app.kubernetes.io/instance: kubescape
-              app.kubernetes.io/name: operator
-              tier: ks-control-plane
+              {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.operator.name) | nindent 14 }}
       ports:
         - port: {{ .Values.kubevuln.service.port }}
           protocol: TCP
