@@ -5,7 +5,6 @@ apiVersion: batch/v1
       namespace: {{ include "randoli-agent.namespace" . }}
       labels:
         app: {{ .Values.registryScanScheduler.name }}
-        kubescape.io/ignore: "true"
         kubescape.io/tier: "core"
         tier: {{ .Values.global.namespaceTier }}
         armo.tier: "registry-scan"
@@ -21,9 +20,18 @@ apiVersion: batch/v1
                 armo.tier: "registry-scan"
                 kubescape.io/tier: "core"
             spec:
+              securityContext:
+                seccompProfile:
+                  type: RuntimeDefault
               {{- if .Values.imagePullSecrets }}
               imagePullSecrets:
-              - name: {{ toYaml .Values.imagePullSecrets }}
+              {{- if kindIs "string" .Values.imagePullSecrets }}
+              - name: {{ .Values.imagePullSecrets }}
+              {{- else }}
+              {{- range .Values.imagePullSecrets }}
+              - name: {{ . }}
+              {{- end }}
+              {{- end }}
               {{- end }}
               containers:
               - name: {{ .Values.registryScanScheduler.name }}
@@ -36,13 +44,16 @@ apiVersion: batch/v1
                   runAsUser: 100
                 resources:
 {{ toYaml .Values.registryScanScheduler.resources | indent 18 }}
-                args: 
+                args:
                   - -method=post
                   - -scheme=http
                   - -host={{ .Values.operator.name }}:{{ .Values.operator.service.port }}
                   - -path=v1/triggerAction
                   - -headers=Content-Type:application/json
                   - -path-body=/home/ks/request-body.json
+                {{- if .Values.registryScanScheduler.insecureSkipTLSVerify }}
+                  - -skip-ssl-verify=true
+                {{- end}}
                 volumeMounts:
                   - name: "request-body-volume"
                     mountPath: /home/ks/request-body.json
@@ -55,42 +66,25 @@ apiVersion: batch/v1
 {{ toYaml .Values.registryScanScheduler.volumeMounts | indent 18 }}
 {{- end }}
               restartPolicy: Never
+              serviceAccountName: {{ .Values.kubevuln.name }}
               automountServiceAccountToken: false
-              {{- if or .Values.registryScanScheduler.tolerations .Values.customScheduling.tolerations .Values.global.tolerations }}
-              tolerations:
-                {{- with .Values.registryScanScheduler.tolerations }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .Values.customScheduling.tolerations }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .Values.global.tolerations }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }} 
-              {{- end }}
-              {{- if or .Values.registryScanScheduler.nodeSelector .Values.customScheduling.nodeSelector .Values.global.nodeSelector }}
               nodeSelector:
-                {{- with .Values.registryScanScheduler.nodeSelector }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .Values.customScheduling.nodeSelector }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .Values.global.nodeSelector }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }} 
+              {{- if .Values.registryScanScheduler.nodeSelector }}
+              {{- toYaml .Values.registryScanScheduler.nodeSelector | nindent 16 }}
+              {{- else if .Values.customScheduling.nodeSelector }}
+              {{- toYaml .Values.customScheduling.nodeSelector | nindent 16 }}
               {{- end }}
-              {{- if or .Values.registryScanScheduler.affinity .Values.customScheduling.tolerations .Values.global.affinity }}
               affinity:
-                {{- with .Values.registryScanScheduler.affinity }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .Values.customScheduling.tolerations }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .Values.global.affinity }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }} 
+              {{- if .Values.registryScanScheduler.affinity }}
+              {{- toYaml .Values.registryScanScheduler.affinity | nindent 16 }}
+              {{- else if .Values.customScheduling.affinity }}
+              {{- toYaml .Values.customScheduling.affinity | nindent 16 }}
+              {{- end }}
+              tolerations:
+              {{- if .Values.registryScanScheduler.tolerations }}
+              {{- toYaml .Values.registryScanScheduler.tolerations | nindent 16 }}
+              {{- else if .Values.customScheduling.tolerations }}
+              {{- toYaml .Values.customScheduling.tolerations | nindent 16 }}
               {{- end }}
               volumes:
                 - name: "request-body-volume" # placeholder

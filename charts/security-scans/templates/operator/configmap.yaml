@@ -5,13 +5,39 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.operator.name }}
   namespace: {{ include "randoli-agent.namespace" . }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    kubescape.io/ignore: "true"
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.operator.name "tier" .Values.global.namespaceTier) | nindent 4 }}
     kubescape.io/tier: "core"
 data:
   config.json: |
     {
-        "namespace": "{{ include "randoli-agent.namespace" . }}",
-        "triggersecurityframework": {{ .Values.operator.triggerSecurityFramework }}
+        {{- if ne .Values.includeNamespaces "" }}
+      "includeNamespaces": "{{ .Values.includeNamespaces }}",
+        {{- else if ne .Values.excludeNamespaces "" }}
+      "excludeNamespaces": "{{ .Values.excludeNamespaces }}",
+        {{- end }}
+      "namespace": "{{ include "randoli-agent.namespace" . }}",
+      "triggersecurityframework": {{ .Values.operator.triggerSecurityFramework }},
+      "podScanGuardTime": "{{ .Values.operator.podScanGuardTime }}",
+      "excludeJsonPaths": {{- .Values.configurations.excludeJsonPaths | toJson }},
+        {{- if .Values.operator.rulesUpdateConfig }}
+      "rulesUpdateConfig": {
+        "Enabled": {{ .Values.operator.rulesUpdateConfig.enabled }},
+        "Interval": "{{ .Values.operator.rulesUpdateConfig.interval }}",
+        "Namespace": "{{ include "randoli-agent.namespace" . }}"
+      },
+        {{- end }}
+      "httpExporterConfig": {{- .Values.nodeAgent.config.httpExporterConfig | toJson }}
+        {{- if and .Values.imageScanning.privateRegistries.credentials (gt (len .Values.imageScanning.privateRegistries.credentials) 0) }}
+        {{- $cred := index .Values.imageScanning.privateRegistries.credentials 0 }}
+        {{- if $cred.skipTlsVerify }},
+      "registryScanningSkipTlsVerify": {{ $cred.skipTlsVerify }}
+        {{- end }}
+        {{- if $cred.insecure }},
+      "registryScanningInsecure": {{ $cred.insecure }}
+        {{- end }}
+        {{- end }}
     }
 {{- end }}

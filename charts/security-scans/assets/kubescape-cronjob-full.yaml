@@ -6,7 +6,6 @@ apiVersion: batch/v1
       labels:
         app: {{ .Values.kubescapeScheduler.name }}
         tier: {{ .Values.global.namespaceTier }}
-        kubescape.io/ignore: "true"
         kubescape.io/tier: "core"
         armo.tier: "kubescape-scan"
     spec:
@@ -21,9 +20,18 @@ apiVersion: batch/v1
                 armo.tier: "kubescape-scan"
                 kubescape.io/tier: "core"
             spec:
+              securityContext:
+                seccompProfile:
+                  type: RuntimeDefault
               {{- if .Values.imagePullSecrets }}
               imagePullSecrets:
-              - name: {{ toYaml .Values.imagePullSecrets }}
+              {{- if kindIs "string" .Values.imagePullSecrets }}
+              - name: {{ .Values.imagePullSecrets }}
+              {{- else }}
+              {{- range .Values.imagePullSecrets }}
+              - name: {{ . }}
+              {{- end }}
+              {{- end }}
               {{- end }}
               containers:
               - name: {{ .Values.kubescapeScheduler.name }}
@@ -36,13 +44,16 @@ apiVersion: batch/v1
                   runAsUser: 100
                 resources:
 {{ toYaml .Values.kubescapeScheduler.resources | indent 18 }}
-                args: 
+                args:
                   - -method=post
                   - -scheme=http
                   - -host={{ .Values.operator.name }}:{{ .Values.operator.service.port }}
                   - -path=v1/triggerAction
                   - -headers=Content-Type:application/json
                   - -path-body=/home/ks/request-body.json
+                {{- if .Values.kubescapeScheduler.insecureSkipTLSVerify }}
+                  - -skip-ssl-verify=true
+                {{- end}}
                 volumeMounts:
                   - name: "request-body-volume"
                     mountPath: /home/ks/request-body.json
@@ -55,42 +66,25 @@ apiVersion: batch/v1
 {{ toYaml .Values.kubescapeScheduler.volumeMounts | indent 18 }}
 {{- end }}
               restartPolicy: Never
+              serviceAccountName: {{ .Values.kubescape.name }}
               automountServiceAccountToken: false
-              {{- if or .Values.kubescapeScheduler.tolerations .Values.customScheduling.tolerations .Values.global.tolerations }}
-              tolerations:
-                {{- with .Values.kubescapeScheduler.tolerations }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .Values.customScheduling.tolerations }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .Values.global.tolerations }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }} 
-              {{- end }}
-              {{- if or .Values.kubescapeScheduler.nodeSelector .Values.customScheduling.nodeSelector .Values.global.nodeSelector }}
               nodeSelector:
-                {{- with .Values.kubescapeScheduler.nodeSelector }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .Values.customScheduling.nodeSelector }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .Values.global.nodeSelector }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }} 
+              {{- if .Values.kubescapeScheduler.nodeSelector }}
+              {{- toYaml .Values.kubescapeScheduler.nodeSelector | nindent 16 }}
+              {{- else if .Values.customScheduling.nodeSelector }}
+              {{- toYaml .Values.customScheduling.nodeSelector | nindent 16 }}
               {{- end }}
-              {{- if or .Values.kubescapeScheduler.affinity .Values.customScheduling.affinity .Values.global.affinity }}
               affinity:
-                {{- with .Values.kubescapeScheduler.affinity }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .Values.customScheduling.affinity }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .Values.global.affinity }}
-                {{- toYaml . | nindent 16 }}
-                {{- end }} 
+              {{- if .Values.kubescapeScheduler.affinity }}
+              {{- toYaml .Values.kubescapeScheduler.affinity | nindent 16 }}
+              {{- else if .Values.customScheduling.affinity }}
+              {{- toYaml .Values.customScheduling.affinity | nindent 16 }}
+              {{- end }}
+              tolerations:
+              {{- if .Values.kubescapeScheduler.tolerations }}
+              {{- toYaml .Values.kubescapeScheduler.tolerations | nindent 16 }}
+              {{- else if .Values.customScheduling.tolerations }}
+              {{- toYaml .Values.customScheduling.tolerations | nindent 16 }}
               {{- end }}
               volumes:
                 - name: "request-body-volume" # placeholder

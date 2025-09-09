@@ -5,15 +5,14 @@ kind: NetworkPolicy
 metadata:
   name: {{ .Values.operator.name }}
   namespace: {{ include "randoli-agent.namespace" . }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    app: {{ .Values.operator.name }}
-    tier: {{ .Values.global.namespaceTier }}
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.operator.name "tier" .Values.global.namespaceTier) | nindent 4 }}
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.operator.name }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      tier: {{ .Values.global.namespaceTier }}
+      {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.operator.name) | nindent 6 }}
   policyTypes:
     - Ingress
   {{- if .Values.global.networkPolicy.createEgressRules }}
@@ -30,8 +29,29 @@ spec:
       to:
         - ipBlock:
             cidr: 169.254.169.254/32
+    - ports:
+        - protocol: TCP
+          port: 8080
+      to:
+        - podSelector:
+            matchLabels:
+              {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.kubescape.name) | nindent 14 }}
+    - ports:
+        - protocol: TCP
+          port: 8080
+      to:
+        - podSelector:
+            matchLabels:
+              {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.kubevuln.name) | nindent 14 }}
+{{ tpl (.Files.Get "assets/api-server-egress-rules.yaml") . | indent 4 }}
+{{ tpl (.Files.Get "assets/common-egress-rules.yaml") . | indent 4 }}
   {{- end }}
   ingress:
+    {{- if eq .Values.capabilities.admissionController "enable" }}
+    - ports:
+      - port: admission-port
+        protocol: TCP
+    {{- end }}
     - from:
         - podSelector:
             matchLabels:

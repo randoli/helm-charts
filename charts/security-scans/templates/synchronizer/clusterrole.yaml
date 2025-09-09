@@ -4,14 +4,16 @@ kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ .Release.Name }}-{{ .Values.synchronizer.name }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    kubescape.io/ignore: "true"
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.synchronizer.name "tier" .Values.global.namespaceTier) | nindent 4 }}
 rules:
   - apiGroups: ["storage.k8s.io"]
     resources: ["storageclasses"]
     verbs: ["get", "list", "watch"]
   - apiGroups: ["rbac.authorization.k8s.io"]
-    resources: ["rolebindings", "clusterrolebindings"]
+    resources: ["rolebindings", "clusterrolebindings", "roles", "clusterroles"]
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["pods", "namespaces", "nodes", "configmaps", "persistentvolumes", "services"]
@@ -26,8 +28,8 @@ rules:
     resources: ["networkpolicies", "ingresses"]
     verbs: ["get", "list", "watch"]
   - apiGroups: ["spdx.softwarecomposition.kubescape.io"]
-    resources: ["applicationactivities", "applicationprofiles", "networkneighborses", "networkneighborhoods"]
-    verbs: ["get", "watch", "list"]
+    resources: ["applicationprofiles", "networkneighborhoods"]
+    verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
   - apiGroups: ["spdx.softwarecomposition.kubescape.io"]
     resources: ["knownservers"]
     verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
@@ -37,7 +39,47 @@ rules:
   - apiGroups: ["projectcalico.org"]
     resources: ["networkpolicies"]
     verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.istio.io"]
+    resources: ["gateways", "virtualservices"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["security.istio.io"]
+    resources: ["authorizationpolicies"]
+    verbs: ["get", "list", "watch"]
   - apiGroups: ["gateway.networking.k8s.io"]
     resources: ["httproutes", "tcproutes","udproutes"]
     verbs: ["get", "list", "watch"]
+  - apiGroups: ["kubescape.io"]
+    resources: ["servicesscanresults"]
+    verbs: ["get", "watch", "list"]
+  - apiGroups: ["kubescape.io"]
+    resources: ["operatorcommands"]
+    verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
+{{- if eq .Values.capabilities.syncSBOM "enable" }}
+  - apiGroups: ["spdx.softwarecomposition.kubescape.io"]
+    resources: ["sbomsyfts", "sbomsyftfiltereds"]
+    verbs: [ "get", "watch", "list"]
+{{- end }}
+{{- if eq .Values.capabilities.manageWorkloads "enable" }}
+  - apiGroups: ["spdx.softwarecomposition.kubescape.io"]
+    resources: ["seccompprofiles"]
+    verbs: ["get", "watch", "list", "create", "update", "patch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["create", "update", "patch"]
+  - apiGroups: ["cilium.io"]
+    resources: ["ciliumnetworkpolicies"]
+    verbs: ["create", "update", "patch"]
+  - apiGroups: ["projectcalico.org"]
+    resources: ["networkpolicies"]
+    verbs: ["create", "update", "patch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets", "daemonsets", "replicasets"]
+    verbs: ["update", "patch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["update", "patch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["update", "patch"]
+{{- end }}
 {{- end }}

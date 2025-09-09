@@ -7,12 +7,10 @@ kind: Deployment
 metadata:
   name: {{ .Values.kubevuln.name }}
   namespace: {{ include "randoli-agent.namespace" . }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    app.kubernetes.io/name: {{ .Values.kubevuln.name }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app: {{ .Values.kubevuln.name }}
-    tier: {{ .Values.global.namespaceTier }}
-    kubescape.io/ignore: "true"
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.kubevuln.name "tier" .Values.global.namespaceTier) | nindent 4 }}
     kubescape.io/tier: "core"
 spec:
   replicas: {{ .Values.kubevuln.replicaCount }}
@@ -21,35 +19,76 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.kubevuln.name }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      tier: {{ .Values.global.namespaceTier }}
+      {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.kubevuln.name) | nindent 6 }}
   template:
     metadata:
       annotations:
+        {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 8 }}
+        {{- with .Values.kubevuln.podAnnotations }}{{- toYaml . | nindent 8 }}{{- end }}
         checksum/cloud-secret: {{ $checksums.cloudSecret }}
         checksum/cloud-config: {{ $checksums.cloudConfig }}
       {{- if ne .Values.global.proxySecretFile "" }}
         checksum/proxy-config: {{ $checksums.proxySecret }}
       {{- end }}
       labels:
+        {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.kubevuln.name "tier" .Values.global.namespaceTier) | nindent 8 }}
+        {{- with .Values.kubevuln.podLabels }}{{- toYaml . | nindent 8 }}{{- end }}
         kubescape.io/tier: "core"
-        app.kubernetes.io/name: {{ .Values.kubevuln.name }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        tier: {{ .Values.global.namespaceTier }}
-        app: {{ .Values.kubevuln.name }}
       {{- if $components.otelCollector.enabled }}
         otel: enabled
       {{- end }}
     spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-      - name: {{ toYaml .Values.imagePullSecrets }}
+      {{- if kindIs "string" .Values.imagePullSecrets }}
+      - name: {{ .Values.imagePullSecrets }}
+      {{- else }}
+      {{- range .Values.imagePullSecrets }}
+      - name: {{ . }}
+      {{- end }}
+      {{- end }}
       {{- end }}
       securityContext:
+        seccompProfile:
+          type: RuntimeDefault
         runAsUser: 65532
         fsGroup: 65532
+      {{- if $components.serviceDiscovery.enabled }}
+      initContainers:
+        - name: {{ .Values.serviceDiscovery.urlDiscovery.name }}
+          image: "{{ .Values.serviceDiscovery.urlDiscovery.image.repository }}:{{ .Values.serviceDiscovery.urlDiscovery.image.tag }}"
+          imagePullPolicy: {{ .Values.serviceDiscovery.urlDiscovery.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          resources:
+{{ toYaml .Values.serviceDiscovery.resources | indent 14 }}
+          env:
+      {{- if ne .Values.global.httpsProxy "" }}
+            - name: HTTPS_PROXY
+              value: "{{ .Values.global.httpsProxy }}"
+            - name : no_proxy
+              value: "{{ $no_proxy_envar_list }}"
+      {{- end }}
+          args:
+            - -method=get
+            - -scheme=https
+            - -host={{ .Values.server }}
+            - -path=api/v2/servicediscovery
+            - -path-output=/data/services.json
+      {{- if .Values.serviceDiscovery.urlDiscovery.insecureSkipTLSVerify }}
+            - -skip-ssl-verify=true
+      {{- end}}
+          volumeMounts:
+            - name: services
+              mountPath: /data
+      {{- if ne .Values.global.proxySecretFile "" }}
+            - name: proxy-secret
+              mountPath: /etc/ssl/certs/proxy.crt
+              subPath: proxy.crt
+      {{- end }}
+      {{- end }}
       containers:
         - name: {{ .Values.kubevuln.name }}
           image: "{{ .Values.kubevuln.image.repository }}:{{ .Values.kubevuln.image.tag }}"
@@ -75,7 +114,15 @@ spec:
 {{ toYaml .Values.kubevuln.resources | indent 12 }}
           env:
             - name: GOMEMLIMIT
-              value: "{{ .Values.kubevuln.resources.requests.memory }}B"
+              valueFrom:
+                resourceFieldRef:
+                  resource: limits.memory
+                  divisor: '1'
+            - name: GOMAXPROCS
+              valueFrom:
+                resourceFieldRef:
+                  resource: limits.cpu
+                  divisor: '1'
             - name: KS_LOGGER_LEVEL
               value: "{{ .Values.logger.level }}"
             - name: KS_LOGGER_NAME
@@ -93,7 +140,11 @@ spec:
                   name: {{ $components.cloudSecret.name }}
                   key: account
             - name: OTEL_COLLECTOR_SVC
-              value: "otel-collector:4317"
+              value: "otel-collector:4318"
+            {{- end }}
+            {{- if .Values.configurations.otelUrl }}
+            - name: OTEL_COLLECTOR_SVC
+              value: {{ .Values.configurations.otelUrl }}
             {{- end }}
             {{- if ne .Values.global.httpsProxy "" }}
             - name: HTTPS_PROXY
@@ -114,8 +165,15 @@ spec:
             - name: grype-db-cache
               mountPath: /home/nonroot/anchore-resources/db
             - name: {{ .Values.global.cloudConfig }}
-              mountPath: /etc/config
+              mountPath: /etc/config/clusterData.json
               readOnly: true
+              subPath: "clusterData.json"
+            {{- if $components.serviceDiscovery.enabled }}
+            - name: "services"
+              mountPath: /etc/config/services.json
+              readOnly: true
+              subPath: "services.json"
+            {{- end }}
             - name: grype-db
               mountPath: /home/nonroot/.cache/grype
 {{- if .Values.volumeMounts }}
@@ -129,6 +187,18 @@ spec:
               mountPath: /etc/ssl/certs/proxy.crt
               subPath: proxy.crt
 {{- end }}
+{{- if .Values.global.overrideDefaultCaCertificates.enabled }}
+            - name: custom-ca-certificates
+              mountPath: /etc/ssl/certs/ca-certificates.crt
+              subPath: ca-certificates.crt
+{{- end }}
+{{- if .Values.global.extraCaCertificates.enabled }}
+        {{- range $key, $value := (lookup "v1" "Secret" (include "randoli-agent.namespace" .) .Values.global.extraCaCertificates.secretName).data }}
+            - name: extra-ca-certificates
+              mountPath: /etc/ssl/certs/{{ $key }}
+              subPath: {{ $key }}
+        {{- end }}
+{{- end }}
       volumes:
         - name: {{ $components.cloudSecret.name }}
           secret:
@@ -138,8 +208,23 @@ spec:
           secret:
             secretName: {{ .Values.global.proxySecretName }}
       {{- end }}
+      {{- if .Values.global.overrideDefaultCaCertificates.enabled }}
+        - name: custom-ca-certificates
+          secret:
+            secretName: {{ $components.customCaCertificates.name }}
+      {{- end }}
+      {{- if .Values.global.extraCaCertificates.enabled }}
+        - name: extra-ca-certificates
+          secret:
+            secretName: {{ .Values.global.extraCaCertificates.secretName }}
+      {{- end }}
         - name: tmp-dir
+          {{- if .Values.kubevuln.tmpDirPersistence.enabled }}
+          persistentVolumeClaim:
+            claimName: kubescape-{{ .Values.kubevuln.name }}-tmp
+          {{- else }}
           emptyDir: {}
+          {{- end }}
         - name: grype-db-cache
           emptyDir: {}
         - name: {{ .Values.global.cloudConfig }}
@@ -148,12 +233,17 @@ spec:
             items:
             - key: "clusterData"
               path: "clusterData.json"
-            {{- if $components.serviceDiscovery.enabled }}
-            - key: "services"
-              path: "services.json"
-            {{- end }}
-        - name: "grype-db"
+      {{- if $components.serviceDiscovery.enabled }}
+        - name: "services"
           emptyDir: {}
+      {{- end }}
+        - name: "grype-db"
+          {{- if .Values.kubevuln.config.grypeDbPersistence }}
+          persistentVolumeClaim:
+            claimName: kubescape-{{ .Values.kubevuln.name }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
 {{- if .Values.volumes }}
 {{ toYaml .Values.volumes | indent 8 }}
 {{- end }}
@@ -162,40 +252,22 @@ spec:
 {{- end }}
       serviceAccountName: {{ .Values.kubevuln.name }}
       automountServiceAccountToken: true
-      {{- if or .Values.kubevuln.tolerations .Values.customScheduling.tolerations .Values.global.tolerations }}
-      tolerations:
-        {{- with .Values.kubevuln.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.customScheduling.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
-      {{- end }}
-      {{- if or .Values.kubevuln.nodeSelector .Values.customScheduling.nodeSelector .Values.global.nodeSelector }}
       nodeSelector:
-        {{- with .Values.kubevuln.nodeSelector }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.customScheduling.nodeSelector }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.nodeSelector }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
+      {{- if .Values.kubevuln.nodeSelector }}
+      {{- toYaml .Values.kubevuln.nodeSelector | nindent 8 }}
+      {{- else if .Values.customScheduling.nodeSelector }}
+      {{- toYaml .Values.customScheduling.nodeSelector | nindent 8 }}
       {{- end }}
-      {{- if or .Values.kubevuln.affinity .Values.customScheduling.affinity .Values.global.affinity }}
       affinity:
-        {{- with .Values.kubevuln.affinity }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.customScheduling.affinity }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.affinity }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
+      {{- if .Values.kubevuln.affinity }}
+      {{- toYaml .Values.kubevuln.affinity | nindent 8 }}
+      {{- else if .Values.customScheduling.affinity }}
+      {{- toYaml .Values.customScheduling.affinity | nindent 8 }}
+      {{- end }}
+      tolerations:
+      {{- if .Values.kubevuln.tolerations }}
+      {{- toYaml .Values.kubevuln.tolerations | nindent 8 }}
+      {{- else if .Values.customScheduling.tolerations }}
+      {{- toYaml .Values.customScheduling.tolerations | nindent 8 }}
       {{- end }}
 {{- end }}

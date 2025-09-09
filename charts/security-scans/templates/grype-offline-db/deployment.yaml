@@ -4,12 +4,10 @@ kind: Deployment
 metadata:
   name: {{ .Values.grypeOfflineDB.name }}
   namespace: {{ include "randoli-agent.namespace" . }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    app.kubernetes.io/name: {{ .Values.grypeOfflineDB.name }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app: {{ .Values.grypeOfflineDB.name }}
-    tier: {{ .Values.global.namespaceTier }}
-    kubescape.io/ignore: "true"
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.grypeOfflineDB.name "tier" .Values.global.namespaceTier) | nindent 4 }}
     kubescape.io/tier: "core"
 spec:
   replicas: 1
@@ -21,26 +19,33 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.grypeOfflineDB.name }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      tier: {{ .Values.global.namespaceTier }}
+      {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.grypeOfflineDB.name) | nindent 6 }}
   template:
     metadata:
+      annotations:
+        {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 8 }}
+        {{- with .Values.grypeOfflineDB.podAnnotations }}{{- toYaml . | nindent 8 }}{{- end }}
       labels:
+        {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.grypeOfflineDB.name "tier" .Values.global.namespaceTier) | nindent 8 }}
+        {{- with .Values.grypeOfflineDB.podLabels }}{{- toYaml . | nindent 8 }}{{- end }}
         kubescape.io/tier: "core"
-        app.kubernetes.io/name: {{ .Values.grypeOfflineDB.name }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        tier: {{ .Values.global.namespaceTier }}
-        app: {{ .Values.grypeOfflineDB.name }}
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-      - name: {{ toYaml .Values.imagePullSecrets }}
+      {{- if kindIs "string" .Values.imagePullSecrets }}
+      - name: {{ .Values.imagePullSecrets }}
+      {{- else }}
+      {{- range .Values.imagePullSecrets }}
+      - name: {{ . }}
+      {{- end }}
+      {{- end }}
       {{- end }}
       containers:
         - name: {{ .Values.grypeOfflineDB.name }}
-          image: "{{ .Values.grypeOfflineDB.image.repository }}@{{ .Values.grypeOfflineDB.image.sha }}"
+          image: "{{ .Values.grypeOfflineDB.image.repository }}{{ if .Values.grypeOfflineDB.image.tag }}:{{ .Values.grypeOfflineDB.image.tag }}{{ else }}@{{ .Values.grypeOfflineDB.image.sha }}{{ end }}"
           imagePullPolicy: {{ .Values.grypeOfflineDB.image.pullPolicy }}
           securityContext:
             allowPrivilegeEscalation: false
@@ -50,40 +55,22 @@ spec:
             protocol: TCP
           resources:
 {{ toYaml .Values.grypeOfflineDB.resources | indent 12 }}
-      {{- if or .Values.grypeOfflineDB.tolerations .Values.customScheduling.tolerations .Values.global.tolerations }}
-      tolerations:
-        {{- with .Values.grypeOfflineDB.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.customScheduling.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
-      {{- end }}
-      {{- if or .Values.grypeOfflineDB.nodeSelector .Values.customScheduling.nodeSelector .Values.global.nodeSelector }}
       nodeSelector:
-        {{- with .Values.grypeOfflineDB.nodeSelector }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.customScheduling.nodeSelector }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.nodeSelector }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
+      {{- if .Values.grypeOfflineDB.nodeSelector }}
+      {{- toYaml .Values.grypeOfflineDB.nodeSelector | nindent 8 }}
+      {{- else if .Values.customScheduling.nodeSelector }}
+      {{- toYaml .Values.customScheduling.nodeSelector | nindent 8 }}
       {{- end }}
-      {{- if or .Values.grypeOfflineDB.affinity .Values.customScheduling.affinity .Values.global.affinity }}
       affinity:
-        {{- with .Values.grypeOfflineDB.affinity }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.customScheduling.affinity }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.affinity }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
+      {{- if .Values.grypeOfflineDB.affinity }}
+      {{- toYaml .Values.grypeOfflineDB.affinity | nindent 8 }}
+      {{- else if .Values.customScheduling.affinity }}
+      {{- toYaml .Values.customScheduling.affinity | nindent 8 }}
+      {{- end }}
+      tolerations:
+      {{- if .Values.grypeOfflineDB.tolerations }}
+      {{- toYaml .Values.grypeOfflineDB.tolerations | nindent 8 }}
+      {{- else if .Values.customScheduling.tolerations }}
+      {{- toYaml .Values.customScheduling.tolerations | nindent 8 }}
       {{- end }}
 {{- end }}
