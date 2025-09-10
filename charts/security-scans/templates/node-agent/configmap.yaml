@@ -1,33 +1,65 @@
 {{- $components := fromYaml (include "components" .) }}
 {{- $configurations := fromYaml (include "configurations" .) }}
 {{- if $components.nodeAgent.enabled }}
+{{/* validate that either alertCRD.scopeClustered or alertCRD.scopeNamespaced defined when the capability enabled */}}
+{{- if eq .Values.capabilities.runtimeDetection "enable" }}
+{{- if and (not .Values.alertCRD.scopeNamespaced) (not .Values.alertCRD.scopeClustered) }}
+{{- fail "Runtime detection is enabled, but the Runtime rule alert binding CRD is not configured to be created neither in the cluster scope nor namespace scope (set alertCRD.scopeClustered or alertCRD.scopeNamepaced)" }}
+{{- end }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Values.nodeAgent.name }}
   namespace: {{ include "randoli-agent.namespace" . }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    kubescape.io/ignore: "true"
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.nodeAgent.name "tier" .Values.global.namespaceTier) | nindent 4 }}
     kubescape.io/tier: "core"
 data:
   config.json: |
     {
-        "applicationProfileServiceEnabled": {{ $configurations.runtimeObservability }},
-        "relevantCVEServiceEnabled": {{ eq .Values.capabilities.relevancy "enable" }},
+        "applicationProfileServiceEnabled": {{ or $configurations.runtimeObservability (eq .Values.capabilities.relevancy "enable") }},
         "prometheusExporterEnabled": {{ eq .Values.nodeAgent.config.prometheusExporter "enable" }},
         "runtimeDetectionEnabled": {{ eq .Values.capabilities.runtimeDetection "enable" }},
+        "httpDetectionEnabled": {{ and (eq .Values.capabilities.httpDetection "enable") (eq .Values.capabilities.runtimeDetection "enable") }},
         "networkServiceEnabled": {{ eq .Values.capabilities.networkPolicyService "enable" }},
         "malwareDetectionEnabled": {{ eq .Values.capabilities.malwareDetection "enable" }},
-        "nodeProfileServiceEnabled": {{ eq .Values.capabilities.nodeProfileService "enable" }},
+        "hostMalwareSensorEnabled": {{ eq .Values.nodeAgent.config.hostMalwareSensor "enable" }},
+        "hostNetworkSensorEnabled": {{ eq .Values.nodeAgent.config.hostNetworkSensor "enable" }},
+        "nodeProfileServiceEnabled": {{ and $components.synchronizer.enabled (eq .Values.capabilities.nodeProfileService "enable") }},
+        "networkStreamingEnabled": {{ and $configurations.submit (eq .Values.capabilities.networkEventsStreaming "enable") }},
+        "maxImageSize": {{ .Values.kubevuln.config.maxImageSize }},
+        "maxSBOMSize": {{ .Values.kubevuln.config.maxSBOMSize }},
+        "sbomGenerationEnabled": {{ eq .Values.capabilities.nodeSbomGeneration "enable" }},
+        "enableEmbeddedSBOMs": {{ eq .Values.capabilities.scanEmbeddedSBOMs "enable" }},
+        "seccompServiceEnabled": {{ eq .Values.capabilities.seccompProfileService "enable" }},
         "initialDelay": "{{ .Values.nodeAgent.config.learningPeriod }}",
         "updateDataPeriod": "{{ .Values.nodeAgent.config.updatePeriod }}",
         "nodeProfileInterval": "{{ .Values.nodeAgent.config.nodeProfileInterval }}",
+        "networkStreamingInterval": "{{ .Values.nodeAgent.config.networkStreamingInterval }}",
         "maxSniffingTimePerContainer": "{{ .Values.nodeAgent.config.maxLearningPeriod }}",
+        {{- if ne .Values.includeNamespaces "" }}
+        "includeNamespaces": "{{ .Values.includeNamespaces }}",
+        {{- else if ne .Values.excludeNamespaces "" }}
+        "excludeNamespaces": "{{ .Values.excludeNamespaces }}",
+        {{- end }}
+        "excludeLabels": {{- .Values.excludeLabels | toJson }},
         "exporters": {
+          {{- if $components.synchronizer.enabled }}
           "httpExporterConfig": {{- .Values.nodeAgent.config.httpExporterConfig | toJson }},
+          {{- end }}
           "alertManagerExporterUrls": {{- .Values.nodeAgent.config.alertManagerExporterUrls | toJson }},
           "stdoutExporter": {{- .Values.nodeAgent.config.stdoutExporter }},
           "syslogExporterURL": "{{- .Values.nodeAgent.config.syslogExporterURL }}"
+        },
+        "excludeJsonPaths": {{- .Values.configurations.excludeJsonPaths | toJson }},
+        "ruleCooldown": {
+            "ruleCooldownDuration": "{{ .Values.nodeAgent.config.ruleCooldown.ruleCooldownDuration }}",
+            "ruleCooldownAfterCount": {{ .Values.nodeAgent.config.ruleCooldown.ruleCooldownAfterCount }},
+            "ruleCooldownOnProfileFailure": {{ .Values.nodeAgent.config.ruleCooldown.ruleCooldownOnProfileFailure }},
+            "ruleCooldownMaxSize": {{ .Values.nodeAgent.config.ruleCooldown.ruleCooldownMaxSize }}
         }
     }
 ---

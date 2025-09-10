@@ -2,19 +2,22 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: host-scanner
+  name: {{ .Values.hostScanner.name }}
   namespace: {{ include "randoli-agent.namespace" . }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    app: host-scanner
-    k8s-app: kubescape-host-scanner
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.hostScanner.name "tier" .Values.global.namespaceTier) | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      name: host-scanner
+      {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.hostScanner.name) | nindent 6 }}
   template:
     metadata:
+      annotations:
+        {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 8 }}
       labels:
-        kubescape.io/ignore: "true"
+        {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.hostScanner.name "tier" .Values.global.namespaceTier) | nindent 8 }}
         kubescape.io/tier: "core"
         name: host-scanner
         {{- if $components.otelCollector.enabled }}
@@ -33,21 +36,21 @@ spec:
       {{- else if .Values.customScheduling.affinity }}
       {{- toYaml .Values.customScheduling.affinity | nindent 8 }}
       {{- end }}
-      {{- if or .Values.hostScanner.tolerations .Values.customScheduling.tolerations .Values.global.daemonsets.tolerations }}
       tolerations:
-        {{- with .Values.hostScanner.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.customScheduling.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.daemonsets.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
+      {{- if .Values.hostScanner.tolerations }}
+      {{- toYaml .Values.hostScanner.tolerations | nindent 8 }}
+      {{- else if .Values.customScheduling.tolerations }}
+      {{- toYaml .Values.customScheduling.tolerations | nindent 8 }}
       {{- end }}
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-      - name: {{ toYaml .Values.imagePullSecrets }}
+      {{- if kindIs "string" .Values.imagePullSecrets }}
+      - name: {{ .Values.imagePullSecrets }}
+      {{- else }}
+      {{- range .Values.imagePullSecrets }}
+      - name: {{ . }}
+      {{- end }}
+      {{- end }}
       {{- end }}
       containers:
       - name: host-sensor
@@ -72,19 +75,18 @@ spec:
         - name: CLUSTER_NAME
           value: "{{ regexReplaceAll "\\W+" .Values.clusterName "-" }}"
         - name: OTEL_COLLECTOR_SVC
-          value: "otel-collector.kubescape.svc:4317"
+          value: "otel-collector.kubescape.svc:4318"
+        {{- end }}
+        {{- if .Values.configurations.otelUrl }}
+        - name: OTEL_COLLECTOR_SVC
+          value: {{ .Values.configurations.otelUrl }}
         {{- end }}
         ports:
           - name: scanner # Do not change port name
             containerPort: 7888
             protocol: TCP
         resources:
-          limits:
-            cpu: 0.4m
-            memory: 400Mi
-          requests:
-            cpu: 0.1m
-            memory: 200Mi
+{{ toYaml .Values.hostScanner.resources | indent 10 }}
         volumeMounts:
         - mountPath: /host_fs
           name: host-filesystem
@@ -107,6 +109,7 @@ spec:
           periodSeconds: 10
       terminationGracePeriodSeconds: 120
       dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: {{ .Values.nodeAgent.name }}
       automountServiceAccountToken: false
       volumes:
       - hostPath:

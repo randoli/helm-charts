@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: randoli-cost-metrics-config
+  namespace: {{ include "randoli-agent.namespace" . }}
+  labels:
+    {{- include "labels" . | nindent 4 }}
+data:
+  metrics.json: |-
+    {
+      "disabledMetrics": [
+        "kube_pod_owner",
+        "kube_node_status_capacity",
+        "kube_node_status_allocatable"
+      ]
+    }

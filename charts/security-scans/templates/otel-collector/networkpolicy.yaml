@@ -4,18 +4,14 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: otel-collector
+  name: {{ .Values.otelCollector.name }}
   namespace: {{ include "randoli-agent.namespace" . }}
   labels:
-    app: otel-collector
-    tier: {{ .Values.global.namespaceTier }}
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.otelCollector.name "tier" .Values.global.namespaceTier) | nindent 4 }}
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: otel-collector
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      tier: {{ .Values.global.namespaceTier }}
+      {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.otelCollector.name) | nindent 6 }}
   policyTypes:
     - Ingress
   {{- if .Values.global.networkPolicy.createEgressRules }}
@@ -23,12 +19,13 @@ spec:
   egress:
       # - otel backend
     - ports:
-      - port: 443
-        protocol: TCP
+        - port: 443
+          protocol: TCP
       {{- if $configurations.otel }}
-      - port: {{ $configurations.otelPort }}
-        protocol: TCP
+        - port: {{ $configurations.otelPort }}
+          protocol: TCP
       {{- end }}
+{{ tpl (.Files.Get "assets/common-egress-rules.yaml") . | indent 4 }}
   {{- end }}
   ingress:
     - from:
@@ -38,4 +35,6 @@ spec:
       ports:
         - port: otlp
           protocol: TCP
-{{ end }}
+        - port: otlp-http
+          protocol: TCP
+{{- end }}

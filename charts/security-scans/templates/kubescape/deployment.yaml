@@ -8,14 +8,11 @@ kind: Deployment
 metadata:
   name: {{ .Values.kubescape.name }}
   namespace: {{ include "randoli-agent.namespace" . }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    app.kubernetes.io/name: {{ .Values.kubescape.name }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app: {{ .Values.kubescape.name }}
-    tier: {{ .Values.global.namespaceTier }}
-    kubescape.io/ignore: "true"
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.kubescape.name "tier" .Values.global.namespaceTier) | nindent 4 }}
     kubescape.io/tier: "core"
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 spec:
   replicas: 1
   revisionHistoryLimit: 2
@@ -26,12 +23,12 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.kubescape.name }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      tier: {{ .Values.global.namespaceTier }}
+      {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.kubescape.name) | nindent 6 }}
   template:
     metadata:
       annotations:
+        {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 8 }}
+        {{- with .Values.kubescape.podAnnotations }}{{- toYaml . | nindent 8 }}{{- end }}
         checksum/host-scanner-configmap: {{ $checksums.hostScannerConfig }}
         checksum/cloud-secret: {{ $checksums.cloudSecret }}
         checksum/cloud-config: {{ $checksums.cloudConfig }}
@@ -39,31 +36,69 @@ spec:
         checksum/proxy-config: {{ $checksums.proxySecret }}
       {{- end }}
       {{- if eq .Values.configurations.prometheusAnnotations "enable" }}
-        #prometheus.io/path: /v1/metrics
-        #prometheus.io/port: "8080"
-        #prometheus.io/scrape: "true"
-        randoli.prometheus.io/path: /v1/metrics
-        randoli.prometheus.io/port: "8080"
-        randoli.prometheus.io/scrape: "true"
+        prometheus.io/path: /v1/metrics
+        prometheus.io/port: "8080"
+        prometheus.io/scrape: "true"
       {{- end }}
       labels:
+        {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.kubescape.name "tier" .Values.global.namespaceTier) | nindent 8 }}
+        {{- with .Values.kubescape.podLabels }}{{- toYaml . | nindent 8 }}{{- end }}
         kubescape.io/tier: "core"
-        app.kubernetes.io/name: {{ .Values.kubescape.name }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        tier: {{ .Values.global.namespaceTier }}
-        app: {{ .Values.kubescape.name }}
       {{- if $components.otelCollector.enabled }}
         otel: enabled
       {{- end }}
     spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-      - name: {{ toYaml .Values.imagePullSecrets }}
+      {{- if kindIs "string" .Values.imagePullSecrets }}
+      - name: {{ .Values.imagePullSecrets }}
+      {{- else }}
+      {{- range .Values.imagePullSecrets }}
+      - name: {{ . }}
+      {{- end }}
+      {{- end }}
       {{- end }}
       securityContext:
+        seccompProfile:
+          type: RuntimeDefault
         runAsUser: 65532
         fsGroup: 65532
+      {{- if $components.serviceDiscovery.enabled }}
+      initContainers:
+      - name: {{ .Values.serviceDiscovery.urlDiscovery.name }}
+        image: "{{ .Values.serviceDiscovery.urlDiscovery.image.repository }}:{{ .Values.serviceDiscovery.urlDiscovery.image.tag }}"
+        imagePullPolicy: {{ .Values.serviceDiscovery.urlDiscovery.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+        resources:
+{{ toYaml .Values.serviceDiscovery.resources | indent 14 }}
+        env:
+      {{- if ne .Values.global.httpsProxy "" }}
+          - name: HTTPS_PROXY
+            value: "{{ .Values.global.httpsProxy }}"
+          - name : no_proxy
+            value: "{{ $no_proxy_envar_list }}"
+      {{- end }}
+        args:
+          - -method=get
+          - -scheme=https
+          - -host={{ .Values.server }}
+          - -path=api/v2/servicediscovery
+          - -path-output=/data/services.json
+      {{- if .Values.serviceDiscovery.urlDiscovery.insecureSkipTLSVerify }}
+          - -skip-ssl-verify=true
+      {{- end}}
+        volumeMounts:
+          - name: services
+            mountPath: /data
+      {{- if ne .Values.global.proxySecretFile "" }}
+          - name: proxy-secret
+            mountPath: /etc/ssl/certs/proxy.crt
+            subPath: proxy.crt
+      {{- end }}
+      {{- end }}
       containers:
       - name: kubescape
         image: "{{ .Values.kubescape.image.repository }}:{{ .Values.kubescape.image.tag }}"
@@ -90,7 +125,15 @@ spec:
           periodSeconds: 3
         env:
         - name: GOMEMLIMIT
-          value: "{{ .Values.kubescape.resources.requests.memory }}B"
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.memory
+              divisor: '1'
+        - name: GOMAXPROCS
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.cpu
+              divisor: '1'
         - name: KS_LOGGER_LEVEL
           value: "{{ .Values.logger.level }}"
         - name: KS_LOGGER_NAME
@@ -121,34 +164,100 @@ spec:
         - name: {{ .name }}
           value: "{{ .value }}"
         {{- end }}
-        {{- if .Values.cloudProviderMetadata.cloudRegion }}
+
+        {{- /* Check configuration to use a Secret if provided */}}
+        {{- if .Values.cloudProviderMetadata.secretRef }}
+
+          {{- if .Values.cloudProviderMetadata.secretRef.cloudRegionKey }}
+        - name: KS_CLOUD_REGION
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.cloudProviderMetadata.secretRef.name }}"
+              key: "{{ .Values.cloudProviderMetadata.secretRef.cloudRegionKey }}"
+          {{- end }}
+
+          {{- if .Values.cloudProviderMetadata.secretRef.gkeProjectKey }}
+        - name: KS_GKE_PROJECT
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.cloudProviderMetadata.secretRef.name }}"
+              key: "{{ .Values.cloudProviderMetadata.secretRef.gkeProjectKey }}"
+          {{- end }}
+
+          {{- if .Values.cloudProviderMetadata.secretRef.subscriptionIdKey }}
+        - name: AZURE_SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.cloudProviderMetadata.secretRef.name }}"
+              key: "{{ .Values.cloudProviderMetadata.secretRef.subscriptionIdKey }}"
+          {{- end }}
+
+          {{- if .Values.cloudProviderMetadata.secretRef.clientIdKey }}
+        - name: AZURE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.cloudProviderMetadata.secretRef.name }}"
+              key: "{{ .Values.cloudProviderMetadata.secretRef.clientIdKey }}"
+          {{- end }}
+
+          {{- if .Values.cloudProviderMetadata.secretRef.clientSecretKey }}
+        - name: AZURE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.cloudProviderMetadata.secretRef.name }}"
+              key: "{{ .Values.cloudProviderMetadata.secretRef.clientSecretKey }}"
+          {{- end }}
+
+          {{- if .Values.cloudProviderMetadata.secretRef.tenantIdKey }}
+        - name: AZURE_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.cloudProviderMetadata.secretRef.name }}"
+              key: "{{ .Values.cloudProviderMetadata.secretRef.tenantIdKey }}"
+          {{- end }}
+
+          {{- if .Values.cloudProviderMetadata.secretRef.resourceGroupKey }}
+        - name: AZURE_RESOURCE_GROUP
+          valueFrom:
+            secretKeyRef:
+              name: "{{ .Values.cloudProviderMetadata.secretRef.name }}"
+              key: "{{ .Values.cloudProviderMetadata.secretRef.resourceGroupKey }}"
+          {{- end }}
+
+        {{- /* Fallback: If not using secretRef, use direct values (original method) */}}
+        {{- else }}
+
+          {{- if .Values.cloudProviderMetadata.cloudRegion }}
         - name: KS_CLOUD_REGION
           value: "{{ .Values.cloudProviderMetadata.cloudRegion }}"
-        {{- end }}
-        {{- if .Values.cloudProviderMetadata.gkeProject }}
+          {{- end }}
+          {{- if .Values.cloudProviderMetadata.gkeProject }}
         - name: KS_GKE_PROJECT
           value: "{{ .Values.cloudProviderMetadata.gkeProject }}"
-        {{- end }}
-        {{- if .Values.cloudProviderMetadata.aksSubscriptionID }}
+          {{- end }}
+          {{- if .Values.cloudProviderMetadata.aksSubscriptionID }}
         - name: AZURE_SUBSCRIPTION_ID
           value: "{{ .Values.cloudProviderMetadata.aksSubscriptionID }}"
-        {{- end }}
-        {{- if .Values.cloudProviderMetadata.aksClientID }}
+          {{- end }}
+          {{- if .Values.cloudProviderMetadata.aksClientID }}
         - name: AZURE_CLIENT_ID
           value: "{{ .Values.cloudProviderMetadata.aksClientID }}"
-        {{- end }}
-        {{- if .Values.cloudProviderMetadata.aksClientSecret }}
+          {{- end }}
+          {{- if .Values.cloudProviderMetadata.aksClientSecret }}
         - name: AZURE_CLIENT_SECRET
           value: "{{ .Values.cloudProviderMetadata.aksClientSecret }}"
-        {{- end }}
-        {{- if .Values.cloudProviderMetadata.aksTenantID }}
+          {{- end }}
+          {{- if .Values.cloudProviderMetadata.aksTenantID }}
         - name: AZURE_TENANT_ID
           value: "{{ .Values.cloudProviderMetadata.aksTenantID }}"
-        {{- end }}
-        {{- if .Values.cloudProviderMetadata.aksResourceGroup }}
+          {{- end }}
+          {{- if .Values.cloudProviderMetadata.aksResourceGroup }}
         - name: AZURE_RESOURCE_GROUP
           value: "{{ .Values.cloudProviderMetadata.aksResourceGroup }}"
-        {{- end }}
+          {{- end }}
+
+        {{- end }} {{- /* End of if/else for secretRef vs direct values */}}
+
         {{- if $components.otelCollector.enabled }}
         - name: ACCOUNT_ID
           valueFrom:
@@ -156,13 +265,28 @@ spec:
               name: {{ $components.cloudSecret.name }}
               key: account
         - name: OTEL_COLLECTOR_SVC
-          value: "otel-collector:4317"
+          value: "otel-collector:4318"
+        {{- end }}
+        {{- if .Values.configurations.otelUrl }}
+        - name: OTEL_COLLECTOR_SVC
+          value: {{ .Values.configurations.otelUrl }}
         {{- end }}
         {{- if ne .Values.global.httpsProxy "" }}
         - name: HTTPS_PROXY
           value: "{{ .Values.global.httpsProxy }}"
         - name : no_proxy
           value: "{{ $no_proxy_envar_list }}"
+        {{- end }}
+        {{- if ne .Values.includeNamespaces "" }}
+        - name: KS_INCLUDE_NAMESPACES
+          value: "{{ .Values.includeNamespaces }}"
+        {{- else if ne .Values.excludeNamespaces "" }}
+        - name: KS_EXCLUDE_NAMESPACES
+          value: "{{ .Values.excludeNamespaces }}"
+        {{- end }}
+        {{- if eq .Values.capabilities.kubescapeOffline "enable" }}
+        - name: KS_OFFLINE
+          value: "true"
         {{- end }}
         command:
         - ksserver
@@ -173,7 +297,11 @@ spec:
           mountPath: /etc/credentials
           readOnly: true
         - name: kubescape-volume
+{{- if eq .Values.capabilities.kubescapeOffline "enable" }}
+          mountPath: /home/nonroot/.kubescape/config.json
+{{- else }}
           mountPath: /home/nonroot/.kubescape
+{{- end }}
           subPath: config.json
         - name: host-scanner-definition
           mountPath: /home/nonroot/.kubescape/host-scanner.yaml
@@ -183,8 +311,15 @@ spec:
         - name: failed
           mountPath: /home/nonroot/failed
         - name: {{ .Values.global.cloudConfig }}
-          mountPath: /etc/config
+          mountPath: /etc/config/clusterData.json
           readOnly: true
+          subPath: "clusterData.json"
+        {{- if $components.serviceDiscovery.enabled }}
+        - name: "services"
+          mountPath: /etc/config/services.json
+          readOnly: true
+          subPath: "services.json"
+        {{- end }}
 {{- if .Values.volumeMounts }}
 {{ toYaml .Values.volumeMounts | indent 8 }}
 {{- end }}
@@ -196,6 +331,18 @@ spec:
           mountPath: /etc/ssl/certs/proxy.crt
           subPath: proxy.crt
 {{- end }}
+{{- if .Values.global.overrideDefaultCaCertificates.enabled }}
+        - name: custom-ca-certificates
+          mountPath: /etc/ssl/certs/ca-certificates.crt
+          subPath: ca-certificates.crt
+{{- end }}
+{{- if .Values.global.extraCaCertificates.enabled }}
+    {{- range $key, $value := (lookup "v1" "Secret" (include "randoli-agent.namespace" .) .Values.global.extraCaCertificates.secretName).data }}
+        - name: extra-ca-certificates
+          mountPath: /etc/ssl/certs/{{ $key }}
+          subPath: {{ $key }}
+    {{- end }}
+{{- end }}
       volumes:
       - name: {{ $components.cloudSecret.name }}
         secret:
@@ -205,16 +352,26 @@ spec:
         secret:
           secretName: {{ .Values.global.proxySecretName }}
       {{- end }}
+      {{- if .Values.global.overrideDefaultCaCertificates.enabled }}
+      - name: custom-ca-certificates
+        secret:
+          secretName: {{ $components.customCaCertificates.name }}
+      {{- end }}
+      {{- if .Values.global.extraCaCertificates.enabled }}
+      - name: extra-ca-certificates
+        secret:
+          secretName: {{ .Values.global.extraCaCertificates.secretName }}
+      {{- end }}
       - name: {{ .Values.global.cloudConfig }}
         configMap:
           name: {{ .Values.global.cloudConfig }}
           items:
           - key: "clusterData"
             path: "clusterData.json"
-          {{- if $components.serviceDiscovery.enabled }}
-          - key: "services"
-            path: "services.json"
-          {{- end }}
+      {{- if $components.serviceDiscovery.enabled }}
+      - name: "services"
+        emptyDir: {}
+      {{- end }}
       - name: host-scanner-definition
         configMap:
           name: host-scanner-definition
@@ -232,41 +389,22 @@ spec:
 {{- end }}
       serviceAccountName: {{ .Values.kubescape.name }}
       automountServiceAccountToken: true
-
-      {{- if or .Values.kubescape.tolerations .Values.customScheduling.tolerations .Values.global.tolerations }}
-      tolerations:
-        {{- with .Values.kubescape.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.customScheduling.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
-      {{- end }}
-      {{- if or .Values.kubescape.nodeSelector .Values.customScheduling.nodeSelector .Values.global.nodeSelector }}
       nodeSelector:
-        {{- with .Values.kubescape.nodeSelector }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.customScheduling.nodeSelector }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.nodeSelector }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
+      {{- if .Values.kubescape.nodeSelector }}
+      {{- toYaml .Values.kubescape.nodeSelector | nindent 8 }}
+      {{- else if .Values.customScheduling.nodeSelector }}
+      {{- toYaml .Values.customScheduling.nodeSelector | nindent 8 }}
       {{- end }}
-      {{- if or .Values.kubescape.affinity .Values.customScheduling.affinity .Values.global.affinity }}
       affinity:
-        {{- with .Values.kubescape.affinity }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.customScheduling.affinity }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.affinity }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
+      {{- if .Values.kubescape.affinity }}
+      {{- toYaml .Values.kubescape.affinity | nindent 8 }}
+      {{- else if .Values.customScheduling.affinity }}
+      {{- toYaml .Values.customScheduling.affinity | nindent 8 }}
+      {{- end }}
+      tolerations:
+      {{- if .Values.kubescape.tolerations }}
+      {{- toYaml .Values.kubescape.tolerations | nindent 8 }}
+      {{- else if .Values.customScheduling.tolerations }}
+      {{- toYaml .Values.customScheduling.tolerations | nindent 8 }}
       {{- end }}
 {{- end }}

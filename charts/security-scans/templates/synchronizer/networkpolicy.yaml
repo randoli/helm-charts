@@ -5,15 +5,14 @@ kind: NetworkPolicy
 metadata:
   name: {{ .Values.synchronizer.name }}
   namespace: {{ include "randoli-agent.namespace" . }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    app: {{ .Values.synchronizer.name }}
-    tier: {{ .Values.global.namespaceTier }}
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.synchronizer.name "tier" .Values.global.namespaceTier) | nindent 4 }}
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.synchronizer.name }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      tier: {{ .Values.global.namespaceTier }}
+      {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.synchronizer.name) | nindent 14 }}
   policyTypes:
     - Ingress
   {{- if .Values.global.networkPolicy.createEgressRules }}
@@ -21,15 +20,16 @@ spec:
   egress:
       # - synchronizer server
     - ports:
-        - port: 8443
-          protocol: TCP
+      - port: 443
+        protocol: TCP
+{{ tpl (.Files.Get "assets/api-server-egress-rules.yaml") . | indent 4 }}
+{{ tpl (.Files.Get "assets/common-egress-rules.yaml") . | indent 4 }}
   {{- end }}
   ingress:
     - from:
         - podSelector:
             matchLabels:
-              app.kubernetes.io/instance: kubecop
-              app.kubernetes.io/name: kubecop
+              {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.nodeAgent.name) | nindent 14 }}
       ports:
         - port: {{ .Values.synchronizer.service.port }}
           protocol: TCP

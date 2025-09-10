@@ -5,10 +5,11 @@ kind: ServiceMonitor
 metadata:
   name: {{ .Values.kubescape.name }}-monitor
   namespace: {{ .Values.kubescape.serviceMonitor.namespace | default (include "randoli-agent.namespace" .) }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    app: {{ .Values.kubescape.name }}
-    kubescape.io/ignore: "true"
-    {{- with .Values.kubescape.labels }}
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.kubescape.name "tier" .Values.global.namespaceTier) | nindent 4 }}
+    {{- with .Values.kubescape.serviceMonitor.additionalLabels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
@@ -17,7 +18,7 @@ spec:
       -  {{ include "randoli-agent.namespace" . }}
   selector:
     matchLabels:
-      app: {{ .Values.kubescape.name }}
+      {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.kubescape.name) | nindent 6 }}
   endpoints:
     - port: http
       path: /v1/metrics

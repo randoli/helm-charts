@@ -5,15 +5,20 @@ kind: ServiceMonitor
 metadata:
   name: runtime-monitor
   namespace: {{ include "randoli-agent.namespace" . }}
+  annotations:
+    {{- include "kubescape-operator.annotations" (dict "Values" .Values) | nindent 4 }}
   labels:
-    app: runtime-monitor
+    {{- include "kubescape-operator.labels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" "runtime-monitor" "tier" .Values.global.namespaceTier) | nindent 4 }}
+    {{- with .Values.nodeAgent.serviceMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   namespaceSelector:
     matchNames:
       -  {{ include "randoli-agent.namespace" . }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.nodeAgent.name }}
+      {{- include "kubescape-operator.selectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "app" .Values.nodeAgent.name) | nindent 6 }}
   endpoints:
   - port: prometheus
     path: /metrics
@@ -21,4 +26,3 @@ spec:
     interval: {{ .Values.nodeAgent.serviceMonitor.interval }}
     scrapeTimeout: {{ .Values.nodeAgent.serviceMonitor.scrapeTimeout }}
 {{ end }}
-
