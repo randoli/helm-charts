@@ -152,7 +152,11 @@ spec:
           - key: netobserv-managed
             operator: NotIn
             values:
-              - "true"    
+              - "true"
+          - key: app.kubernetes.io/instance
+            operator: NotIn
+            values:
+              - 'prometheus-operator'
       podMonitorSelector: {}
     serviceAccount: opentelemetry-targetallocator
   {{- end }}  
