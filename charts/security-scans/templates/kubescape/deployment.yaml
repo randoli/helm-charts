@@ -389,22 +389,40 @@ spec:
 {{- end }}
       serviceAccountName: {{ .Values.kubescape.name }}
       automountServiceAccountToken: true
-      nodeSelector:
-      {{- if .Values.kubescape.nodeSelector }}
-      {{- toYaml .Values.kubescape.nodeSelector | nindent 8 }}
-      {{- else if .Values.customScheduling.nodeSelector }}
-      {{- toYaml .Values.customScheduling.nodeSelector | nindent 8 }}
-      {{- end }}
-      affinity:
-      {{- if .Values.kubescape.affinity }}
-      {{- toYaml .Values.kubescape.affinity | nindent 8 }}
-      {{- else if .Values.customScheduling.affinity }}
-      {{- toYaml .Values.customScheduling.affinity | nindent 8 }}
-      {{- end }}
+      {{- if or .Values.kubescape.tolerations .Values.customScheduling.tolerations .Values.global.tolerations }}
       tolerations:
-      {{- if .Values.kubescape.tolerations }}
-      {{- toYaml .Values.kubescape.tolerations | nindent 8 }}
-      {{- else if .Values.customScheduling.tolerations }}
-      {{- toYaml .Values.customScheduling.tolerations | nindent 8 }}
+        {{- with .Values.kubescape.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.customScheduling.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.kubescape.nodeSelector .Values.customScheduling.nodeSelector .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- with .Values.kubescape.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.customScheduling.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.kubescape.affinity .Values.customScheduling.affinity .Values.global.affinity }}
+      affinity:
+        {{- with .Values.kubescape.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.customScheduling.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
       {{- end }}
 {{- end }}

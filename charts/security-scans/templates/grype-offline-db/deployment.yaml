@@ -55,22 +55,40 @@ spec:
             protocol: TCP
           resources:
 {{ toYaml .Values.grypeOfflineDB.resources | indent 12 }}
-      nodeSelector:
-      {{- if .Values.grypeOfflineDB.nodeSelector }}
-      {{- toYaml .Values.grypeOfflineDB.nodeSelector | nindent 8 }}
-      {{- else if .Values.customScheduling.nodeSelector }}
-      {{- toYaml .Values.customScheduling.nodeSelector | nindent 8 }}
-      {{- end }}
-      affinity:
-      {{- if .Values.grypeOfflineDB.affinity }}
-      {{- toYaml .Values.grypeOfflineDB.affinity | nindent 8 }}
-      {{- else if .Values.customScheduling.affinity }}
-      {{- toYaml .Values.customScheduling.affinity | nindent 8 }}
-      {{- end }}
+      {{- if or .Values.grypeOfflineDB.tolerations .Values.customScheduling.tolerations .Values.global.tolerations }}
       tolerations:
-      {{- if .Values.grypeOfflineDB.tolerations }}
-      {{- toYaml .Values.grypeOfflineDB.tolerations | nindent 8 }}
-      {{- else if .Values.customScheduling.tolerations }}
-      {{- toYaml .Values.customScheduling.tolerations | nindent 8 }}
+        {{- with .Values.grypeOfflineDB.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.customScheduling.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.grypeOfflineDB.nodeSelector .Values.customScheduling.nodeSelector .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- with .Values.grypeOfflineDB.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.customScheduling.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.grypeOfflineDB.affinity .Values.customScheduling.affinity .Values.global.affinity }}
+      affinity:
+        {{- with .Values.grypeOfflineDB.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.customScheduling.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
       {{- end }}
 {{- end }}

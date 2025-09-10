@@ -68,23 +68,41 @@ apiVersion: batch/v1
               restartPolicy: Never
               serviceAccountName: {{ .Values.kubevuln.name }}
               automountServiceAccountToken: false
-              nodeSelector:
-              {{- if .Values.registryScanScheduler.nodeSelector }}
-              {{- toYaml .Values.registryScanScheduler.nodeSelector | nindent 16 }}
-              {{- else if .Values.customScheduling.nodeSelector }}
-              {{- toYaml .Values.customScheduling.nodeSelector | nindent 16 }}
-              {{- end }}
-              affinity:
-              {{- if .Values.registryScanScheduler.affinity }}
-              {{- toYaml .Values.registryScanScheduler.affinity | nindent 16 }}
-              {{- else if .Values.customScheduling.affinity }}
-              {{- toYaml .Values.customScheduling.affinity | nindent 16 }}
-              {{- end }}
+              {{- if or .Values.registryScanScheduler.tolerations .Values.customScheduling.tolerations .Values.global.tolerations }}
               tolerations:
-              {{- if .Values.registryScanScheduler.tolerations }}
-              {{- toYaml .Values.registryScanScheduler.tolerations | nindent 16 }}
-              {{- else if .Values.customScheduling.tolerations }}
-              {{- toYaml .Values.customScheduling.tolerations | nindent 16 }}
+                {{- with .Values.registryScanScheduler.tolerations }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .Values.customScheduling.tolerations }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .Values.global.tolerations }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }} 
+              {{- end }}
+              {{- if or .Values.registryScanScheduler.nodeSelector .Values.customScheduling.nodeSelector .Values.global.nodeSelector }}
+              nodeSelector:
+                {{- with .Values.registryScanScheduler.nodeSelector }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .Values.customScheduling.nodeSelector }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .Values.global.nodeSelector }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }} 
+              {{- end }}
+              {{- if or .Values.registryScanScheduler.affinity .Values.customScheduling.tolerations .Values.global.affinity }}
+              affinity:
+                {{- with .Values.registryScanScheduler.affinity }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .Values.customScheduling.tolerations }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .Values.global.affinity }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }} 
               {{- end }}
               volumes:
                 - name: "request-body-volume" # placeholder
