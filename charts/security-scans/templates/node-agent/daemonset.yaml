@@ -298,10 +298,16 @@ spec:
       {{- else if .Values.customScheduling.affinity }}
       {{- toYaml .Values.customScheduling.affinity | nindent 8 }}
       {{- end }}
+      {{- if or .Values.nodeAgent.tolerations .Values.customScheduling.tolerations .Values.global.daemonsets.tolerations }}
       tolerations:
-      {{- if .Values.nodeAgent.tolerations }}
-      {{- toYaml .Values.nodeAgent.tolerations | nindent 8 }}
-      {{- else if .Values.customScheduling.tolerations }}
-      {{- toYaml .Values.customScheduling.tolerations | nindent 8 }}
+        {{- with .Values.nodeAgent.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.customScheduling.tolerations}}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.daemonsets.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
       {{- end }}
 {{- end }}
