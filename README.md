@@ -22,4 +22,4 @@ Install the App Insights Agent Standalone chart
 helm install randoli/randoli-agent --generate-name
 ```
 
-For more details see [App Insights agent Documentation](https://docs.insights.randoli.io/agent/overview).
+For more details see [Randoli Product Documentation](https://docs.insights.randoli.io/agent/kubernetes_agent/kubernetes).
