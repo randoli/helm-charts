@@ -26,4 +26,4 @@ Install the Helm Chart
 helm install randoli randoli/randoli-agent -n randoli-agents --set tags.costManagement=true --set tags.observability=true
 ```
 
-For more details see [App Insights agent Documentation](https://docs.insights.randoli.io/agent/overview).
+For more details see [Randoli Product Documentation](https://docs.randoli.io/getting-started/step-0).
