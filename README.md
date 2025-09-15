@@ -1,25 +1,29 @@
-## Randoli Helm Chart Public Registry
+# Randoli Helm Chart Public Registry
 
-### How to use it
+## How to install the LocalControl Plane & Agent
+
+### Prerequisits.
+You need to setup an Account using the [Signup page](https://signup.randoli.io/?product=observability%2Bcost) 
+For more information please check the [Getting Start Guide](https://docs.insights.randoli.io/getting-started/step-0)
+
+[!Tip]
+If it's your first time, we recommend you read the `Getting Started Guide` and follow **guided onboarding flow** when you sign up for the account
+
+### Helm Chart Installation
+Create the namespace & apply the secrets downloaded from the Console
+```
+kubectl create ns randoli-agents
+kubectl create -f xxxx-credentials.yaml
+```
 
 Add the repository
 ```
 helm repo add randoli https://randoli.github.io/helm-charts
 ```
 
-Install the Operator chart
+Install the Helm Chart
 ```
-helm install randoli/app-director-agent-operator --generate-name
-```
-
-Example, to install the operator in a specific namespace
-```
-helm install randoli/app-director-agent-operator --generate-name -n <namespace_name> --create-namespace
-```
-
-Install the App Insights Agent Standalone chart
-```
-helm install randoli/randoli-agent --generate-name
+helm install randoli randoli/randoli-agent -n randoli-agents --set tags.costManagement=true --set tags.observability=true
 ```
 
 For more details see [App Insights agent Documentation](https://docs.insights.randoli.io/agent/overview).
