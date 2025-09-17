@@ -1350,7 +1350,7 @@ externalAccess:
     ##
     image:
       registry: docker.io
-      repository: bitnami/kubectl
+      repository: bitnamilegacy/kubectl
       tag: 1.29.0-debian-11-r0
       digest: ""
       ## Specify a imagePullPolicy

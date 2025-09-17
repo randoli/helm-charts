@@ -14,7 +14,7 @@ spec:
       serviceAccountName: agent-manifests-applier
       containers:
       - name: apply-manifests
-        image: docker.io/bitnami/kubectl:1.33.1
+        image: docker.io/bitnamilegacy/kubectl:1.33.1
         command:
         - /bin/bash
         - -c
