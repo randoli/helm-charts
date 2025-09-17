@@ -9,7 +9,17 @@ spec:
   type: Counter
   valueField: Bytes
   direction: Egress
-  labels: [SrcK8S_Name,SrcK8S_Type,SrcK8S_Namespace,SrcK8S_Zone,DstK8S_Name,DstK8S_Type,DstK8S_Namespace,DstK8S_Zone]
+  labels: 
+  - SrcK8S_Name
+  - SrcK8S_Type
+  - SrcK8S_Namespace
+  - SrcK8S_Zone
+  - DstK8S_Name
+  - DstK8S_Type
+  - DstK8S_Namespace
+  - DstK8S_Zone
+  - source.subnet.label
+  - destination.subnet.label
   filters:
   - field: SrcK8S_Type
     value: Pod
