@@ -802,7 +802,7 @@ crds:
     registry: docker.io
 
     ## @param crds.image.repository Image repository
-    repository: bitnami/kubectl
+    repository: bitnamilegacy/kubectl
 
     ## @param crds.image.tag Image tag
     tag: 1.29.3
