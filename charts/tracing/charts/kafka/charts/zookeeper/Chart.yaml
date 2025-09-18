@@ -2,9 +2,9 @@ annotations:
   category: Infrastructure
   images: |
     - name: os-shell
-      image: docker.io/bitnami/os-shell:11-debian-11-r91
+      image: docker.io/bitnamilegacy/os-shell:11-debian-11-r91
     - name: zookeeper
-      image: docker.io/bitnami/zookeeper:3.9.1-debian-11-r2
+      image: docker.io/bitnamilegacy/zookeeper:3.9.1-debian-11-r2
   licenses: Apache-2.0
 apiVersion: v2
 appVersion: 3.9.1

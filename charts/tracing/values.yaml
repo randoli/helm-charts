@@ -280,7 +280,7 @@ elasticsearch: {}
 #   fullnameOverride: "elasticsearch"
 #   image:
 #     registry: ""
-#     repository: docker.io/bitnami/elasticsearch
+#     repository: docker.io/bitnamilegacy/elasticsearch
 #     tag: ""
 #   master:
 #     masterOnly: false
@@ -297,13 +297,13 @@ elasticsearch: {}
 #     cluster.max_shards_per_node: 3000
 #   sysctlImage:
 #     registry: ""
-#     repository: docker.io/bitnami/os-shell
+#     repository: docker.io/bitnamilegacy/os-shell
 #     tag: 12-debian-12-r18
 #   volumePermissions:
 #     enabled: true
 #     image:
 #       registry: ""
-#       repository: docker.io/bitnami/os-shell
+#       repository: docker.io/bitnamilegacy/os-shell
 #       tag: 12-debian-12-r18
 #   data:
 #     replicaCount: 0

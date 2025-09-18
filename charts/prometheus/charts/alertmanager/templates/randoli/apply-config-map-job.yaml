@@ -15,7 +15,7 @@ spec:
       serviceAccountName: randoli-alerts-cm-applier
       containers:
       - name: apply-cm
-        image: docker.io/bitnami/kubectl:1.33.1
+        image: docker.io/bitnamilegacy/kubectl:1.33.1
         command:
         - /bin/bash
         - -c
