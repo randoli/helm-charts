@@ -17,49 +17,41 @@ version: 1.17.5
 dependencies:
   - name: opentelemetry-operator
     version: 0.86.4
-    repository: https://randoli.github.io/helm-charts
     condition: observability.otel.operator.enabled
     tags:
      - observability
      - costManagement
   - name: prometheus
-    repository: https://randoli.github.io/helm-charts
     version: 26.0.1
     condition: global.prometheus.install
   - name: rightsizing
-    repository: https://randoli.github.io/helm-charts
     version: 1.0.0
     condition: costManagement.vpaOperator.enabled
     tags:
      - costManagement
   - name: security-scans
     alias: securityScans
-    repository: https://randoli.github.io/helm-charts
     version: 1.29.6
     condition: observability.security.enabled
     tags:
      - observability
   - name: logs
-    repository: https://randoli.github.io/helm-charts
     version: 0.0.40
     condition: observability.vector.enabled
     tags:
      - observability
   - name: cost-management
-    repository: https://randoli.github.io/helm-charts
     version: 1.42.0
     alias: costManagement
     tags:
      - costManagement
   - name: tracing
     version: 3.4.0
-    repository: https://randoli.github.io/helm-charts
     condition: observability.tracing.enabled
     tags:
      - observability
   - name: network
     version: 1.8.2
-    repository: https://randoli.github.io/helm-charts
     condition: observability.netobserv.enabled
     tags:
     - observability     

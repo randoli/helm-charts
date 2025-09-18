@@ -40,7 +40,9 @@ spec:
                 path: client-key.pem
             defaultMode: 420
         - name: shared-migrations
-          emptyDir: {}    
+          emptyDir: {}
+        - name: gizmosql-tmp
+          emptyDir: {}      
         {{- if and .Values.global.prometheus.tlsCertConfigmapName .Values.global.prometheus.tlsCertConfigmapKey }}
         - name: prometheus-tls-cert
           configMap:
@@ -65,6 +67,13 @@ spec:
               echo "copying migrations..."
               cp -r /migration-scripts/* /migrations/
               cp -r /migrate /migrations/migrate
+          resources:
+            limits:
+              cpu: 50m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi    
           volumeMounts:
             - name: shared-migrations
               mountPath: /migrations
@@ -86,6 +95,13 @@ spec:
               echo "setting up permissions..."
               chown :1001 /persistence/agent.db
               chmod 660 /persistence/agent.db
+          resources:
+            limits:
+              cpu: 50m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi       
           volumeMounts:
             - name: shared-migrations
               mountPath: /migrations
@@ -194,6 +210,8 @@ spec:
           volumeMounts:
           - name: agent-pv
             mountPath: /persistence
+          - name: gizmosql-tmp
+            mountPath: /var/gizmosql-tmp    
           env:
           - name: GIZMOSQL_PATH
             value: /persistence/agent.db
@@ -219,8 +237,10 @@ spec:
             value: "randoli_db_test"
           - name: INIT_SQL_COMMANDS
             value: |
-              SET memory_limit = {{ .Values.db.flightEngine.memoryLimit | squote }};
+              SET memory_limit={{ .Values.db.flightEngine.memoryLimit | squote }};
               SET threads TO {{ .Values.db.flightEngine.threads }};
+              SET temp_directory='/var/gizmosql-tmp';
+              SET max_temp_directory_size={{ .Values.db.flightEngine.tempDirectorySize | squote }};
               CREATE SCHEMA IF NOT EXISTS insights_agent;
               SET schema='insights_agent';
               SET search_path='insights_agent';

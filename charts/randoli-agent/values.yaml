@@ -119,21 +119,24 @@ deploymentAnnotations: {}
 
 resources:
   limits:
-    memory: 2Gi
+    cpu: 150m
+    memory: 1.5Gi
   requests:
-    cpu: 50m
-    memory: 1Gi
+    cpu: 150m
+    memory: 1.5Gi
 
 db:
   resources:
     limits:
-      memory: 2Gi
+      cpu: 150m
+      memory: 1.5Gi
     requests:
-      cpu: 50m
-      memory: 1Gi
+      cpu: 150m
+      memory: 1.5Gi
   flightEngine:
-    memoryLimit: 1500MB
-    threads: 2
+    memoryLimit: 1000MB
+    threads: 1
+    tempDirectorySize: 3GB
 
 anomalyDetection:
   # Defaults anomaly detection list contains detections for:
