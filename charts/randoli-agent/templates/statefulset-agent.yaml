@@ -96,9 +96,6 @@ spec:
               chown :1001 /persistence/agent.db
               chmod 660 /persistence/agent.db
           resources:
-            limits:
-              cpu: 50m
-              memory: 128Mi
             requests:
               cpu: 50m
               memory: 128Mi       
