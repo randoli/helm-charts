@@ -5,7 +5,6 @@ metadata:
   annotations:
     helm.sh/hook-weight: "-5"
     helm.sh/hook: pre-install,post-delete
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -14,7 +13,6 @@ metadata:
   annotations:
     helm.sh/hook-weight: "-5"
     helm.sh/hook: pre-install,post-delete
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 rules:
 - verbs: ["create"]
   apiGroups: [""]
@@ -31,7 +29,6 @@ metadata:
   annotations:
     helm.sh/hook-weight: "-4"
     helm.sh/hook: pre-install,post-delete
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 subjects:
 - kind: ServiceAccount
   name: agent-manifests-applier

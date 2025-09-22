@@ -4,7 +4,7 @@ metadata:
   name: apply-agent-manifests
   annotations:
     helm.sh/hook: pre-install
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    helm.sh/hook-delete-policy: hook-succeeded
 spec:
   completions: 1
   parallelism: 1

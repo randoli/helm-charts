@@ -68,9 +68,6 @@ spec:
               cp -r /migration-scripts/* /migrations/
               cp -r /migrate /migrations/migrate
           resources:
-            limits:
-              cpu: 50m
-              memory: 128Mi
             requests:
               cpu: 50m
               memory: 128Mi    
@@ -201,7 +198,7 @@ spec:
             {{- end }}
           {{- end }}
         - name: gizmosql
-          image: ghcr.io/gizmodata/gizmosql:v1.9.12
+          image: ghcr.io/gizmodata/gizmosql:v1.11.5
           ports:
           - containerPort: 31337
           volumeMounts:
@@ -234,13 +231,14 @@ spec:
             value: "randoli_db_test"
           - name: INIT_SQL_COMMANDS
             value: |
-              SET memory_limit={{ .Values.db.flightEngine.memoryLimit | squote }};
-              SET threads TO {{ .Values.db.flightEngine.threads }};
-              SET temp_directory='/var/gizmosql-tmp';
-              SET max_temp_directory_size={{ .Values.db.flightEngine.tempDirectorySize | squote }};
+              PRAGMA memory_limit={{ .Values.db.flightEngine.memoryLimit | squote }};
+              PRAGMA threads={{ .Values.db.flightEngine.threads }};
+              PRAGMA temp_directory='/var/gizmosql-tmp';
+              PRAGMA max_temp_directory_size={{ .Values.db.flightEngine.tempDirectorySize | squote }};
+              PRAGMA preserve_insertion_order=false;
               CREATE SCHEMA IF NOT EXISTS insights_agent;
-              SET schema='insights_agent';
-              SET search_path='insights_agent';
+              PRAGMA schema='insights_agent';
+              PRAGMA search_path='insights_agent';
           resources:
             {{- toYaml .Values.db.resources | nindent 12 }}
       serviceAccountName: {{ template "randoli-agent.serviceAccountName" . }}

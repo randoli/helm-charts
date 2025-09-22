@@ -5,17 +5,15 @@ metadata:
   name: otel-cr-applier
   annotations:
     helm.sh/hook-weight: "-5"
-    helm.sh/hook: post-install,post-upgrade,pre-delete
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    helm.sh/hook: post-install,pre-delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   name: {{ .Release.Name }}-otel-cr-applier-role
   annotations:
     helm.sh/hook-weight: "-5"
-    helm.sh/hook: post-install,post-upgrade,pre-delete
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    helm.sh/hook: post-install,pre-delete
 rules:
 - apiGroups: ["opentelemetry.io"]
   resources: ["opentelemetrycollectors", "targetallocators", "instrumentations"]
@@ -25,19 +23,18 @@ rules:
   verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: otel-cr-applier-binding
   annotations:
     helm.sh/hook-weight: "-4"
-    helm.sh/hook: post-install,post-upgrade,pre-delete
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    helm.sh/hook: post-install,pre-delete
 subjects:
 - kind: ServiceAccount
   name: otel-cr-applier
   namespace: {{ .Release.Namespace }}
 roleRef:
-  kind: ClusterRole
+  kind: Role
   name: {{ .Release.Name }}-otel-cr-applier-role
   apiGroup: rbac.authorization.k8s.io
 {{end}}

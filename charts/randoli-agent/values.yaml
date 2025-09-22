@@ -134,7 +134,7 @@ db:
       cpu: 150m
       memory: 1.5Gi
   flightEngine:
-    memoryLimit: 1000MB
+    memoryLimit: 1GB
     threads: 1
     tempDirectorySize: 3GB
 
