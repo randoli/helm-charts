@@ -3,7 +3,7 @@ entries:
   randoli-agent:
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2025-09-19T12:54:32.113553118-04:00"
+    created: "2025-09-22T14:37:25.32495944-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -55,7 +55,7 @@ entries:
       - costManagement
       version: 1.8.2
     description: Randoli Agent
-    digest: e7dca1c1b4c5156eac8c65cff4b6077b7ce99f66b08d7b7fb13d61cfa68db45f
+    digest: 24dfd396b7ef4b0646fc094028c7a111c2c363382db039a6d6cfe2de5f790ed3
     home: https://randoli.ca
     icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
     keywords:
@@ -73,7 +73,7 @@ entries:
     version: 1.17.5
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2025-09-19T12:54:32.076371445-04:00"
+    created: "2025-09-22T14:37:25.289452853-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -143,7 +143,7 @@ entries:
     version: 1.17.4
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2025-09-19T12:54:32.037422436-04:00"
+    created: "2025-09-22T14:37:25.251703966-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -213,7 +213,7 @@ entries:
     version: 1.17.3
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2025-09-19T12:54:31.993885499-04:00"
+    created: "2025-09-22T14:37:25.206431231-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -281,4 +281,4 @@ entries:
     urls:
     - randoli-agent-1.17.2.tgz
     version: 1.17.2
-generated: "2025-09-19T12:54:31.943375179-04:00"
+generated: "2025-09-22T14:37:25.159730411-04:00"

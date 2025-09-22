@@ -4,7 +4,7 @@ metadata:
   name: delete-agent-manifests
   annotations:
     helm.sh/hook: post-delete
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    helm.sh/hook-delete-policy: hook-succeeded
 spec:
   backoffLimit: 1
   template:
