@@ -21,6 +21,7 @@ data:
   {{ else }}
   OPENCOST_BACKEND_URL: http://randoli-cmk-opencost.{{ .Release.Namespace }}.svc:9003
   {{ end -}}
+  OPENCOST_POD_PREFIX: randoli-cmk-opencost
   {{- if .Values.global.prometheus.install }}
   PROMETHEUS_URL: 'http://randoli-prometheus.{{ .Release.Namespace }}.svc:80'
   {{ else }}
