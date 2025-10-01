@@ -21,3 +21,9 @@ rules:
     verbs: 
       - get
       - update
+  - apiGroups:
+      - ''
+    resources:
+      - pods
+    verbs: 
+      - delete

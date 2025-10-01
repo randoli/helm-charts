@@ -3,7 +3,7 @@ global:
     image:
       registry: docker.io
       repository: randoli/network-cost-metrics
-      tag: "1.0.0"
+      tag: "1.0.1"
       pullPolicy: Always
     metricGenerationInterval: 2m
     prometheusTimeout: 30s
@@ -97,12 +97,13 @@ rightsizing:
 tags:
   observability: false
   costManagement: false
+  security: false
 
 
 image:
   registry: docker.io
   repository: randoli/insights-agent
-  tag: "1.17"
+  tag: "1.17.6"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
