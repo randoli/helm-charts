@@ -806,6 +806,11 @@ serverFiles:
         - k8s.pod.name
         - k8s.replicaset.name
         - k8s.statefulset.name
+        - host.id
+        - host.name
+        - host.type
+        - cloud.platform
+        - cloud.provider
 
     rule_files:
       - /etc/config/recording_rules.yml
