@@ -81,7 +81,7 @@ false
 
 {{- define "enable.security" -}}
 {{- $security := .Values.observability.security | default dict }}
-{{- if and (or (not (hasKey $security "enabled")) $security.enabled ) .Values.tags.observability -}}
+{{- if and (or (not (hasKey $security "enabled")) $security.enabled ) .Values.tags.security -}}
 true
 {{- else -}}
 false
@@ -91,7 +91,7 @@ false
 
 {{- define "observability.security.mode" -}}
 {{- $security := .Values.observability.security | default dict }}
-{{- if or $security.enabled .Values.tags.observability -}}
+{{- if or $security.enabled .Values.tags.security -}}
 {{.Values.observability.security.mode }}
 {{- else -}}
 OFF
