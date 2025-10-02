@@ -3,7 +3,7 @@ entries:
   randoli-agent:
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2025-10-01T16:51:51.516320447-04:00"
+    created: "2025-10-02T16:32:25.073576844-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -55,7 +55,7 @@ entries:
       - costManagement
       version: 1.8.2
     description: Randoli Agent
-    digest: 573c0feea80c08243f459db0cce55996f4588bd822f5926861e43554bb31b4bc
+    digest: 2ffa3bbb899b82702d5ea10810167a3bfa65438978331f6b9cd961d412e69fa5
     home: https://randoli.ca
     icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
     keywords:
@@ -73,7 +73,7 @@ entries:
     version: 1.17.6
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2025-10-01T16:51:51.46293444-04:00"
+    created: "2025-10-02T16:32:25.011960795-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -143,7 +143,7 @@ entries:
     version: 1.17.5
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2025-10-01T16:51:51.411970779-04:00"
+    created: "2025-10-02T16:32:24.938581496-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -213,7 +213,7 @@ entries:
     version: 1.17.4
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2025-10-01T16:51:51.359442506-04:00"
+    created: "2025-10-02T16:32:24.881701137-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -283,7 +283,7 @@ entries:
     version: 1.17.3
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2025-10-01T16:51:51.304347693-04:00"
+    created: "2025-10-02T16:32:24.734803838-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -351,4 +351,4 @@ entries:
     urls:
     - randoli-agent-1.17.2.tgz
     version: 1.17.2
-generated: "2025-10-01T16:51:51.242985988-04:00"
+generated: "2025-10-02T16:32:24.645431034-04:00"
