@@ -86,6 +86,9 @@ spec:
               chmod +x /migrations/migrate
               ln -s /duckdb /bin/duckdb
 
+              # remove .wal file
+              rm -rf /persistence/agent.db.wal
+
               echo "running migrations..."
               /migrations/migrate /persistence/agent.db
 
