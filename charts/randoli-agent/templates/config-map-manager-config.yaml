@@ -60,7 +60,7 @@ data:
   TRACE_STORAGE_BACKEND_URL: {{ include "trace-storage-url" . }}
   SUPERVISOR_AGENT_HTTP_URL: 'http://ai-agent/chat'
   POPULATE_RES_INDEX_FROM_DB: ''
-  FLIGHT_SQL_HOST: {{ include "randoli-agent.fullname" . }}.{{ .Release.Namespace }}:31337
+  FLIGHT_SQL_HOST: localhost:31337
   {{- if .Values.observability.traceConfig.opensearch.spanIndexPattern }}
   OPENSEARCH_SPANS_INDEX_PATTERN: {{ .Values.observability.traceConfig.opensearch.spanIndexPattern }}
   {{- end }}
