@@ -8,10 +8,11 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: randoli-agent
     {{- include "labels" . | nindent 4 }}
-  {{- with .Values.statefulSetAnnotations }}
   annotations:
+  {{- with .Values.statefulSetAnnotations }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
+    resource.opentelemetry.io/service.name: randoli-agent
 spec:
   replicas: 1
   selector:
