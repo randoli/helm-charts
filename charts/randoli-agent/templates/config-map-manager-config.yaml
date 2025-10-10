@@ -70,3 +70,4 @@ data:
   {{- end }}
   OPENSEARCH_SKIP_TLS_VERIFY: '{{ .Values.observability.traceConfig.opensearch.skipTlsVerify }}'
   RANDOLI_AGENT_HTTP_ENDPOINT: 'http://{{ include "randoli-agent.fullname" . }}.{{ include "randoli-agent.namespace" . }}:8080'
+  ENABLE_SUPERVISOR_AGENT_REPORTS: '{{ .Values.observability.sreAgent.enableReports }}'

@@ -70,6 +70,8 @@ observability:
       secretName:
       usernameKeyRef: 
       passwordKeyRef: 
+  sreAgent:
+    enableReports: false
 
 costManagement:
   vpaOperator: 
@@ -251,5 +253,3 @@ prometheus:
             - host.type
             - cloud.platform
             - cloud.provider    
-
-  
