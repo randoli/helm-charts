@@ -108,7 +108,7 @@ spec:
               value: {{ .Values.opencost.carbonCost.enabled | quote }}
             {{- end }}
             - name: RANDOLI_AGENT_SERVER
-              value: http://{{ .Release.Name }}.{{ include "randoli-agent.namespace" . }}.svc.cluster.local:8080
+              value: http://randoli-agent.{{ .Release.Namespace }}.svc.cluster.local:8080
             - name: RANDOLI_AGENT_RETRY_INTERVAL_IN_SECONDS
               value: '5'
             {{- if .Values.opencost.exporter.cloudProviderApiKey }}
