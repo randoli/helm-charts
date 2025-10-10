@@ -87,6 +87,9 @@ spec:
               chmod +x /migrations/migrate
               ln -s /duckdb /bin/duckdb
 
+              # remove .wal file
+              rm -rf /persistence/agent.db.wal
+
               echo "running migrations..."
               /migrations/migrate /persistence/agent.db
 
@@ -199,7 +202,15 @@ spec:
             {{- end }}
           {{- end }}
         - name: gizmosql
-          image: ghcr.io/gizmodata/gizmosql:v1.9.12
+          image: docker.io/randoli/gizmosql:v1.9.16
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - gizmosql_client --command Execute --host localhost --port 31337 --username
+                "$GIZMOSQL_USERNAME" --password "$GIZMOSQL_PASSWORD" --query "SELECT 1503+1503"
+                | grep -q 3006 || exit 1
           ports:
           - containerPort: 31337
           volumeMounts:
