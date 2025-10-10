@@ -107,6 +107,10 @@ spec:
             - name: CARBON_ESTIMATES_ENABLED
               value: {{ .Values.opencost.carbonCost.enabled | quote }}
             {{- end }}
+            - name: RANDOLI_AGENT_SERVER
+              value: http://randoli-agent.{{ .Release.Namespace }}.svc.cluster.local:8080
+            - name: RANDOLI_AGENT_RETRY_INTERVAL_IN_SECONDS
+              value: '5'
             {{- if .Values.opencost.exporter.cloudProviderApiKey }}
             - name: CLOUD_PROVIDER_API_KEY
               valueFrom:

@@ -36,6 +36,14 @@ rules:
       - watch
       - get
     apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+  - verbs:
+      - list
+      - watch
+      - get
+    apiGroups:
       - 'apps'
       - core.strimzi.io
     resources:

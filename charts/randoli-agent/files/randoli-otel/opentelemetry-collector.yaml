@@ -30,7 +30,7 @@ spec:
     {{- toYaml . | nindent 8 }}
     {{- end }} 
   {{- end }}
-  image: docker.io/randoli/otelcol:v1.0.1
+  image: docker.io/randoli/otelcol:v1.0.2
   upgradeStrategy: automatic
   mode: statefulset
   serviceAccount: randoli-otel-collector
@@ -115,6 +115,15 @@ spec:
     connectors:
       spanmetrics: {}
     service:
+      telemetry:
+        metrics:
+          level: "detailed"
+          readers:
+            - pull:
+                exporter:
+                  prometheus:
+                    host: "0.0.0.0"
+                    port: 8888
       pipelines:
         traces:
           receivers: [otlp]

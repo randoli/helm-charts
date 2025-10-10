@@ -8,10 +8,11 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: randoli-agent
     {{- include "labels" . | nindent 4 }}
-  {{- with .Values.statefulSetAnnotations }}
   annotations:
+  {{- with .Values.statefulSetAnnotations }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
+    resource.opentelemetry.io/service.name: randoli-agent
 spec:
   replicas: 1
   selector:
@@ -85,6 +86,9 @@ spec:
               while [ ! -f /migrations/migrate ]; do sleep 1; done
               chmod +x /migrations/migrate
               ln -s /duckdb /bin/duckdb
+
+              # remove .wal file
+              rm -rf /persistence/agent.db.wal
 
               echo "running migrations..."
               /migrations/migrate /persistence/agent.db
@@ -198,7 +202,15 @@ spec:
             {{- end }}
           {{- end }}
         - name: gizmosql
-          image: ghcr.io/gizmodata/gizmosql:v1.11.5
+          image: docker.io/randoli/gizmosql:v1.9.16
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - gizmosql_client --command Execute --host localhost --port 31337 --username
+                "$GIZMOSQL_USERNAME" --password "$GIZMOSQL_PASSWORD" --query "SELECT 1503+1503"
+                | grep -q 3006 || exit 1
           ports:
           - containerPort: 31337
           volumeMounts:

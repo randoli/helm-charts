@@ -3,7 +3,7 @@ global:
     image:
       registry: docker.io
       repository: randoli/network-cost-metrics
-      tag: "1.0.0"
+      tag: "1.0.1"
       pullPolicy: Always
     metricGenerationInterval: 2m
     prometheusTimeout: 30s
@@ -70,6 +70,8 @@ observability:
       secretName:
       usernameKeyRef: 
       passwordKeyRef: 
+  sreAgent:
+    enableReports: false
 
 costManagement:
   vpaOperator: 
@@ -97,6 +99,7 @@ rightsizing:
 tags:
   observability: false
   costManagement: false
+  security: false
 
 
 image:
@@ -250,5 +253,3 @@ prometheus:
             - host.type
             - cloud.platform
             - cloud.provider    
-
-  
