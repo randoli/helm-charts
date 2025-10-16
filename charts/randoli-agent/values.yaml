@@ -72,6 +72,9 @@ observability:
       passwordKeyRef: 
   sreAgent:
     enableReports: false
+  agentInstrumentation:
+    enabled: true
+    otlpEndpoint:
 
 costManagement:
   vpaOperator: 
