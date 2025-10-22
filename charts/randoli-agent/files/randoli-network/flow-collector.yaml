@@ -28,7 +28,7 @@ spec:
   exporters:
   - type: OpenTelemetry
     openTelemetry:
-      targetHost: "randoli-otel-collector.{{ .Release.Namespace }}.svc.cluster.local"
+      targetHost: "randoli-otel-collector.{{ .Release.Namespace }}.svc"
       targetPort: 4317
       protocol: grpc
       logs:

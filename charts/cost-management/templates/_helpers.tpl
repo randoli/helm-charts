@@ -96,7 +96,7 @@ Only change done by Randoli
     {{- $host := tpl .Values.opencost.prometheus.internal.serviceName . }}
     {{- $ns := tpl .Values.opencost.prometheus.internal.namespaceName . }}
     {{- $port := .Values.opencost.prometheus.internal.port | int }}
-    {{- printf "http://%s.%s.svc.cluster.local:%d" $host $ns $port -}}
+    {{- printf "http://%s.%s.svc:%d" $host $ns $port -}}
   {{- end -}}
 {{- end -}}
 
@@ -110,7 +110,7 @@ Check that either thanos external or internal is defined
     {{- $host := .Values.opencost.prometheus.thanos.internal.serviceName }}
     {{- $ns := .Values.opencost.prometheus.thanos.internal.namespaceName }}
     {{- $port := .Values.opencost.prometheus.thanos.internal.port | int }}
-    {{- printf "http://%s.%s.svc.cluster.local:%d" $host $ns $port -}}
+    {{- printf "http://%s.%s.svc:%d" $host $ns $port -}}
   {{- end -}}
 {{- end -}}
 
