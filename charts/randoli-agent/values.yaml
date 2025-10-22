@@ -134,7 +134,7 @@ db:
   resources:
     limits:
       cpu: 150m
-      memory: 2Gi
+      memory: 3Gi
     requests:
       cpu: 150m
       memory: 2Gi
