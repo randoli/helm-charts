@@ -245,7 +245,6 @@ spec:
             value: |
               PRAGMA memory_limit={{ .Values.db.flightEngine.memoryLimit | squote }};
               PRAGMA threads={{ .Values.db.flightEngine.threads }};
-              PRAGMA temp_directory='/var/gizmosql-tmp';
               PRAGMA max_temp_directory_size={{ .Values.db.flightEngine.tempDirectorySize | squote }};
               PRAGMA preserve_insertion_order=false;
               CREATE SCHEMA IF NOT EXISTS insights_agent;
