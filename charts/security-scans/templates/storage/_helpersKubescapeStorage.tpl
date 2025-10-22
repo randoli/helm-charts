@@ -35,7 +35,7 @@ Create the name of the Kubescape Storage Auth Reader RoleBinding to use
   {{- $cert | toJson -}}
 {{- else }}
   {{- $cn := printf "%s.%s.svc-%s" .Values.storage.name (include "randoli-agent.namespace" .) (randAlphaNum 10) -}}
-  {{- $dnsNames := list (printf "%s.%s.svc" .Values.storage.name (include "randoli-agent.namespace" .)) (printf "%s.%s.svc.cluster.local" .Values.storage.name (include "randoli-agent.namespace" .)) -}}
+  {{- $dnsNames := list (printf "%s.%s.svc" .Values.storage.name (include "randoli-agent.namespace" .)) (printf "%s.%s.svc" .Values.storage.name (include "randoli-agent.namespace" .)) -}}
   {{- $cert := genSignedCert $cn nil $dnsNames (int .Values.storage.mtls.certificateValidityInDays) .Values.global.storageCA -}}
   {{- $cert | toJson -}}
 {{- end -}}
