@@ -54,6 +54,10 @@ rules:
 ---
 apiVersion: v1
 kind: ServiceAccount
+{{- with .Values.global.imagePullSecrets }}
+imagePullSecrets:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
 metadata:
   name: opentelemetry-targetallocator
   namespace: {{ .Release.Namespace }}
