@@ -140,7 +140,7 @@ db:
       memory: 2Gi
   flightEngine:
     memoryLimit: 1GB
-    threads: 1
+    threads: 2
     tempDirectorySize: 5GB
 
 anomalyDetection:
