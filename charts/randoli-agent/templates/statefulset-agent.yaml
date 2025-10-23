@@ -78,7 +78,7 @@ spec:
             - name: agent-pv
               mountPath: /persistence
         - name: migrate-db
-          image: datacatering/duckdb:v1.2.0
+          image: datacatering/duckdb:v1.4.1
           command: ["/bin/sh", "-c"]
           args:
             - |
@@ -202,7 +202,7 @@ spec:
             {{- end }}
           {{- end }}
         - name: gizmosql
-          image: docker.io/randoli/gizmosql:v1.9.16
+          image: docker.io/gizmodata/gizmosql:v1.12.4
           livenessProbe:
             exec:
               command:
