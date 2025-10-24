@@ -51,7 +51,7 @@ data:
   PIXIE_INSTALL: '{{ include "enable.pixie.operator" .}}'
   LOG_ANALYZERS_ENABLED: '{{ and .Values.tags.observability .Values.observability.logs.analyzers.enabled }}'
   VECTOR_INSTALL: '{{ include "enable.vector" . }}'
-  VECTOR_HTTP_SINKER_URL: 'http://{{ include "randoli-agent.fullname" . }}.{{ include "randoli-agent.namespace" . }}:8080/log-sink/'
+  VECTOR_HTTP_SINKER_URL: 'http://randoli-agent.{{ include "randoli-agent.namespace" . }}:8080/log-sink/'
   PROMETHEUS_INSTALL: '{{ .Values.global.prometheus.install }}'
   TEKTON_PIPELINE_ENABLED: '{{ .Values.tektonPipeline.enabled }}'
   JAEGER_QUERY_SVC_GRPC: randoli-rok-jaeger-query.{{ .Release.Namespace }}:16685
@@ -69,5 +69,5 @@ data:
   OPENSEARCH_ROOT_SPAN_INDEX_PATTERN: {{ .Values.observability.traceConfig.opensearch.rootSpanIndexPattern }}
   {{- end }}
   OPENSEARCH_SKIP_TLS_VERIFY: '{{ .Values.observability.traceConfig.opensearch.skipTlsVerify }}'
-  RANDOLI_AGENT_HTTP_ENDPOINT: 'http://{{ include "randoli-agent.fullname" . }}.{{ include "randoli-agent.namespace" . }}:8080'
+  RANDOLI_AGENT_HTTP_ENDPOINT: 'http://randoli-agent.{{ include "randoli-agent.namespace" . }}:8080'
   ENABLE_SUPERVISOR_AGENT_REPORTS: '{{ .Values.observability.sreAgent.enableReports }}'
