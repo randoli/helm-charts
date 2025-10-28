@@ -1,6 +1,10 @@
 {{- if .Values.allInOne.enabled -}}
 apiVersion: v1
 kind: ServiceAccount
+{{- with .Values.global.imagePullSecrets }}
+imagePullSecrets:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
 metadata:
   name: {{ template "jaeger.fullname" . }}
   labels:

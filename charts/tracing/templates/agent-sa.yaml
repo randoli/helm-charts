@@ -1,6 +1,10 @@
 {{- if and .Values.agent.enabled .Values.agent.serviceAccount.create -}}
 apiVersion: v1
 kind: ServiceAccount
+{{- with .Values.global.imagePullSecrets }}
+imagePullSecrets:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
 metadata:
   name: {{ template "jaeger.agent.serviceAccountName" . }}
   labels:
