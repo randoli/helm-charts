@@ -73,7 +73,7 @@ data:
   ENABLE_SUPERVISOR_AGENT_REPORTS: '{{ .Values.observability.sreAgent.enableReports }}'
 
   {{- if .Values.observability.agentInstrumentation.enabled }}
-  OTEL_ENABLED: true
+  OTEL_ENABLED: 'true'
   {{- if .Values.observability.agentInstrumentation.otlpEndpoint }}
   OTEL_EXPORTER_OTLP_ENDPOINT: '{{ .Values.observability.agentObservability.otlpEndpoint }}'
   {{ else }}
