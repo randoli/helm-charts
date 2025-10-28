@@ -78,7 +78,7 @@ spec:
             - name: agent-pv
               mountPath: /persistence
         - name: migrate-db
-          image: datacatering/duckdb:v1.2.0
+          image: datacatering/duckdb:v1.4.1
           command: ["/bin/sh", "-c"]
           args:
             - |
@@ -202,7 +202,7 @@ spec:
             {{- end }}
           {{- end }}
         - name: gizmosql
-          image: docker.io/randoli/gizmosql:v1.9.16
+          image: docker.io/gizmodata/gizmosql:v1.12.5
           livenessProbe:
             exec:
               command:
@@ -211,6 +211,11 @@ spec:
               - gizmosql_client --command Execute --host localhost --port 31337 --username
                 "$GIZMOSQL_USERNAME" --password "$GIZMOSQL_PASSWORD" --query "SELECT 1503+1503"
                 | grep -q 3006 || exit 1
+            failureThreshold: 2
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 2
           ports:
           - containerPort: 31337
           volumeMounts:
@@ -245,7 +250,6 @@ spec:
             value: |
               PRAGMA memory_limit={{ .Values.db.flightEngine.memoryLimit | squote }};
               PRAGMA threads={{ .Values.db.flightEngine.threads }};
-              PRAGMA temp_directory='/var/gizmosql-tmp';
               PRAGMA max_temp_directory_size={{ .Values.db.flightEngine.tempDirectorySize | squote }};
               PRAGMA preserve_insertion_order=false;
               CREATE SCHEMA IF NOT EXISTS insights_agent;

@@ -133,17 +133,19 @@ resources:
     memory: 1.5Gi
 
 db:
+  storage:
+    pvSize: 10Gi
   resources:
     limits:
       cpu: 150m
-      memory: 1.5Gi
+      memory: 3Gi
     requests:
       cpu: 150m
-      memory: 1.5Gi
+      memory: 2Gi
   flightEngine:
     memoryLimit: 1GB
-    threads: 1
-    tempDirectorySize: 3GB
+    threads: 2
+    tempDirectorySize: 5GB
 
 anomalyDetection:
   # Defaults anomaly detection list contains detections for:
