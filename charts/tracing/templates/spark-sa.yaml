@@ -1,6 +1,10 @@
 {{- if and .Values.spark.enabled .Values.spark.serviceAccount.create -}}
 apiVersion: v1
 kind: ServiceAccount
+{{- with .Values.global.imagePullSecrets }}
+imagePullSecrets:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
 metadata:
   name: {{ template "jaeger.spark.serviceAccountName" . }}
   labels:

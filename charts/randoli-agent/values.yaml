@@ -1,4 +1,5 @@
 global:
+  imagePullSecrets: []
   networkCostMetrics:
     image:
       registry: docker.io
@@ -116,7 +117,7 @@ image:
   ##
   pullPolicy: Always
 
-imagePullSecrets: []
+
 
 labels:
   app: randoli-agent
