@@ -258,4 +258,5 @@ prometheus:
             - host.name
             - host.type
             - cloud.platform
-            - cloud.provider    
+            - cloud.provider
+            - match.label    
