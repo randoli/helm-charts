@@ -1,0 +1,4 @@
+{{- $otel := .Values.observability.otel | default dict }}
+{{- if and (hasKey $otel "explodeCRs") .Values.observability.otel.explodeCRs }}
+{{ tpl (.Files.Get "files/randoli-otel/instrumentation.yaml") . }}
+{{ end -}}
