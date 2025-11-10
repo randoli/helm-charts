@@ -43,6 +43,7 @@ observability:
     operator: 
       #enabled: false
     #applyCRs: false
+    #explodeCRs: false
     applyTargetAllocator: true  
   logs:
     analyzers:
@@ -60,6 +61,7 @@ observability:
   netobserv: 
     #enabled: false
     #applyCRs: false
+    #explodeCRs: false
   traceConfig:
     storage:
       type: JAEGER
