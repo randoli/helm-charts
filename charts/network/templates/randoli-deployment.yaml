@@ -1,3 +1,4 @@
+{{- if not .Values.certManager.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -146,4 +147,5 @@ spec:
         {{- with .Values.global.affinity }}
         {{- toYaml . | nindent 8 }}
         {{- end }} 
-      {{- end }}   
+      {{- end }}
+{{- end }}      
