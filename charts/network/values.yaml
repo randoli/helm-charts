@@ -1,9 +1,10 @@
+clusterDomain: cluster.local
 certManager:
   # if existingIssuer.name is not provided, a new self-signed Issuer will be created
+  enabled: false
   existingIssuer:
     kind: ClusterIssuer
     name: ""
 standaloneConsole:
   enable: false
-
 tolerations: []
