@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: netobserv-controller-manager
+  name: randoli-rok-netobserv-controller-manager
   labels:
     app: netobserv-operator
     control-plane: controller-manager
