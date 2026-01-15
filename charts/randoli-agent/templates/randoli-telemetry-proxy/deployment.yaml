@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
         - name: randoli-telemetry-proxy
-          image: visvakula/proxy-app:v13
+          image: docker.io/randoli/telemetry-proxy:0.1.0
           ports:
             - containerPort: 8080
               protocol: TCP
