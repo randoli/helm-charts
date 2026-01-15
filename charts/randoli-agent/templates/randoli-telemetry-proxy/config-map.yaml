@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: randoli-telemetry-proxy
+  namespace: {{ include "randoli-agent.namespace" . }}
+data:
+  LOKI_BASE_URL: http://randoli-rok-loki.{{ include "randoli-agent.namespace" . }}.svc:3100
+  LISTEN_ADDR: ':8080'
+  ROUTE_PREFIX: /api/loki
+  ENABLE_CORS: 'true'
+  CORS_ALLOW_ORIGIN: {{ include "telemetry-proxy-cors" . }}
+  ALLOWED_PATHS: /loki/api/v1/query,/loki/api/v1/query_range
+  KEYCLOAK_ISSUER_URL: https://sso.randoli.io/auth/realms/sso

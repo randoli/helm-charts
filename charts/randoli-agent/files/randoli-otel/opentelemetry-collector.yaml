@@ -71,9 +71,9 @@ spec:
               regex: label_(.+)
               replacement: $$1
     exporters:
-      ## Create an exporter to Jaeger using the standard `otlp` export format
-      otlp/jaeger:
-        endpoint: 'randoli-rok-jaeger-collector.{{ .Release.Namespace }}.svc:4317'
+      ## Create an exporter to tempo using the standard `otlp` export format
+      otlp/tempo:
+        endpoint: 'randoli-rok-tempo.{{ .Release.Namespace }}.svc:4317'
         tls:
           insecure: true
       ## Prometheus
@@ -136,7 +136,7 @@ spec:
             - k8sattributes
             - randoli_otel_enricher
             - batch
-          exporters: [debug, spanmetrics, otlp/jaeger]
+          exporters: [debug, spanmetrics, otlp/tempo]
         metrics:
           receivers: [otlp, prometheus, spanmetrics]
           processors:

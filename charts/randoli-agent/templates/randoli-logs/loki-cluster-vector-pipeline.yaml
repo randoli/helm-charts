@@ -1,0 +1,192 @@
+{{- if .Values.observability.logs.applyVectorPipeline  -}}
+apiVersion: observability.kaasops.io/v1alpha1
+kind: ClusterVectorPipeline
+metadata:
+  name: randoli-rok-loki-log-sync
+spec:
+  sinks:
+    loki:
+      encoding:
+        codec: json
+        only_fields:
+          - message
+          - trace_id
+      endpoint: {{ include "logs-loki-url" . }}
+      inputs:
+        - extract_trace_from_text
+      labels:
+        forwarder: vector
+        k8s_container_image: {{ `'{{ kubernetes.container_image }}'` }}
+        k8s_container_name: {{ `'{{ kubernetes.container_name }}'` }}
+        k8s_pod_ip: {{ `'{{ kubernetes.pod_ip }}'` }}
+        k8s_pod_name: {{ `'{{ kubernetes.pod_name }}'` }}
+        k8s_pod_namespace: {{ `'{{ kubernetes.pod_namespace }}'` }}
+        k8s_pod_node_name: {{ `'{{ kubernetes.pod_node_name }}'` }}
+        k8s_pod_uid: {{ `'{{ kubernetes.pod_uid }}'` }}
+        severity: {{ `'{{ severity }}'` }}
+        service_name: {{ `'{{ service_name }}'` }}
+        source_type: {{ `'{{ source_type }}'` }}
+      tenant_id: self-monitoring
+      type: loki
+      # Disable healthcheck
+      healthcheck:
+        enabled: false
+      # Retry configuration
+      request:
+        retry_attempts: 10
+        retry_initial_backoff_secs: 1
+        retry_max_duration_secs: 300
+        timeout_secs: 60
+  sources:
+    k8s_log_source:
+      extra_label_selector: app.kubernetes.io/name!=vector
+      read_from: end
+      type: kubernetes_logs
+  transforms:
+    dedot_transform:
+      inputs:
+        - drop_empty_message
+      source: >-
+        . = map_keys(., recursive: true) -> |key| { replace(key, r'[./-]', "_")
+        }
+      type: remap
+    drop_empty_containers:
+      condition: '!(.kubernetes.container_name == null)'
+      inputs:
+        - merge_multiline_logs
+      type: filter
+    drop_empty_message:
+      condition: >-
+        !(strip_whitespace!(.message) == "") || !(.kubernetes.container_name ==
+        null)
+      inputs:
+        - drop_empty_containers
+      type: filter
+    drop_fields:
+      drop_on_abort: true
+      inputs:
+        - dedot_transform
+      source: |-
+        del(.kubernetes.node_labels)
+        del(.kubernetes.container_image_id)
+        del(.kubernetes.namespace_labels)
+        del(.kubernetes.pod_ip)
+        del(.kubernetes.pod_ips)
+        del(.kubernetes.pod_uid)
+      type: remap
+    extract_message:
+      inputs:
+        - drop_fields
+      source: >
+        parsed = parse_json!(.message)
+
+        .message = parsed
+
+        # Now .message contains the parsed object, and kubernetes.* fields still
+        exist
+      type: remap
+    extract_severity:
+      inputs:
+        - extract_message
+      source: >
+        # Extract severity from the message string
+
+        severity = "unknown"
+
+
+        message_str = string!(.message)
+
+
+        if contains(message_str, "CRITICAL") || contains(message_str,
+        "critical") {
+          severity = "CRITICAL"
+        } else if contains(message_str, "ERROR") || contains(message_str,
+        "error") {
+          severity = "ERROR"
+        } else if contains(message_str, "WARN") || contains(message_str,
+        "warning") || contains(message_str, "WARNING") {
+          severity = "WARNING"
+        } else if contains(message_str, "INFO") || contains(message_str, "info")
+        {
+          severity = "INFO"
+        } else if contains(message_str, "DEBUG") || contains(message_str,
+        "debug") {
+          severity = "DEBUG"
+        }
+
+
+        .severity = severity
+      type: remap
+    extract_service_name:
+      inputs:
+        - extract_severity
+      source: |
+        service_name = null
+
+        if exists(.kubernetes.pod_annotations.resource_opentelemetry_io_service_name) {
+          service_name = .kubernetes.pod_annotations.resource_opentelemetry_io_service_name
+        }
+
+        .service_name = service_name
+      type: remap 
+    extract_trace_from_json:
+      inputs:
+        - extract_service_name
+      source: |
+        trace_id = null
+
+        if exists(.message.trace_details.trace_id) {
+          trace_id = .message.trace_details.trace_id
+        }
+
+        .trace_id = trace_id
+      type: remap  
+    extract_trace_from_text:
+      inputs:
+        - extract_trace_from_json
+      source: |
+        # If we didn't find trace_id in JSON, try regex on plain text
+         if is_null(.trace_id) {
+            # Convert message back to string for regex matching
+            message_str = encode_json(.message)
+            
+            # Match pattern: traceId: <hexadecimal> (case insensitive)
+            matches = parse_regex(message_str, r'(?i)traceId:\s*(?P<trace_id>[a-f0-9]{32})') ?? null
+            
+            if !is_null(matches) {
+              .trace_id = matches.trace_id
+            }
+          }
+      type: remap
+    {{- if and .Values.observability.logs.watchNamespaces (gt (len .Values.observability.logs.watchNamespaces) 0) }}
+    filter_namespace:
+      type: filter
+      inputs:
+        - k8s_log_source
+      condition: |
+        includes([
+          {{- range $index, $ns := .Values.observability.logs.watchNamespaces }}
+          {{- if $index }},{{ end }}
+          "{{ $ns }}"
+          {{- end }}
+        ], to_string(.kubernetes.pod_namespace) ?? "")
+    {{- end }}        
+    merge_multiline_logs:
+      expire_after_ms: 2000
+      group_by:
+        - kubernetes.pod_name
+        - kubernetes.container_name
+        - stream
+      inputs:
+        {{- if and .Values.observability.logs.watchNamespaces (gt (len .Values.observability.logs.watchNamespaces) 0) }}
+        - filter_namespace
+        {{- else }}
+        - k8s_log_source
+        {{- end }}
+      merge_strategies:
+        message: concat_newline
+      starts_when: >-
+        match(string!(.message),
+        r'(^\d{4}-\d{2}-\d{2}|^\d{2}:\d{2}:\d{2}|^\{"|^[A-Z]+\s)')
+      type: reduce
+{{end}}       

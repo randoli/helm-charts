@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: randoli-telemetry-proxy
+  namespace: {{ include "randoli-agent.namespace" . }}
+  labels:
+    app.kubernetes.io/name: randoli-telemetry-proxy
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: randoli-telemetry-proxy
+  annotations:
+    resource.opentelemetry.io/service.name: randoli-telemetry-proxy  
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: randoli-telemetry-proxy
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: randoli-telemetry-proxy
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/name: randoli-telemetry-proxy
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: randoli-telemetry-proxy
+    spec:
+      containers:
+        - name: randoli-telemetry-proxy
+          image: visvakula/proxy-app:v13
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: randoli-telemetry-proxy
+          resources:
+            limits:
+              cpu: 200m
+              memory: "512Mi"
+            requests:
+              cpu: 30m
+              memory: "128Mi"
+      {{- if or .Values.imagePullSecrets .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- with .Values.imagePullSecrets }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.imagePullSecrets }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.tolerations .Values.global.tolerations }}
+      tolerations:
+        {{- with .Values.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.nodeSelector .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- with .Values.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.affinity .Values.global.affinity }}
+      affinity:
+        {{- with .Values.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }} 
