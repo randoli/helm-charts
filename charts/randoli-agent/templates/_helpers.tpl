@@ -148,3 +148,15 @@ https://telemetry-app.randoli.io
 {{- printf "http://randoli-rok-loki.%s.svc:3100" .Release.Namespace -}}
 {{- end -}}
 {{- end -}}
+
+{{- define "telemetry-proxy-keycloak-issuer" -}}
+{{- if not (empty .Values.observability.logs.proxyKeycloakIssuer)  -}}
+{{ .Values.observability.logs.proxyKeycloakIssuer }}
+{{- else -}}
+https://sso.randoli.io/auth/realms/sso
+{{- end -}}
+{{- end -}}
+
+
+
+

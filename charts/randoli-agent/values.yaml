@@ -49,6 +49,7 @@ observability:
     applyVectorPipeline: true
     watchNamespaces: []
     #proxyCORS: 
+    #proxyKeycloakIssuer:
     #lokiUrl:
     analyzers:
       enabled: true
