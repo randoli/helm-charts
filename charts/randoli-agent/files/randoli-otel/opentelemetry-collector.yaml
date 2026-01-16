@@ -116,6 +116,7 @@ spec:
               - from: connection
     connectors:
       spanmetrics: {}
+      llmmetrics: {}
     service:
       telemetry:
         metrics:
