@@ -13,7 +13,7 @@ maintainers:
 name: randoli-agent
 sources:
 - https://github.com/randoli/helm-charts
-version: 1.17.9
+version: 1.18.0
 dependencies:
   - name: opentelemetry-operator
     version: 0.86.4
@@ -45,14 +45,19 @@ dependencies:
     alias: costManagement
     tags:
      - costManagement
-  - name: tracing
-    version: 3.4.0
-    condition: observability.tracing.enabled
+  - name: tempo
+    version: 1.24.1
+    condition: observability.tempo.enabled
     tags:
-     - observability
+     - observability  
   - name: network
     version: 1.8.2
     condition: observability.netobserv.enabled
     tags:
     - observability     
     - costManagement
+  - name: loki
+    version: 6.49.9
+    condition: observability.loki.enabled
+    tags:
+     - observability   

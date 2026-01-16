@@ -129,6 +129,34 @@ false
 {{- if not (empty .Values.observability.traceConfig.storage.url)  -}}
 {{ .Values.observability.traceConfig.storage.url }}
 {{- else -}}
-{{- printf "http://randoli-rok-jaeger-query.%s:16686" .Release.Namespace -}}
+{{- printf "http://randoli-rok-tempo.%s:3200" .Release.Namespace -}}
 {{- end -}}
 {{- end -}}
+
+{{- define "telemetry-proxy-cors" -}}
+{{- if not (empty .Values.observability.logs.proxyCORS)  -}}
+{{ .Values.observability.logs.proxyCORS }}
+{{- else -}}
+https://telemetry-app.randoli.io
+{{- end -}}
+{{- end -}}
+
+{{- define "logs-loki-url" -}}
+{{- if not (empty .Values.observability.logs.lokiUrl)  -}}
+{{ .Values.observability.logs.lokiUrl }}
+{{- else -}}
+{{- printf "http://randoli-rok-loki.%s.svc:3100" .Release.Namespace -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "telemetry-proxy-keycloak-issuer" -}}
+{{- if not (empty .Values.observability.logs.proxyKeycloakIssuer)  -}}
+{{ .Values.observability.logs.proxyKeycloakIssuer }}
+{{- else -}}
+https://sso.randoli.io/auth/realms/sso
+{{- end -}}
+{{- end -}}
+
+
+
+

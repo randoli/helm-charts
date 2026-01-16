@@ -3,7 +3,83 @@ entries:
   randoli-agent:
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2025-12-15T14:44:32.118445011-05:00"
+    created: "2026-01-15T18:58:41.680499413-05:00"
+    dependencies:
+    - condition: observability.otel.operator.enabled
+      name: opentelemetry-operator
+      repository: ""
+      tags:
+      - observability
+      - costManagement
+      version: 0.86.4
+    - condition: global.prometheus.install
+      name: prometheus
+      repository: ""
+      version: 26.0.1
+    - condition: costManagement.vpaOperator.enabled
+      name: rightsizing
+      repository: ""
+      tags:
+      - costManagement
+      version: 1.0.0
+    - alias: securityScans
+      condition: observability.security.enabled
+      name: security-scans
+      repository: ""
+      tags:
+      - security
+      version: 1.29.6
+    - condition: observability.vector.enabled
+      name: logs
+      repository: ""
+      tags:
+      - observability
+      version: 0.0.40
+    - alias: costManagement
+      name: cost-management
+      repository: ""
+      tags:
+      - costManagement
+      version: 1.42.0
+    - condition: observability.tempo.enabled
+      name: tempo
+      repository: ""
+      tags:
+      - observability
+      version: 1.24.1
+    - condition: observability.netobserv.enabled
+      name: network
+      repository: ""
+      tags:
+      - observability
+      - costManagement
+      version: 1.8.2
+    - condition: observability.loki.enabled
+      name: loki
+      repository: ""
+      tags:
+      - observability
+      version: 6.49.9
+    description: Randoli Agent
+    digest: 1e39a0f23b5e52a6fd2bfd13b1786b6ce313aab657cd24f8998c7f7eec19a33c
+    home: https://randoli.ca
+    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
+    keywords:
+    - randoli-agent
+    - randoli
+    maintainers:
+    - email: support@randoli.ca
+      name: Randoli
+      url: https://randoli.ca
+    name: randoli-agent
+    sources:
+    - https://github.com/randoli/helm-charts
+    urls:
+    - randoli-agent-1.18.0.tgz
+    version: 1.18.0
+  - apiVersion: v2
+    appVersion: "1.17"
+    created: "2026-01-15T18:58:41.648897466-05:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -73,7 +149,7 @@ entries:
     version: 1.17.9
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2025-12-15T14:44:31.981146001-05:00"
+    created: "2026-01-15T18:58:41.609497688-05:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -143,7 +219,7 @@ entries:
     version: 1.17.8
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2025-12-15T14:44:31.831354895-05:00"
+    created: "2026-01-15T18:58:41.567932427-05:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -213,7 +289,7 @@ entries:
     version: 1.17.7
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2025-12-15T14:44:31.695023888-05:00"
+    created: "2026-01-15T18:58:41.523267669-05:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -281,74 +357,4 @@ entries:
     urls:
     - randoli-agent-1.17.6.tgz
     version: 1.17.6
-  - apiVersion: v2
-    appVersion: "1.17"
-    created: "2025-12-15T14:44:31.556464562-05:00"
-    dependencies:
-    - condition: observability.otel.operator.enabled
-      name: opentelemetry-operator
-      repository: ""
-      tags:
-      - observability
-      - costManagement
-      version: 0.86.4
-    - condition: global.prometheus.install
-      name: prometheus
-      repository: ""
-      version: 26.0.1
-    - condition: costManagement.vpaOperator.enabled
-      name: rightsizing
-      repository: ""
-      tags:
-      - costManagement
-      version: 1.0.0
-    - alias: securityScans
-      condition: observability.security.enabled
-      name: security-scans
-      repository: ""
-      tags:
-      - observability
-      version: 1.29.6
-    - condition: observability.vector.enabled
-      name: logs
-      repository: ""
-      tags:
-      - observability
-      version: 0.0.40
-    - alias: costManagement
-      name: cost-management
-      repository: ""
-      tags:
-      - costManagement
-      version: 1.42.0
-    - condition: observability.tracing.enabled
-      name: tracing
-      repository: ""
-      tags:
-      - observability
-      version: 3.4.0
-    - condition: observability.netobserv.enabled
-      name: network
-      repository: ""
-      tags:
-      - observability
-      - costManagement
-      version: 1.8.2
-    description: Randoli Agent
-    digest: 24dfd396b7ef4b0646fc094028c7a111c2c363382db039a6d6cfe2de5f790ed3
-    home: https://randoli.ca
-    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
-    keywords:
-    - randoli-agent
-    - randoli
-    maintainers:
-    - email: support@randoli.ca
-      name: Randoli
-      url: https://randoli.ca
-    name: randoli-agent
-    sources:
-    - https://github.com/randoli/helm-charts
-    urls:
-    - randoli-agent-1.17.5.tgz
-    version: 1.17.5
-generated: "2025-12-15T14:44:31.405716173-05:00"
+generated: "2026-01-15T18:58:41.471838193-05:00"

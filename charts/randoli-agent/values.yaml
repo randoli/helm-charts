@@ -30,13 +30,13 @@ global:
   secrets:
     cert: randoli-agent-cert
     config: randoli-agent-secret
-  nodeSelector:
-  affinity:
-  tolerations:
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
   daemonsets:
-    nodeSelector:
-    affinity:
-    tolerations: 
+    nodeSelector: {}
+    affinity: {}
+    tolerations: []
 
 observability:
   otel:
@@ -46,6 +46,11 @@ observability:
     #explodeCRs: false
     applyTargetAllocator: true  
   logs:
+    applyVectorPipeline: true
+    watchNamespaces: []
+    #proxyCORS: 
+    #proxyKeycloakIssuer:
+    #lokiUrl:
     analyzers:
       enabled: true
   vector: 
@@ -64,7 +69,7 @@ observability:
     #explodeCRs: false
   traceConfig:
     storage:
-      type: JAEGER
+      type: TEMPO
       url:
     opensearch:
       spanIndexPattern:
@@ -111,7 +116,7 @@ tags:
 image:
   registry: docker.io
   repository: randoli/insights-agent
-  tag: "1.17"
+  tag: "1.18"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -128,7 +133,7 @@ deploymentAnnotations: {}
 
 resources:
   limits:
-    cpu: 150m
+    cpu: 1
     memory: 1.5Gi
   requests:
     cpu: 150m
@@ -139,7 +144,7 @@ db:
     pvSize: 10Gi
   resources:
     limits:
-      cpu: 150m
+      cpu: 1
       memory: 3Gi
     requests:
       cpu: 150m
@@ -261,4 +266,61 @@ prometheus:
             - host.type
             - cloud.platform
             - cloud.provider
-            - match.label    
+            - match.label
+            
+loki:
+  deploymentMode: SingleBinary
+  loki: 
+    auth_enabled: false
+    storage:
+      type: 'filesystem'
+    commonConfig:
+      replication_factor: 1  
+    schemaConfig: 
+      configs:
+        - from: 2024-01-01
+          store: tsdb
+          object_store: filesystem
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+
+  singleBinary:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 2
+        memory: 2Gi
+      requests:
+        cpu: 0.5
+        memory: 1Gi
+    extraEnv:
+      # Keep a little bit lower than memory limits
+      - name: GOMEMLIMIT
+        value: 1750MiB
+    persistence:
+      size: 20Gi    
+
+  tableManager:
+    retention_deletes_enabled: true
+    retention_period: 5d    
+
+  test:
+    enabled: false
+
+  # Disable canary 
+  lokiCanary:
+    enabled: false
+
+  # Disable gateway
+  gateway:
+    enabled: false
+
+  # Disable caching
+  chunksCache:
+    enabled: false
+
+  resultsCache:
+    enabled: false
+                
