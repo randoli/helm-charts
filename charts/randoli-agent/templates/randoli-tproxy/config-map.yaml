@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: randoli-tproxy
+  namespace: {{ include "randoli-agent.namespace" . }}
+data:
+  LOKI_BASE_URL: {{ include "logs-loki-url" . }}
+  LISTEN_ADDR: ':8080'
+  ROUTE_PREFIX: /api/loki
+  ENABLE_CORS: 'true'
+  CORS_ALLOW_ORIGIN: {{ include "telemetry-proxy-cors" . }}
+  ALLOWED_PATHS: /loki/api/v1/query,/loki/api/v1/query_range,/loki/api/v1/labels,/loki/api/v1/label/service_name/values,/loki/api/v1/label/k8s_pod_namespace/values,/loki/api/v1/label/k8s_pod_name/values,/loki/api/v1/label/k8s_container_name/values,/loki/api/v1/label/severity/values
+  KEYCLOAK_ISSUER_URL: {{ include "telemetry-proxy-keycloak-issuer" . }}
+  TEMPO_BASE_URL: {{ include "trace-storage-url" . }}
+  PROMETHEUS_BASE_URL: {{ include "prometheus-server-endpoint" . }}

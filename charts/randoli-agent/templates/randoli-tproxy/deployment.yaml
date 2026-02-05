@@ -1,38 +1,39 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: randoli-telemetry-proxy
+  name: randoli-tproxy
   namespace: {{ include "randoli-agent.namespace" . }}
   labels:
-    app.kubernetes.io/name: randoli-telemetry-proxy
+    app.kubernetes.io/name: randoli-tproxy
     app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: randoli-telemetry-proxy
+    app.kubernetes.io/component: randoli-tproxy
   annotations:
-    resource.opentelemetry.io/service.name: randoli-telemetry-proxy  
+    resource.opentelemetry.io/service.name: randoli-tproxy  
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: randoli-telemetry-proxy
+      app.kubernetes.io/name: randoli-tproxy
       app.kubernetes.io/instance: {{ .Release.Name }}
-      app.kubernetes.io/component: randoli-telemetry-proxy
+      app.kubernetes.io/component: randoli-tproxy
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app.kubernetes.io/name: randoli-telemetry-proxy
+        app.kubernetes.io/name: randoli-tproxy
         app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: randoli-telemetry-proxy
+        app.kubernetes.io/component: randoli-tproxy
     spec:
       containers:
-        - name: randoli-telemetry-proxy
+        - name: randoli-tproxy
           image: docker.io/randoli/telemetry-proxy:0.1.0
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 8080
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: randoli-telemetry-proxy
+                name: randoli-tproxy
           resources:
             limits:
               cpu: 200m

@@ -137,7 +137,7 @@ false
 {{- if not (empty .Values.observability.logs.proxyCORS)  -}}
 {{ .Values.observability.logs.proxyCORS }}
 {{- else -}}
-https://telemetry-app.randoli.io
+https://telemetry-app.randoli.io,https://console.insights.randoli.io
 {{- end -}}
 {{- end -}}
 
