@@ -234,6 +234,13 @@ cert-manager:
     enabled: true
   #namespace: "cert-manager"  
 
+securityScans:
+  capabilities:
+    admissionController: disable
+  storage:
+    mtls:
+      enabled: false
+
 network:
   standaloneConsole:
     enable: true

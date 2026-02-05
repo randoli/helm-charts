@@ -86,7 +86,7 @@ capabilities:
   #
   # Default configuration scanning setup
   configurationScan: enable
-  nodeScan: disable # Changed from official default
+  nodeScan: enable
 
   # Continuous Scanning continuously evaluates the security posture of your cluster.
   continuousScan: enable # Changed from official default
@@ -97,21 +97,21 @@ capabilities:
   # Instruct Syft to also scan for SBOM files in the filesystem container
   scanEmbeddedSBOMs: disable
   vulnerabilityScan: enable
-  relevancy: disable # Changed from official default
+  relevancy: enable
   # Generate VEX documents alongside the image vulnerabilities report (experimental)
   vexGeneration: disable
 
   # ====== Runtime related capabilities ======
   #
-  runtimeObservability: disable # Changed from official default
-  networkPolicyService: disable # Changed from official default
+  runtimeObservability: enable
+  networkPolicyService: enable
   networkEventsStreaming: enable
   runtimeDetection: disable
   malwareDetection: disable
-  nodeProfileService: disable # Changed from official default
+  nodeProfileService: enable
   admissionController: enable
   httpDetection: enable
-  seccompProfileService: disable # Changed from official default 
+  seccompProfileService: enable
   manageWorkloads: disable
   syncSBOM: disable
 
@@ -532,7 +532,7 @@ storage:
 # +++++++++++++++++++++++++++++ Node-agent ++++++++++++++++++++++++++++++++++++++++++++++++
 
 nodeAgent:
-  name: node-agent
+  name: randoli-rok-kubescape-node-agent
   image:
     # -- source code: https://github.com/kubescape/node-agent
     repository: quay.io/kubescape/node-agent

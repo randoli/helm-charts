@@ -32,6 +32,8 @@ spec:
     {{- toYaml . | nindent 8 }}
     {{- end }} 
   {{- end }}
+  networkPolicy:
+    enabled: false
   image: docker.io/randoli/otelcol:v1.0.3
   upgradeStrategy: automatic
   mode: statefulset
