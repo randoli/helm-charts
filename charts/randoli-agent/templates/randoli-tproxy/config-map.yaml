@@ -9,7 +9,9 @@ data:
   ROUTE_PREFIX: /api/loki
   ENABLE_CORS: 'true'
   CORS_ALLOW_ORIGIN: {{ include "telemetry-proxy-cors" . }}
-  ALLOWED_PATHS: /loki/api/v1/query,/loki/api/v1/query_range,/loki/api/v1/labels,/loki/api/v1/label/service_name/values,/loki/api/v1/label/k8s_pod_namespace/values,/loki/api/v1/label/k8s_pod_name/values,/loki/api/v1/label/k8s_container_name/values,/loki/api/v1/label/severity/values
+  ALLOWED_LOKI_PATHS: /loki/api/v1/query,/loki/api/v1/query_range,/loki/api/v1/labels,/loki/api/v1/label/service_name/values,/loki/api/v1/label/k8s_pod_namespace/values,/loki/api/v1/label/k8s_pod_name/values,/loki/api/v1/label/k8s_container_name/values,/loki/api/v1/label/severity/values
+  ALLOWED_TEMPO_PATHS: /api/v2/search/,/api/v2/traces/,/api/v2/services/,/api/v2/spans/,/api/v1/search/,/api/v1/traces/,/api/v1/services/,/api/v1/spans/,/api/search,/api/search/tag/name/values,/api/search/tag/service.name/values,/api/search/tags  
+  ALLOWED_PROMETHEUS_PATHS: /api/v1/query_range
   KEYCLOAK_ISSUER_URL: {{ include "telemetry-proxy-keycloak-issuer" . }}
   TEMPO_BASE_URL: {{ include "trace-storage-url" . }}
   PROMETHEUS_BASE_URL: {{ include "prometheus-server-endpoint" . }}
