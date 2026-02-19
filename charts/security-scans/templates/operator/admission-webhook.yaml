@@ -46,5 +46,12 @@ webhooks:
         resources: ["pods", "pods/exec", "pods/portforward", "pods/attach", "clusterrolebindings", "rolebindings"]
         scope: "*"
     failurePolicy: Ignore
+    namespaceSelector:
+      matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: NotIn
+        values:
+        - kube-system
+        - kube-node-lease
 {{- end }}
 {{- end }}

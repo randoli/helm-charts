@@ -10,7 +10,7 @@ global:
     prometheusTimeout: 30s
     url:
   opencost:
-    url: 
+    url:
   openshift:
     enabled: false
   prometheus:
@@ -25,8 +25,8 @@ global:
     tlsCertConfigmapKey: ""
   alerts:
     slack:
-      channel: 
-      api_url: 
+      channel:
+      api_url:
   secrets:
     cert: randoli-agent-cert
     config: randoli-agent-secret
@@ -40,30 +40,31 @@ global:
 
 observability:
   otel:
-    operator: 
+    operator:
       #enabled: false
     #applyCRs: false
     #explodeCRs: false
-    applyTargetAllocator: true  
+    applyTargetAllocator: true
   logs:
     applyVectorPipeline: true
     watchNamespaces: []
-    #proxyCORS: 
+    proxyCORS: "*"
+    proxyImage: docker.io/randoli/telemetry-proxy:0.1.1
     #proxyKeycloakIssuer:
     #lokiUrl:
     analyzers:
       enabled: true
-  vector: 
+  vector:
     #enabled: false
-  security: 
+  security:
     #enabled: false
     #OFF|INTERVAL_SCANNING
-    mode: 'INTERVAL_SCANNING'
-    cronSpec: '0 10,20 * * *'
+    mode: "INTERVAL_SCANNING"
+    cronSpec: "0 10,20 * * *"
     imagePullSecrets: ""
-  tracing:  
+  tracing:
     #enabled: false
-  netobserv: 
+  netobserv:
     #enabled: false
     #applyCRs: false
     #explodeCRs: false
@@ -73,11 +74,11 @@ observability:
       url:
     opensearch:
       spanIndexPattern:
-      rootSpanIndexPattern: 
+      rootSpanIndexPattern:
       skipTlsVerify: false
       secretName:
-      usernameKeyRef: 
-      passwordKeyRef: 
+      usernameKeyRef:
+      passwordKeyRef:
   sreAgent:
     enableReports: false
   agentInstrumentation:
@@ -85,7 +86,7 @@ observability:
     otlpEndpoint:
 
 costManagement:
-  vpaOperator: 
+  vpaOperator:
     #enabled: false
   opencost:
     metrics:
@@ -102,16 +103,15 @@ costManagement:
         name: randoli-cost-metrics-config
 
 rightsizing:
-   recommender:
-     extraArgs:
-       pod-recommendation-min-cpu-millicores: 25
-       pod-recommendation-min-memory-mb: 25
+  recommender:
+    extraArgs:
+      pod-recommendation-min-cpu-millicores: 25
+      pod-recommendation-min-memory-mb: 25
 
 tags:
   observability: false
   costManagement: false
   security: false
-
 
 image:
   registry: docker.io
@@ -123,8 +123,6 @@ image:
   ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
   ##
   pullPolicy: Always
-
-
 
 labels:
   app: randoli-agent
@@ -167,7 +165,6 @@ anomalyDetection:
     # Path for user defined queries, queries should be in YAML format
     path: /prometheus
 
-
 tektonPipeline:
   # Identifying tekton pipeline resource
   enabled: false
@@ -195,7 +192,7 @@ extraVolumeMounts: []
 securityContext:
   fsGroup: 1001
 
-storageClassName: 
+storageClassName:
 
 serviceAccount:
   create: true
@@ -230,9 +227,9 @@ tracing:
 
 cert-manager:
   enabled: false
-  crds: 
+  crds:
     enabled: true
-  #namespace: "cert-manager"  
+  #namespace: "cert-manager"
 
 securityScans:
   capabilities:
@@ -247,43 +244,47 @@ network:
 
 prometheus:
   serverFiles:
-      prometheus.yml:
-        otlp:
-          promote_resource_attributes:
-            - service.instance.id
-            - service.name
-            - service.namespace
-            - cloud.availability_zone
-            - cloud.region
-            - container.name
-            - deployment.environment.name
-            - k8s.cluster.name
-            - k8s.container.name
-            - k8s.cronjob.name
-            - k8s.daemonset.name
-            - k8s.deployment.name
-            - k8s.job.name
-            - k8s.namespace.name
-            - k8s.pod.name
-            - k8s.replicaset.name
-            - k8s.statefulset.name
-            # custom attributes
-            - host.id
-            - host.name
-            - host.type
-            - cloud.platform
-            - cloud.provider
-            - match.label
-            
+    prometheus.yml:
+      otlp:
+        promote_resource_attributes:
+          - service.instance.id
+          - service.name
+          - service.namespace
+          - cloud.availability_zone
+          - cloud.region
+          - container.name
+          - deployment.environment.name
+          - k8s.cluster.name
+          - k8s.container.name
+          - k8s.cronjob.name
+          - k8s.daemonset.name
+          - k8s.deployment.name
+          - k8s.job.name
+          - k8s.namespace.name
+          - k8s.pod.name
+          - k8s.replicaset.name
+          - k8s.statefulset.name
+          # custom attributes
+          - host.id
+          - host.name
+          - host.type
+          - cloud.platform
+          - cloud.provider
+          - match.label
+          - postgresql.table.name
+          - postgresql.schema.name
+          - postgresql.index.name
+          - postgresql.database.name
+
 loki:
   deploymentMode: SingleBinary
-  loki: 
+  loki:
     auth_enabled: false
     storage:
-      type: 'filesystem'
+      type: "filesystem"
     commonConfig:
-      replication_factor: 1  
-    schemaConfig: 
+      replication_factor: 1
+    schemaConfig:
       configs:
         - from: 2024-01-01
           store: tsdb
@@ -307,16 +308,16 @@ loki:
       - name: GOMEMLIMIT
         value: 1750MiB
     persistence:
-      size: 20Gi    
+      size: 20Gi
 
   tableManager:
     retention_deletes_enabled: true
-    retention_period: 5d    
+    retention_period: 5d
 
   test:
     enabled: false
 
-  # Disable canary 
+  # Disable canary
   lokiCanary:
     enabled: false
 
@@ -330,4 +331,13 @@ loki:
 
   resultsCache:
     enabled: false
-                
+
+opentelemetry-operator:
+  admissionWebhooks:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            - kube-system
+            - kube-node-lease
