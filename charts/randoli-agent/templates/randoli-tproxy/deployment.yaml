@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
         - name: randoli-tproxy
-          image: docker.io/randoli/telemetry-proxy:0.1.0
+          image: {{ .Values.observability.logs.proxyImage }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 8080

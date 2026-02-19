@@ -135,7 +135,7 @@ false
 
 {{- define "telemetry-proxy-cors" -}}
 {{- if not (empty .Values.observability.logs.proxyCORS)  -}}
-{{ .Values.observability.logs.proxyCORS }}
+{{ .Values.observability.logs.proxyCORS | quote}}
 {{- else -}}
 https://telemetry-app.randoli.io,https://console.insights.randoli.io
 {{- end -}}
