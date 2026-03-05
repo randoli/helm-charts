@@ -1,6 +1,10 @@
 {{- if eq (include "apply-network-crs" . | trim) "true" -}}
 apiVersion: v1
 kind: ServiceAccount
+{{- with .Values.global.imagePullSecrets }}
+imagePullSecrets:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
 metadata:
   name: network-cr-applier
 ---

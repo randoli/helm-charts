@@ -2,6 +2,8 @@ apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
   name: randoli-otel
+  labels:
+    randoli/app-type: otel-pipeline
 spec:
   {{- if or .Values.tolerations .Values.global.tolerations }}
   tolerations:
@@ -30,7 +32,7 @@ spec:
     {{- toYaml . | nindent 8 }}
     {{- end }} 
   {{- end }}
-  image: docker.io/randoli/otelcol:v1.0.2
+  image: docker.io/randoli/otelcol:v1.0.3
   upgradeStrategy: automatic
   mode: statefulset
   serviceAccount: randoli-otel-collector
@@ -69,9 +71,9 @@ spec:
               regex: label_(.+)
               replacement: $$1
     exporters:
-      ## Create an exporter to Jaeger using the standard `otlp` export format
-      otlp/jaeger:
-        endpoint: 'randoli-rok-jaeger-collector.{{ .Release.Namespace }}.svc:4317'
+      ## Create an exporter to tempo using the standard `otlp` export format
+      otlp/tempo:
+        endpoint: 'randoli-rok-tempo.{{ .Release.Namespace }}.svc:4317'
         tls:
           insecure: true
       ## Prometheus
@@ -114,6 +116,7 @@ spec:
               - from: connection
     connectors:
       spanmetrics: {}
+      llmmetrics: {}
     service:
       telemetry:
         metrics:
@@ -124,6 +127,8 @@ spec:
                   prometheus:
                     host: "0.0.0.0"
                     port: 8888
+        resource:
+          service.name: randoli-otel-collector
       pipelines:
         traces:
           receivers: [otlp]
@@ -132,7 +137,7 @@ spec:
             - k8sattributes
             - randoli_otel_enricher
             - batch
-          exporters: [debug, spanmetrics, otlp/jaeger]
+          exporters: [debug, spanmetrics, otlp/tempo]
         metrics:
           receivers: [otlp, prometheus, spanmetrics]
           processors:

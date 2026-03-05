@@ -3,6 +3,8 @@ kind: FlowCollector
 metadata:
   name: cluster
 spec:
+  networkPolicy:
+    enable: false
   namespace: netobserv
   consolePlugin:
     advanced:
@@ -28,7 +30,7 @@ spec:
   exporters:
   - type: OpenTelemetry
     openTelemetry:
-      targetHost: "randoli-otel-collector.{{ .Release.Namespace }}.svc.cluster.local"
+      targetHost: "randoli-otel-collector.{{ .Release.Namespace }}"
       targetPort: 4317
       protocol: grpc
       logs:

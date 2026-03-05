@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: '1.17'
+appVersion: '1.18'
 description: Randoli Agent
 home: https://randoli.ca
 icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
@@ -13,7 +13,7 @@ maintainers:
 name: randoli-agent
 sources:
 - https://github.com/randoli/helm-charts
-version: 1.17.6
+version: 1.18.2
 dependencies:
   - name: opentelemetry-operator
     version: 0.86.4
@@ -45,14 +45,19 @@ dependencies:
     alias: costManagement
     tags:
      - costManagement
-  - name: tracing
-    version: 3.4.0
-    condition: observability.tracing.enabled
+  - name: tempo
+    version: 1.24.1
+    condition: observability.tempo.enabled
     tags:
-     - observability
+     - observability  
   - name: network
     version: 1.8.2
     condition: observability.netobserv.enabled
     tags:
     - observability     
     - costManagement
+  - name: loki
+    version: 6.49.9
+    condition: observability.loki.enabled
+    tags:
+     - observability   

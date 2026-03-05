@@ -1,0 +1,4 @@
+{{- $netobserv := .Values.observability.netobserv | default dict }}
+{{- if and (hasKey $netobserv "explodeCRs") .Values.observability.netobserv.explodeCRs }}
+{{ tpl (.Files.Get "files/randoli-network/pod-egress-bytes-metric.yaml") . }}
+{{ end -}}

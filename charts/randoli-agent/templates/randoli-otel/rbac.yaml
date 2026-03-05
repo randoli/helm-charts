@@ -1,6 +1,11 @@
-{{- if eq (include "apply-open-telemetry-crs" . | trim) "true" -}}
+{{- $otel := .Values.observability.otel | default dict }}
+{{- if or $otel.explodeCRs (eq (include "apply-open-telemetry-crs" . | trim) "true") -}}
 apiVersion: v1
 kind: ServiceAccount
+{{- with .Values.global.imagePullSecrets }}
+imagePullSecrets:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
 metadata:
   name: randoli-otel-collector
   namespace: {{ .Release.Namespace }}

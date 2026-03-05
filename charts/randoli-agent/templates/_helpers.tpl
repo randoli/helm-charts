@@ -11,11 +11,7 @@
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
 {{- printf "%s" $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
 {{- end -}}
 {{- end -}}
 
@@ -113,7 +109,7 @@ false
 
 {{- define "apply-open-telemetry-crs" -}}
 {{- $otel := .Values.observability.otel | default dict }}
-{{- if and (or (not (hasKey $otel "applyCRs")) $otel.applyCRs ) (or .Values.tags.observability .Values.tags.costManagement) -}}
+{{- if and (or (not (hasKey $otel "explodeCRs")) (not $otel.explodeCRs)) (or (not (hasKey $otel "applyCRs")) $otel.applyCRs ) (or .Values.tags.observability .Values.tags.costManagement) -}}
 true
 {{- else -}}
 false
@@ -122,7 +118,7 @@ false
 
 {{- define "apply-network-crs" -}}
 {{- $netobserv := .Values.observability.netobserv | default dict }}
-{{- if and (or (not (hasKey $netobserv "applyCRs")) $netobserv.applyCRs ) (or .Values.tags.observability .Values.tags.costManagement) -}}
+{{- if and (or (not (hasKey $netobserv "explodeCRs")) (not $netobserv.explodeCRs)) (or (not (hasKey $netobserv "applyCRs")) $netobserv.applyCRs ) (or .Values.tags.observability .Values.tags.costManagement) -}}
 true
 {{- else -}}
 false
@@ -133,6 +129,34 @@ false
 {{- if not (empty .Values.observability.traceConfig.storage.url)  -}}
 {{ .Values.observability.traceConfig.storage.url }}
 {{- else -}}
-{{- printf "http://randoli-rok-jaeger-query.%s:16686" .Release.Namespace -}}
+{{- printf "http://randoli-rok-tempo.%s:3200" .Release.Namespace -}}
 {{- end -}}
 {{- end -}}
+
+{{- define "telemetry-proxy-cors" -}}
+{{- if not (empty .Values.observability.logs.proxyCORS)  -}}
+{{ .Values.observability.logs.proxyCORS | quote}}
+{{- else -}}
+https://telemetry-app.randoli.io,https://console.insights.randoli.io
+{{- end -}}
+{{- end -}}
+
+{{- define "logs-loki-url" -}}
+{{- if not (empty .Values.observability.logs.lokiUrl)  -}}
+{{ .Values.observability.logs.lokiUrl }}
+{{- else -}}
+{{- printf "http://randoli-rok-loki.%s.svc:3100" .Release.Namespace -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "telemetry-proxy-keycloak-issuer" -}}
+{{- if not (empty .Values.observability.logs.proxyKeycloakIssuer)  -}}
+{{ .Values.observability.logs.proxyKeycloakIssuer }}
+{{- else -}}
+https://sso.randoli.io/auth/realms/sso
+{{- end -}}
+{{- end -}}
+
+
+
+
