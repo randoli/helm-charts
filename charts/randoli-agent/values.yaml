@@ -47,7 +47,6 @@ observability:
     applyTargetAllocator: true
   logs:
     applyVectorPipeline: true
-    # watchNamespaces: []
     namespaces:
       include: []
       exclude: []
