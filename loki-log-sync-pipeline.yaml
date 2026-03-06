@@ -1,8 +1,7 @@
-{{- if .Values.observability.logs.applyVectorPipeline  -}}
 apiVersion: observability.kaasops.io/v1alpha1
 kind: ClusterVectorPipeline
 metadata:
-  name: randoli-rok-loki-log-sync
+  name: loki-log-sync-pipeline
 spec:
   sinks:
     loki:
@@ -11,7 +10,7 @@ spec:
         only_fields:
           - message
           - trace_id
-      endpoint: {{ include "logs-loki-url" . }}
+      endpoint: http://loki-services-gateway.loki.svc:80
       inputs:
         - extract_trace_from_text
       labels:
@@ -26,20 +25,17 @@ spec:
         severity: {{ `'{{ severity }}'` }}
         service_name: {{ `'{{ service_name }}'` }}
         source_type: {{ `'{{ source_type }}'` }}
-      tenant_id: self-monitoring
-      type: loki
-      # Disable healthcheck
-      healthcheck:
-        enabled: false
-      # Retry configuration
       request:
         retry_attempts: 10
         retry_initial_backoff_secs: 1
         retry_max_duration_secs: 300
         timeout_secs: 60
+      tenant_id: self-monitoring
+      type: loki
   sources:
     k8s_log_source:
       extra_label_selector: app.kubernetes.io/name!=vector
+      max_line_bytes: 524288
       read_from: end
       type: kubernetes_logs
   transforms:
@@ -70,18 +66,30 @@ spec:
         del(.kubernetes.node_labels)
         del(.kubernetes.container_image_id)
         del(.kubernetes.namespace_labels)
-        del(.kubernetes.pod_ip)
         del(.kubernetes.pod_ips)
-        del(.kubernetes.pod_uid)
       type: remap
     extract_message:
       inputs:
         - drop_fields
-      source: >
+      source: |
         parsed = parse_json(.message) ?? null
         if !is_null(parsed) {
           .message = parsed
         }
+      type: remap
+    extract_service_name:
+      inputs:
+        - extract_severity
+      source: >
+        service_name = null
+
+        if
+        exists(.kubernetes.pod_annotations.resource_opentelemetry_io_service_name)
+        {
+          service_name = .kubernetes.pod_annotations.resource_opentelemetry_io_service_name
+        }
+
+        .service_name = service_name
       type: remap
     extract_severity:
       inputs:
@@ -114,21 +122,8 @@ spec:
           severity = "DEBUG"
         }
 
-
         .severity = severity
       type: remap
-    extract_service_name:
-      inputs:
-        - extract_severity
-      source: |
-        service_name = null
-
-        if exists(.kubernetes.pod_annotations.resource_opentelemetry_io_service_name) {
-          service_name = .kubernetes.pod_annotations.resource_opentelemetry_io_service_name
-        }
-
-        .service_name = service_name
-      type: remap 
     extract_trace_from_json:
       inputs:
         - extract_service_name
@@ -140,7 +135,7 @@ spec:
         }
 
         .trace_id = trace_id
-      type: remap  
+      type: remap
     extract_trace_from_text:
       inputs:
         - extract_trace_from_json
@@ -158,32 +153,21 @@ spec:
             }
           }
       type: remap
-    {{- if or (gt (len .Values.observability.logs.namespaces.include) 0) (gt (len .Values.observability.logs.namespaces.exclude) 0)}}
     filter_namespace:
-      type: filter
+      condition: |
+        includes([
+          "app-insights-prod",
+          "core-services-prod",
+          "csp-prod",
+          "randoli-agents-dev1",
+          "randoli-agents-prod-gke",
+          "kong",
+          "auth"
+          "simulation"
+        ], to_string(.kubernetes.pod_namespace) ?? "")        
       inputs:
         - k8s_log_source
-      condition: |
-        {{- if gt (len .Values.observability.logs.namespaces.include) 0 }}
-        includes([
-          {{- range $index, $ns := .Values.observability.logs.namespaces.include }}
-          {{- if $index }},{{ end }}
-          "{{ $ns }}"
-          {{- end }}
-        ], to_string(.kubernetes.pod_namespace) ?? "")
-        {{- end }}
-        {{- if and (gt (len .Values.observability.logs.namespaces.include) 0) (gt (len .Values.observability.logs.namespaces.exclude) 0) }}
-        &&
-        {{- end }}
-        {{- if gt (len .Values.observability.logs.namespaces.exclude) 0 }}
-        !includes([
-          {{- range $index, $ns := .Values.observability.logs.namespaces.exclude }}
-          {{- if $index }},{{ end }}
-          "{{ $ns }}"
-          {{- end }}
-        ], to_string(.kubernetes.pod_namespace) ?? "")
-        {{- end }}
-    {{- end }}        
+      type: filter
     merge_multiline_logs:
       expire_after_ms: 2000
       group_by:
@@ -191,15 +175,10 @@ spec:
         - kubernetes.container_name
         - stream
       inputs:
-        {{- if or (gt (len .Values.observability.logs.namespaces.include) 0) (gt (len .Values.observability.logs.namespaces.exclude) 0)}}
         - filter_namespace
-        {{- else }}
-        - k8s_log_source
-        {{- end }}
       merge_strategies:
         message: concat_newline
       starts_when: >-
         match(string!(.message),
         r'(^\d{4}-\d{2}-\d{2}|^\d{2}:\d{2}:\d{2}|^\{"|^[A-Z]+\s)')
       type: reduce
-{{end}}       

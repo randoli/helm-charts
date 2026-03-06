@@ -47,7 +47,10 @@ observability:
     applyTargetAllocator: true
   logs:
     applyVectorPipeline: true
-    watchNamespaces: []
+    # watchNamespaces: []
+    namespaces:
+      include: []
+      exclude: []
     proxyCORS: "*"
     proxyImage: docker.io/randoli/telemetry-proxy:0.1.1
     #proxyKeycloakIssuer:
