@@ -242,7 +242,7 @@ spec:
             value: /persistence/agent.db
           - name: TLS_ENABLED
             value: "0"
-          - name: LOG_LEVEL
+          - name: GIZMOSQL_LOG_LEVEL
             value: ERROR
           - name: GIZMOSQL_QUERY_LOG_LEVEL
             value: ERROR
