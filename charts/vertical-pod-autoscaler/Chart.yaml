@@ -1,0 +1,12 @@
+apiVersion: v2
+appVersion: 1.6.0
+description: Automatically adjust resources for your workloads
+icon: https://github.com/kubernetes/kubernetes/raw/master/logo/logo.png
+maintainers:
+- email: kubernetes-sig-autoscaling@googlegroups.com
+  name: adrianmoisey
+- email: kubernetes-sig-autoscaling@googlegroups.com
+  name: omerap12
+name: vertical-pod-autoscaler
+type: application
+version: 0.8.1

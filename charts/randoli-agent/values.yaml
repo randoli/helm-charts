@@ -102,7 +102,7 @@ costManagement:
       configMap:
         name: randoli-cost-metrics-config
 
-rightsizing:
+verticalPodAutoscaler:
   recommender:
     extraArgs:
       pod-recommendation-min-cpu-millicores: 25
@@ -341,3 +341,14 @@ opentelemetry-operator:
           values:
             - kube-system
             - kube-node-lease
+
+vertical-pod-autoscaler:
+  admissionController:
+    mutatingWebhookConfiguration:
+      namespaceSelector:
+        matchExpressions:
+          - key: kubernetes.io/metadata.name
+            operator: NotIn
+            values:
+              - kube-system
+              - kube-node-lease
