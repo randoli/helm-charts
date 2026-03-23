@@ -208,8 +208,8 @@ spec:
               command:
               - sh
               - -c
-              - gizmosql_client --command Execute --host localhost --port 31337 --username
-                "$GIZMOSQL_USERNAME" --password "$GIZMOSQL_PASSWORD" --query "SELECT 1503+1503"
+              - gizmosql_client --host localhost --port 31337 --username
+                "$GIZMOSQL_USERNAME" --command "SELECT 1503+1503"
                 | grep -q 3006 || exit 1
             failureThreshold: 2
             initialDelaySeconds: 10
