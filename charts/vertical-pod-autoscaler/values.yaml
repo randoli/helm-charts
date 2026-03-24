@@ -59,7 +59,7 @@ admissionController:
         targetPort: 8000
 
   # Number of Admission Controller replicas to create.
-  replicas: 2
+  replicas: 1
 
   # Labels to add to the Admission Controller pod.
   podLabels: {}
@@ -215,7 +215,7 @@ recommender:
     annotations: {}
 
   # Number of Recommender replicas to create.
-  replicas: 2
+  replicas: 1
 
   # Labels to add to the Recommender pod.
   podLabels: {}
@@ -307,7 +307,7 @@ updater:
     pullPolicy: IfNotPresent
 
   # Number of Updater replicas to create.
-  replicas: 2
+  replicas: 1
 
   # Labels to add to the Updater pod.
   podLabels: {}

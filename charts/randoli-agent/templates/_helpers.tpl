@@ -133,6 +133,14 @@ false
 {{- end -}}
 {{- end -}}
 
+{{- define "trace-storage-url-otlp" -}}
+{{- if not (empty .Values.observability.traceConfig.storage.urlOtlp)  -}}
+{{ .Values.observability.traceConfig.storage.urlOtlp }}
+{{- else -}}
+{{- printf "http://randoli-rok-tempo.%s:4317" .Release.Namespace -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "telemetry-proxy-cors" -}}
 {{- if not (empty .Values.observability.logs.proxyCORS)  -}}
 {{ .Values.observability.logs.proxyCORS | quote}}

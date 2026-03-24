@@ -72,6 +72,7 @@ observability:
     storage:
       type: TEMPO
       url:
+      urlOtlp:
     opensearch:
       spanIndexPattern:
       rootSpanIndexPattern:
@@ -101,13 +102,6 @@ costManagement:
     - name: metrics-config-volume
       configMap:
         name: randoli-cost-metrics-config
-
-verticalPodAutoscaler:
-  recommender:
-    extraArgs:
-      pod-recommendation-min-cpu-millicores: 25
-      pod-recommendation-min-memory-mb: 25
-
 tags:
   observability: false
   costManagement: false
@@ -202,35 +196,6 @@ serviceAccount:
   annotations: {}
   labels: {}
 
-tracing:
-  provisionDataStore:
-    cassandra: false
-
-  allInOne:
-    enabled: true
-    args:
-      - "--badger.span-store-ttl=2h"
-  storage:
-    type: badger
-    badger:
-      ephemeral: false
-      persistence:
-        mountPath: /mnt/data
-        useExistingPvcName: "randoli-jaeger-storage"
-        size: 10Gi
-  agent:
-    enabled: false
-  collector:
-    enabled: false
-  query:
-    enabled: false
-
-cert-manager:
-  enabled: false
-  crds:
-    enabled: true
-  #namespace: "cert-manager"
-
 securityScans:
   capabilities:
     admissionController: disable
@@ -243,6 +208,11 @@ network:
     enable: true
 
 prometheus:
+  server:
+    retention: "30d"
+    retentionSize: "45GB"
+    persistentVolume:
+      size: 50Gi
   serverFiles:
     prometheus.yml:
       otlp:
@@ -308,11 +278,11 @@ loki:
       - name: GOMEMLIMIT
         value: 1750MiB
     persistence:
-      size: 20Gi
+      size: 100Gi
 
   tableManager:
     retention_deletes_enabled: true
-    retention_period: 5d
+    retention_period: 30d
 
   test:
     enabled: false
@@ -341,8 +311,13 @@ opentelemetry-operator:
           values:
             - kube-system
             - kube-node-lease
+tempo:
+  tempo:
+    retention: 730h
+  persistence:
+    size: 50Gi
 
-vertical-pod-autoscaler:
+vpa:
   admissionController:
     mutatingWebhookConfiguration:
       namespaceSelector:
@@ -352,3 +327,10 @@ vertical-pod-autoscaler:
             values:
               - kube-system
               - kube-node-lease
+  recommender:
+    minCpuMillicores: 25
+    minMemoryMb: 25
+    extraArgs:
+      - "--pod-recommendation-min-cpu-millicores=25"
+      - "--pod-recommendation-min-memory-mb=25"
+
