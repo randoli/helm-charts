@@ -53,5 +53,6 @@ webhooks:
         values:
         - kube-system
         - kube-node-lease
+        - kube-public
 {{- end }}
 {{- end }}
