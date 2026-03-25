@@ -311,6 +311,7 @@ opentelemetry-operator:
           values:
             - kube-system
             - kube-node-lease
+            - kube-public
 tempo:
   tempo:
     retention: 730h
@@ -327,6 +328,7 @@ vpa:
             values:
               - kube-system
               - kube-node-lease
+              - kube-public
   recommender:
     minCpuMillicores: 25
     minMemoryMb: 25
