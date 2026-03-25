@@ -49,7 +49,7 @@ observability:
     applyVectorPipeline: true
     watchNamespaces: []
     proxyCORS: "*"
-    proxyImage: docker.io/randoli/telemetry-proxy:0.1.1
+    proxyImage: docker.io/randoli/telemetry-proxy:0.1.2
     #proxyKeycloakIssuer:
     #lokiUrl:
     analyzers:
