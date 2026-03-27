@@ -129,7 +129,15 @@ false
 {{- if not (empty .Values.observability.traceConfig.storage.url)  -}}
 {{ .Values.observability.traceConfig.storage.url }}
 {{- else -}}
-{{- printf "http://randoli-rok-tempo.%s:3200" .Release.Namespace -}}
+{{- printf "http://randoli-rok-tempo.%s.svc:3200" .Release.Namespace -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "trace-storage-url-otlp" -}}
+{{- if not (empty .Values.observability.traceConfig.storage.urlOtlp)  -}}
+{{ .Values.observability.traceConfig.storage.urlOtlp }}
+{{- else -}}
+{{- printf "randoli-rok-tempo.%s.svc:4317" .Release.Namespace -}}
 {{- end -}}
 {{- end -}}
 

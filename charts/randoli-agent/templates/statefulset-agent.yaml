@@ -78,7 +78,7 @@ spec:
             - name: agent-pv
               mountPath: /persistence
         - name: migrate-db
-          image: datacatering/duckdb:v1.4.1
+          image: datacatering/duckdb:v1.5.0
           command: ["/bin/sh", "-c"]
           args:
             - |
@@ -202,14 +202,14 @@ spec:
             {{- end }}
           {{- end }}
         - name: gizmosql
-          image: docker.io/gizmodata/gizmosql:v1.12.5
+          image: docker.io/gizmodata/gizmosql:v1.19.2
           livenessProbe:
             exec:
               command:
               - sh
               - -c
-              - gizmosql_client --command Execute --host localhost --port 31337 --username
-                "$GIZMOSQL_USERNAME" --password "$GIZMOSQL_PASSWORD" --query "SELECT 1503+1503"
+              - gizmosql_client --host localhost --port 31337 --username
+                "$GIZMOSQL_USERNAME" --command "SELECT 1503+1503"
                 | grep -q 3006 || exit 1
             failureThreshold: 2
             initialDelaySeconds: 10
@@ -242,8 +242,12 @@ spec:
             value: /persistence/agent.db
           - name: TLS_ENABLED
             value: "0"
-          - name: PRINT_QUERIES
-            value: "0"
+          - name: GIZMOSQL_LOG_LEVEL
+            value: ERROR
+          - name: GIZMOSQL_QUERY_LOG_LEVEL
+            value: ERROR
+          - name: GIZMOSQL_AUTH_LOG_LEVEL
+            value: ERROR
           - name: SECRET_KEY
             value: "randoli_db_test"
           - name: INIT_SQL_COMMANDS

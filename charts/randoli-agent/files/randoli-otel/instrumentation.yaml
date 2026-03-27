@@ -49,4 +49,4 @@ spec:
     image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.22.0
     env:
       - name: OTEL_EXPORTER_OTLP_ENDPOINT
-        value: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4318              
+        value: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4318

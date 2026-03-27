@@ -73,7 +73,7 @@ spec:
     exporters:
       ## Create an exporter to tempo using the standard `otlp` export format
       otlp/tempo:
-        endpoint: 'randoli-rok-tempo.{{ .Release.Namespace }}.svc:4317'
+        endpoint: '{{ include "trace-storage-url-otlp" . }}'
         tls:
           insecure: true
       ## Prometheus
@@ -137,9 +137,9 @@ spec:
             - k8sattributes
             - randoli_otel_enricher
             - batch
-          exporters: [debug, spanmetrics, otlp/tempo]
+          exporters: [debug, spanmetrics, llmmetrics, otlp/tempo]
         metrics:
-          receivers: [otlp, prometheus, spanmetrics]
+          receivers: [otlp, prometheus, spanmetrics, llmmetrics]
           processors:
             - memory_limiter
             - randoli_otel_enricher

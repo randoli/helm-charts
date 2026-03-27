@@ -1,63 +1,64 @@
 apiVersion: v2
-appVersion: '1.18'
+appVersion: "1.19"
 description: Randoli Agent
 home: https://randoli.ca
 icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
 keywords:
-- randoli-agent
-- randoli
+  - randoli-agent
+  - randoli
 maintainers:
-- name: Randoli
-  url: https://randoli.ca
-  email: support@randoli.ca
+  - name: Randoli
+    url: https://randoli.ca
+    email: support@randoli.ca
 name: randoli-agent
 sources:
-- https://github.com/randoli/helm-charts
-version: 1.18.2
+  - https://github.com/randoli/helm-charts
+version: 1.19.0
 dependencies:
   - name: opentelemetry-operator
     version: 0.86.4
     condition: observability.otel.operator.enabled
     tags:
-     - observability
-     - costManagement
+      - observability
+      - costManagement
   - name: prometheus
     version: 26.0.1
     condition: global.prometheus.install
-  - name: rightsizing
-    version: 1.0.0
+  - name: vertical-pod-autoscaler
+    alias: vpa
+    version: 0.8.1
     condition: costManagement.vpaOperator.enabled
     tags:
-     - costManagement
+      - costManagement
   - name: security-scans
     alias: securityScans
     version: 1.29.6
     condition: observability.security.enabled
     tags:
-     - security
+      - security
   - name: logs
     version: 0.0.40
     condition: observability.vector.enabled
     tags:
-     - observability
+      - observability
   - name: cost-management
     version: 1.42.0
     alias: costManagement
     tags:
-     - costManagement
+      - costManagement
   - name: tempo
     version: 1.24.1
     condition: observability.tempo.enabled
     tags:
-     - observability  
+      - observability
   - name: network
     version: 1.8.2
     condition: observability.netobserv.enabled
     tags:
-    - observability     
-    - costManagement
+      - observability
+      - costManagement
   - name: loki
     version: 6.49.9
     condition: observability.loki.enabled
     tags:
-     - observability   
+      - observability
