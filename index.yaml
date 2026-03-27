@@ -2,8 +2,8 @@ apiVersion: v1
 entries:
   randoli-agent:
   - apiVersion: v2
-    appVersion: "1.18"
-    created: "2026-03-27T10:53:06.577379876-04:00"
+    appVersion: "1.19"
+    created: "2026-03-27T11:29:45.381515816-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -62,7 +62,7 @@ entries:
       - observability
       version: 6.49.9
     description: Randoli Agent
-    digest: 8b8afce50c52530a73cc6e923dacaa27de076053d6a571fca6bf7e4f8f06bdd7
+    digest: 3d2b76e3907764074b9e0380317a06fe9b88279426f6c4df199006cfe5bd2adb
     home: https://randoli.ca
     icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
     keywords:
@@ -76,11 +76,11 @@ entries:
     sources:
     - https://github.com/randoli/helm-charts
     urls:
-    - randoli-agent-1.18.3.tgz
-    version: 1.18.3
+    - randoli-agent-1.19.0.tgz
+    version: 1.19.0
   - apiVersion: v2
     appVersion: "1.18"
-    created: "2026-03-27T10:53:06.547502055-04:00"
+    created: "2026-03-27T11:29:45.350262443-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -156,7 +156,7 @@ entries:
     version: 1.18.1
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2026-03-27T10:53:06.515352285-04:00"
+    created: "2026-03-27T11:29:45.31345669-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -232,7 +232,7 @@ entries:
     version: 1.18.0
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2026-03-27T10:53:06.477868085-04:00"
+    created: "2026-03-27T11:29:45.27367501-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -302,7 +302,7 @@ entries:
     version: 1.17.9
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2026-03-27T10:53:06.435341295-04:00"
+    created: "2026-03-27T11:29:45.226293915-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -370,4 +370,4 @@ entries:
     urls:
     - randoli-agent-1.17.8.tgz
     version: 1.17.8
-generated: "2026-03-27T10:53:06.388262122-04:00"
+generated: "2026-03-27T11:29:45.177928748-04:00"
