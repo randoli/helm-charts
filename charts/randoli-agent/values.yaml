@@ -183,6 +183,12 @@ extraVolumeMounts: []
   # - name: extra-queries
   #   mountPath: /prometheus
 
+containerSecurityContext:
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  runAsUser: 1001
+  runAsGroup: 1001
+
 securityContext:
   fsGroup: 1001
 

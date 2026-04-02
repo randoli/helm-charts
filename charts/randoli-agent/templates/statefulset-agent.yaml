@@ -68,6 +68,10 @@ spec:
               echo "copying migrations..."
               cp -r /migration-scripts/* /migrations/
               cp -r /migrate /migrations/migrate
+          {{- with .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           resources:
             requests:
               cpu: 50m
@@ -85,7 +89,6 @@ spec:
               echo "waiting for migration scripts..." &&
               while [ ! -f /migrations/migrate ]; do sleep 1; done
               chmod +x /migrations/migrate
-              ln -s /duckdb /bin/duckdb
 
               # remove .wal file
               rm -rf /persistence/agent.db.wal
@@ -96,6 +99,10 @@ spec:
               echo "setting up permissions..."
               chown :1001 /persistence/agent.db
               chmod 660 /persistence/agent.db
+          {{- with .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           resources:
             requests:
               cpu: 50m
@@ -259,6 +266,10 @@ spec:
               CREATE SCHEMA IF NOT EXISTS insights_agent;
               PRAGMA schema='insights_agent';
               PRAGMA search_path='insights_agent';
+          {{- with .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.db.resources | nindent 12 }}
       serviceAccountName: {{ template "randoli-agent.serviceAccountName" . }}
