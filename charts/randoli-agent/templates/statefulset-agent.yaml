@@ -89,7 +89,6 @@ spec:
               echo "waiting for migration scripts..." &&
               while [ ! -f /migrations/migrate ]; do sleep 1; done
               chmod +x /migrations/migrate
-              ln -s /duckdb /bin/duckdb
 
               # remove .wal file
               rm -rf /persistence/agent.db.wal
