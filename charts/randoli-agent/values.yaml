@@ -37,6 +37,8 @@ global:
     nodeSelector: {}
     affinity: {}
     tolerations: []
+  reconciliation:
+    enableOtelServiceNameFallback: false
 
 observability:
   otel:
@@ -85,6 +87,8 @@ observability:
   agentInstrumentation:
     enabled: true
     otlpEndpoint:
+    metricsEnabled: true 
+    tracesEnabled: false 
 
 costManagement:
   vpaOperator:

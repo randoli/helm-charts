@@ -73,10 +73,14 @@ data:
   ENABLE_SUPERVISOR_AGENT_REPORTS: '{{ .Values.observability.sreAgent.enableReports }}'
 
   {{- if .Values.observability.agentInstrumentation.enabled }}
-  OTEL_ENABLED: 'true'
+  OTEL_METRICS_ENABLED: '{{ .Values.observability.agentInstrumentation.metricsEnabled }}'
+  OTEL_TRACES_ENABLED: '{{ .Values.observability.agentInstrumentation.tracesEnabled }}'
   {{- if .Values.observability.agentInstrumentation.otlpEndpoint }}
-  OTEL_EXPORTER_OTLP_ENDPOINT: '{{ .Values.observability.agentObservability.otlpEndpoint }}'
+  OTEL_EXPORTER_OTLP_ENDPOINT: '{{ .Values.observability.agentInstrumentation.otlpEndpoint }}'
   {{ else }}
   OTEL_EXPORTER_OTLP_ENDPOINT: 'http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4317'
   {{- end }}
   {{- end }}
+
+  RECONCILIATION_BACKEND_TIMEOUT: 1m0s
+  ENABLE_OTEL_SERVICE_NAME_FALLBACK: '{{ .Values.global.enableOtelServiceNameFallback }}'
