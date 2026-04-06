@@ -97,7 +97,7 @@ spec:
               /migrations/migrate /persistence/agent.db
 
               echo "setting up permissions..."
-              chown :1001 /persistence/agent.db
+              chown 1001:1001 /persistence/agent.db
               chmod 660 /persistence/agent.db
           {{- with .Values.containerSecurityContext }}
           securityContext:
@@ -231,8 +231,8 @@ spec:
           - name: gizmosql-tmp
             mountPath: /var/gizmosql-tmp    
           env:
-          - name: GIZMOSQL_PATH
-            value: /persistence/agent.db
+          - name: HOME
+            value: /var/gizmosql-tmp
           - name: GIZMOSQL_USERNAME
             valueFrom:
               secretKeyRef:
@@ -255,8 +255,6 @@ spec:
             value: ERROR
           - name: GIZMOSQL_AUTH_LOG_LEVEL
             value: ERROR
-          - name: SECRET_KEY
-            value: "randoli_db_test"
           - name: INIT_SQL_COMMANDS
             value: |
               PRAGMA memory_limit={{ .Values.db.flightEngine.memoryLimit | squote }};
