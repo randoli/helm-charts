@@ -75,7 +75,7 @@ data:
   {{- if .Values.observability.agentInstrumentation.enabled }}
   OTEL_ENABLED: 'true'
   {{- if .Values.observability.agentInstrumentation.otlpEndpoint }}
-  OTEL_EXPORTER_OTLP_ENDPOINT: '{{ .Values.observability.agentObservability.otlpEndpoint }}'
+  OTEL_EXPORTER_OTLP_ENDPOINT: '{{ .Values.observability.agentInstrumentation.otlpEndpoint }}'
   {{ else }}
   OTEL_EXPORTER_OTLP_ENDPOINT: 'http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4317'
   {{- end }}
