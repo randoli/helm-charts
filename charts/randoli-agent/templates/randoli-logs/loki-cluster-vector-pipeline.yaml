@@ -161,6 +161,7 @@ spec:
             }
           }
       type: remap     
+
     enrich_runtime_exceptions:
       type: remap
       inputs:
@@ -210,7 +211,7 @@ spec:
             # python traceback
             parsed = parse_regex(
               msg,
-              r'(?ms)^Traceback \(most recent call last\):.*\n(?P<exception_type>[A-Za-z_][A-Za-z0-9_.]*):'
+              r'Traceback .*?\n(?:.*\n)*?(?P<exception_type>[A-Za-z_][A-Za-z0-9_.]*):'
             ) ?? {}
 
             if parsed.exception_type != null {
@@ -241,7 +242,7 @@ spec:
 
           if exception_data != null {
             .randoli_tags = push(.randoli_tags, {
-              "type": "ERROR",
+              "type": "EXCEPTION",
               "data": exception_data
             })
           }
