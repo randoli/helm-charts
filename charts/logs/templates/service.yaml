@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vector-metrics
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/component: Agent
+    app.kubernetes.io/instance: randoli-rok-vector
+    app.kubernetes.io/name: vector
+spec:
+  selector:
+    app.kubernetes.io/component: Agent
+    app.kubernetes.io/instance: randoli-rok-vector
+    app.kubernetes.io/name: vector
+  ports:
+    - name: metrics
+      port: 8383
+      targetPort: 8383

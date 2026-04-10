@@ -324,6 +324,10 @@ prometheus:
       metrics_path: "/metrics"
       static_configs:
         - targets: ['{{ include "prometheus.networkCostMetrics.url" . }}']
+    - job_name: 'vector-metrics'
+      scrape_interval: 1m
+      static_configs:
+        - targets: ['vector-metrics.{{ .Release.Namespace }}.svc:8383']
 
   prometheus-pushgateway:
     enabled: false

@@ -50,6 +50,14 @@ vector-operator:
       imagePullSecrets: []
       configCheck:
         tolerations: []
+    
+    metrics:
+      serviceMonitor:
+        enabled: true
+        namespace: {{ .Release.Namespace }}
+        scrapeInterval: 30s
+        scrapeTimeout: 10s
+        additionalLabels: {}
 
   rbac:
     create: true

@@ -1,0 +1,41 @@
+apiVersion: observability.kaasops.io/v1alpha1
+kind: ClusterVectorPipeline
+metadata:
+  name: vector-internal-metrics
+  namespace: {{ .Release.Namespace }}
+spec:
+  sinks:
+    prometheus_exporter:
+      address: 0.0.0.0:8383
+      default_namespace: vector
+      inputs:
+        - remove_namespace_prefix
+      type: prometheus_exporter
+  sources:
+    vector_metrics:
+      scrape_interval_secs: 60
+      type: internal_metrics
+  transforms:
+    filter_metrics:
+      condition: >-
+        .name == "component_received_events_total" || 
+        .name == "component_sent_events_total" || 
+        .name == "buffer_size_events" || 
+        .name == "component_errors_total" || 
+        .name == "http_client_errors_total" ||
+        .name == "component_discarded_events_total" || 
+        .name == "send_errors_total" || 
+        .name == "connection_send_errors_total" || 
+        .name == "connection_read_errors_total" || 
+        .name == "http_client_responses_total" || 
+        .name == "buffer_discarded_events_total" || 
+        .name == "utilization"
+      inputs:
+        - vector_metrics
+      type: filter
+    remove_namespace_prefix:
+      inputs:
+        - filter_metrics
+      source: |
+        .name = replace!(.name, "{{ .Release.Namespace }}", "")
+      type: remap

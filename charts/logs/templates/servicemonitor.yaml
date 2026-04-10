@@ -1,0 +1,31 @@
+{{- if .Values.vector.metrics.serviceMonitor.enabled }}
+{{- if .Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor" }}
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "logs.fullname" . }}-vector
+  namespace: {{ .Values.vector.metrics.serviceMonitor.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "logs.labels" . | nindent 4 }}
+    {{- with .Values.vector.metrics.serviceMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+
+spec:
+  selector:
+    matchLabels:
+      {{- include "logs.selectorLabels" . | nindent 6 }}
+
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+
+{{- end }}
+{{- end }}
