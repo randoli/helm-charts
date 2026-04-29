@@ -14,7 +14,7 @@ spec:
           - randoli_tags
       endpoint: {{ include "logs-loki-url" . }}
       inputs:
-        - enrich_runtime_exceptions
+        - extract_runtime_exceptions
       labels:
         forwarder: vector
         k8s_container_image: {{ `'{{ kubernetes.container_image }}'` }}
@@ -162,7 +162,7 @@ spec:
           }
       type: remap     
 
-    enrich_runtime_exceptions:
+    extract_runtime_exceptions:
       type: remap
       inputs:
         - extract_trace_from_text
