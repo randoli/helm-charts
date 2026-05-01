@@ -3,6 +3,7 @@ kind: FlowCollector
 metadata:
   name: cluster
 spec:
+  deploymentModel: Service
   networkPolicy:
     enable: false
   namespace: netobserv
