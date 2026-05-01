@@ -102,6 +102,26 @@ costManagement:
     - name: metrics-config-volume
       configMap:
         name: randoli-cost-metrics-config
+logs:
+  vector-operator:
+    # Operator Deployment scheduling.
+    # global.* values are NOT automatically propagated here — set these explicitly
+    # to match global.tolerations / global.nodeSelector / global.affinity / global.imagePullSecrets.
+    tolerations: []
+    nodeSelector: {}
+    affinity: {}
+    imagePullSecrets: []
+    vector:
+      agent:
+        # Vector agent daemonset scheduling.
+        # tolerations     → set same as global.daemonsets.tolerations
+        # imagePullSecrets → set same as global.imagePullSecrets
+        # configCheck.tolerations → set same as global.tolerations
+        tolerations: []
+        imagePullSecrets: []
+        configCheck:
+          tolerations: []
+
 tags:
   observability: false
   costManagement: false

@@ -1,0 +1,6 @@
+dependencies:
+- name: vector-operator
+  repository: https://kaasops.github.io/vector-operator/helm
+  version: 0.8.1
+digest: sha256:a80016054b36b28cf838ed00c66e23cdf3fae841ba5cb2b72f9f4eac0748bb68
+generated: "2026-04-30T23:16:10.691123354-04:00"

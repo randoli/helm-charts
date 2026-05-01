@@ -37,7 +37,7 @@ dependencies:
     tags:
       - security
   - name: logs
-    version: 0.0.40
+    version: 0.8.1
     condition: observability.vector.enabled
     tags:
       - observability
@@ -52,7 +52,7 @@ dependencies:
     tags:
       - observability
   - name: network
-    version: 1.8.2
+    version: 1.11.3
     condition: observability.netobserv.enabled
     tags:
       - observability
