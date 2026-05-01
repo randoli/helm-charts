@@ -55,7 +55,7 @@ observability:
     analyzers:
       enabled: true
   vector:
-    #enabled: false
+    enabled: true
   security:
     #enabled: false
     #OFF|INTERVAL_SCANNING
@@ -204,8 +204,20 @@ securityScans:
       enabled: false
 
 network:
-  standaloneConsole:
-    enable: true
+  # TLS configuration — one of the two modes must be set when netobserv is enabled.
+  # See charts/network/README.md for full instructions.
+  tls:
+    # Mode A (recommended): reference a pre-existing TLS Secret.
+    # Create the secret before helm install:
+    #   kubectl create secret tls <name> --cert=tls.crt --key=tls.key -n <namespace>
+    existingSecret:
+      name: ""          # set to the secret name to use Mode A
+      certKey: tls.crt
+      keyKey: tls.key
+
+    # Mode B (fallback): auto-generate a self-signed cert via a pre-install Job.
+    generateJob:
+      enabled: true    # set to true to use Mode B
 
 prometheus:
   server:
