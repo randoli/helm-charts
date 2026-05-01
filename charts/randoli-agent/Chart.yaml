@@ -16,7 +16,7 @@ sources:
 version: 1.19.0
 dependencies:
   - name: opentelemetry-operator
-    version: 0.86.4
+    version: 0.111.0
     condition: observability.otel.operator.enabled
     tags:
       - observability

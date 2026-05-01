@@ -1,5 +1,4 @@
-{{- $otel := .Values.observability.otel | default dict }}
-{{- if or $otel.explodeCRs (eq (include "apply-open-telemetry-crs" . | trim) "true") -}}
+{{- if .Values.tags.observability -}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -30,9 +29,7 @@ rules:
   verbs: ["get", "list", "watch"]
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]
-
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -51,7 +48,6 @@ rules:
   resources:
   - namespaces
   verbs: ["get", "list", "watch"]
-
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -88,4 +84,4 @@ subjects:
 - kind: ServiceAccount
   name: opentelemetry-targetallocator
   namespace: {{ .Release.Namespace }}
-{{end}}  
+{{- end }}

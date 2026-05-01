@@ -42,8 +42,6 @@ observability:
   otel:
     operator:
       #enabled: false
-    #applyCRs: false
-    #explodeCRs: false
     applyTargetAllocator: true
   logs:
     applyVectorPipeline: true
@@ -279,71 +277,73 @@ prometheus:
           - postgresql.database.name
 
 loki:
-  deploymentMode: SingleBinary
   loki:
-    auth_enabled: false
-    storage:
-      type: "filesystem"
-    commonConfig:
-      replication_factor: 1
-    schemaConfig:
-      configs:
-        - from: 2024-01-01
-          store: tsdb
-          object_store: filesystem
-          schema: v13
-          index:
-            prefix: index_
-            period: 24h
+    deploymentMode: SingleBinary
+    loki:
+      auth_enabled: false
+      storage:
+        type: "filesystem"
+      commonConfig:
+        replication_factor: 1
+      schemaConfig:
+        configs:
+          - from: 2024-01-01
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index:
+              prefix: index_
+              period: 24h
 
-  singleBinary:
-    replicas: 1
-    resources:
-      limits:
-        cpu: 2
-        memory: 2Gi
-      requests:
-        cpu: 0.5
-        memory: 1Gi
-    extraEnv:
-      # Keep a little bit lower than memory limits
-      - name: GOMEMLIMIT
-        value: 1750MiB
-    persistence:
-      size: 100Gi
+    singleBinary:
+      replicas: 1
+      resources:
+        limits:
+          cpu: 2
+          memory: 2Gi
+        requests:
+          cpu: 0.5
+          memory: 1Gi
+      extraEnv:
+        # Keep a little bit lower than memory limits
+        - name: GOMEMLIMIT
+          value: 1750MiB
+      persistence:
+        size: 100Gi
 
-  tableManager:
-    retention_deletes_enabled: true
-    retention_period: 30d
+    tableManager:
+      retention_deletes_enabled: true
+      retention_period: 30d
 
-  test:
-    enabled: false
+    test:
+      enabled: false
 
-  # Disable canary
-  lokiCanary:
-    enabled: false
+    # Disable canary
+    lokiCanary:
+      enabled: false
 
-  # Disable gateway
-  gateway:
-    enabled: false
+    # Disable gateway
+    gateway:
+      enabled: false
 
-  # Disable caching
-  chunksCache:
-    enabled: false
+    # Disable caching
+    chunksCache:
+      enabled: false
 
-  resultsCache:
-    enabled: false
+    resultsCache:
+      enabled: false
 
 opentelemetry-operator:
-  admissionWebhooks:
-    namespaceSelector:
-      matchExpressions:
-        - key: kubernetes.io/metadata.name
-          operator: NotIn
-          values:
-            - kube-system
-            - kube-node-lease
-            - kube-public
+  opentelemetry-operator:
+    admissionWebhooks:
+      namespaceSelector:
+        matchExpressions:
+          - key: kubernetes.io/metadata.name
+            operator: NotIn
+            values:
+              - kube-system
+              - kube-node-lease
+              - kube-public
 tempo:
   tempo:
     retention: 730h

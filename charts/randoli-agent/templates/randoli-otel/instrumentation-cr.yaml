@@ -1,0 +1,47 @@
+{{- if .Values.tags.observability -}}
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: otel-instrumentation
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  exporter:
+    endpoint: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4317
+  propagators:
+    - tracecontext
+    - baggage
+    - b3
+  sampler:
+    type: parentbased_traceidratio
+    argument: "1"
+  python:
+    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-python:0.59b0
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4318
+  dotnet:
+    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-dotnet:1.12.0
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4318
+  go:
+    image: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.23.0
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4318
+      - name: OTEL_GO_AUTO_INCLUDE_DB_STATEMENT
+        value: "true"
+      - name: OTEL_GO_AUTO_PARSE_DB_STATEMENT
+        value: "true"
+  nodejs:
+    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-nodejs:0.67.0
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4318
+  java:
+    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.22.0
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4318
+{{- end }}
