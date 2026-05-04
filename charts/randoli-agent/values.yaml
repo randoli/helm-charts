@@ -353,8 +353,8 @@ opentelemetry-operator:
 tempo:
   tempo:
     retention: 730h
-  persistence:
-    size: 50Gi
+    persistence:
+      size: 50Gi
 
 vpa:
   admissionController:
