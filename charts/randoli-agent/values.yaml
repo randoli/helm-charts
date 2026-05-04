@@ -216,11 +216,16 @@ serviceAccount:
   labels: {}
 
 securityScans:
-  capabilities:
-    admissionController: disable
-  storage:
-    mtls:
-      enabled: false
+  kubescape-operator:
+    # Must match the Helm install namespace (-n flag).
+    # Override at install time if using a different namespace:
+    #   --set "securityScans.kubescape-operator.ksNamespace=<your-namespace>"
+    ksNamespace: "randoli-agents"
+    capabilities:
+      admissionController: disable
+    storage:
+      mtls:
+        enabled: false
 
 network:
   # TLS configuration — one of the two modes must be set when netobserv is enabled.
