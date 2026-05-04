@@ -357,20 +357,23 @@ tempo:
       size: 50Gi
 
 vpa:
-  admissionController:
-    mutatingWebhookConfiguration:
-      namespaceSelector:
-        matchExpressions:
-          - key: kubernetes.io/metadata.name
-            operator: NotIn
-            values:
-              - kube-system
-              - kube-node-lease
-              - kube-public
+  # Agent-level config — read by randoli-agent templates (not passed to VPA)
   recommender:
     minCpuMillicores: 25
     minMemoryMb: 25
-    extraArgs:
-      - "--pod-recommendation-min-cpu-millicores=25"
-      - "--pod-recommendation-min-memory-mb=25"
+  vertical-pod-autoscaler:
+    admissionController:
+      mutatingWebhookConfiguration:
+        namespaceSelector:
+          matchExpressions:
+            - key: kubernetes.io/metadata.name
+              operator: NotIn
+              values:
+                - kube-system
+                - kube-node-lease
+                - kube-public
+    recommender:
+      extraArgs:
+        - "--pod-recommendation-min-cpu-millicores=25"
+        - "--pod-recommendation-min-memory-mb=25"
 
