@@ -87,19 +87,20 @@ observability:
 costManagement:
   vpaOperator:
     #enabled: false
-  opencost:
-    metrics:
-      kubeStateMetrics:
-        emitKsmV1Metrics: "false"
-        emitKsmV1MetricsOnly: "true"
-    exporter:
-      extraVolumeMounts:
-        - name: metrics-config-volume
-          mountPath: /var/configs
-  extraVolumes:
-    - name: metrics-config-volume
-      configMap:
-        name: randoli-cost-metrics-config
+  opencost:             # values for the upstream opencost dependency (wrapper key)
+    opencost:           # upstream's "opencost:" config block
+      metrics:
+        kubeStateMetrics:
+          emitKsmV1Metrics: "false"
+          emitKsmV1MetricsOnly: "true"
+      exporter:
+        extraVolumeMounts:
+          - name: metrics-config-volume
+            mountPath: /var/configs
+    extraVolumes:       # upstream's top-level extraVolumes
+      - name: metrics-config-volume
+        configMap:
+          name: randoli-cost-metrics-config
 logs:
   vector-operator:
     # Operator Deployment scheduling.
