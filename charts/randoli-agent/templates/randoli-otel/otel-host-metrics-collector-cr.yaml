@@ -1,0 +1,130 @@
+{{- if eq (include "enable.otel-host-metrics" .) "true" -}}
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: randoli-otel-hostmetrics
+  labels:
+    randoli/app-type: otel-hostmetrics
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  {{- if or .Values.global.daemonsets.tolerations .Values.global.tolerations }}
+  tolerations:
+    {{- with .Values.global.daemonsets.tolerations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.global.tolerations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  {{- if or .Values.global.daemonsets.nodeSelector .Values.global.nodeSelector }}
+  nodeSelector:
+    {{- with .Values.global.daemonsets.nodeSelector }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.global.nodeSelector }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  image: {{ .Values.observability.hostMetrics.collectorImage | default "otel/opentelemetry-collector-contrib:0.123.0" }}
+  upgradeStrategy: automatic
+  mode: daemonset
+  serviceAccount: randoli-otel-collector
+  env:
+    - name: K8S_NODE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+  volumes:
+    - name: hostfs
+      hostPath:
+        path: /
+  volumeMounts:
+    - name: hostfs
+      mountPath: /hostfs
+      readOnly: true
+      mountPropagation: HostToContainer
+  config:
+    receivers:
+      hostmetrics:
+        root_path: /hostfs
+        collection_interval: {{ .Values.observability.hostMetrics.collectionInterval | default "60s" }}
+        scrapers:
+          cpu:
+            metrics:
+              system.cpu.utilization:
+                enabled: true
+          disk: {}
+          load: {}
+          filesystem:
+            exclude_mount_points:
+              mount_points:
+                - /dev/*
+                - /proc/*
+                - /sys/*
+                - /var/lib/docker/*
+                - /var/lib/containers/*
+                - /run/containerd/*
+                - /boot
+                - /tmp
+              match_type: regexp
+            exclude_fs_types:
+              fs_types:
+                - autofs
+                - binfmt_misc
+                - bpf
+                - cgroup2
+                - configfs
+                - debugfs
+                - devpts
+                - devtmpfs
+                - fusectl
+                - hugetlbfs
+                - iso9660
+                - mqueue
+                - nsfs
+                - overlay
+                - proc
+                - procfs
+                - pstore
+                - rpc_pipefs
+                - securityfs
+                - selinuxfs
+                - squashfs
+                - sysfs
+                - tracefs
+              match_type: strict
+          memory:
+            metrics:
+              system.memory.utilization:
+                enabled: true
+          network: {}
+          paging: {}
+          processes: {}
+    processors:
+      resource/node:
+        attributes:
+          - key: k8s.node.name
+            value: "${env:K8S_NODE_NAME}"
+            action: upsert
+      memory_limiter:
+        check_interval: 5s
+        limit_mib: 200
+        spike_limit_mib: 50
+      batch:
+        send_batch_size: 256
+        timeout: 10s
+    exporters:
+      otlp:
+        endpoint: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4317
+        tls:
+          insecure: true
+      debug:
+        verbosity: detailed
+    service:
+      pipelines:
+        metrics:
+          receivers: [hostmetrics]
+          processors: [memory_limiter, resource/node, batch]
+          exporters: [otlp]
+{{- end }}

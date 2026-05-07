@@ -156,6 +156,15 @@ https://sso.randoli.io/auth/realms/sso
 {{- end -}}
 {{- end -}}
 
+{{- define "enable.otel-host-metrics" -}}
+{{- $hm := .Values.observability.hostMetrics | default dict }}
+{{- if and .Values.tags.observability (eq ($hm.provider | default "node-exporter") "otel-host-metrics") -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
 
 
 

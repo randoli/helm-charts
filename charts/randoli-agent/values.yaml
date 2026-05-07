@@ -83,6 +83,23 @@ observability:
   agentInstrumentation:
     enabled: true
     otlpEndpoint:
+  hostMetrics:
+    # "node-exporter" (default) keeps the prometheus-community node-exporter DaemonSet.
+    # "otel-host-metrics" disables it and deploys an OTel Collector DaemonSet instead.
+    #
+    # IMPORTANT: when switching to "otel-host-metrics" you must also set:
+    #   prometheus.prometheus-node-exporter.enabled: false
+    #
+    # Metric name differences to be aware of when changing this:
+    #   node-exporter  → node_cpu_seconds_total, node_memory_MemAvailable_bytes, node_load1, …
+    #   otel-host-metrics → system_cpu_time_total, system_memory_usage, system_cpu_load_average_1m, …
+    # Any dashboards or alert rules that reference node_* metrics will need updating.
+    provider: "node-exporter"
+    # Image for the OTel host-metrics collector DaemonSet.
+    # Must include the hostmetricsreceiver (opentelemetry-collector-contrib or equivalent).
+    collectorImage: "otel/opentelemetry-collector-contrib:0.123.0"
+    # How often to collect host metrics.
+    collectionInterval: "60s"
 
 costManagement:
   vpaOperator:
@@ -246,6 +263,9 @@ network:
 
 prometheus:
   prometheus:
+    # Set to false when using observability.hostMetrics.provider: otel-host-metrics
+    prometheus-node-exporter:
+      enabled: true
     server:
       retention: "30d"
       retentionSize: "45GB"
