@@ -303,6 +303,7 @@ prometheus:
             - postgresql.schema.name
             - postgresql.index.name
             - postgresql.database.name
+            - k8s.node.name
 
 loki:
   loki:

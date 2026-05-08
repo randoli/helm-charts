@@ -98,13 +98,21 @@ spec:
             metrics:
               system.memory.utilization:
                 enabled: true
+              system.memory.limit:
+                enabled: true
           network: {}
           paging: {}
           processes: {}
     processors:
+      resourcedetection:
+        detectors: [env, system, docker, ec2, gcp, azure, aks, eks, openshift]
+        timeout: 5s
+        override: false
+        system:
+          hostname_sources: [dns, os]
       resource/node:
         attributes:
-          - key: k8s.node.name
+          - key: host.name
             value: "${env:K8S_NODE_NAME}"
             action: upsert
       memory_limiter:
@@ -125,6 +133,6 @@ spec:
       pipelines:
         metrics:
           receivers: [hostmetrics]
-          processors: [memory_limiter, resource/node, batch]
-          exporters: [otlp]
+          processors: [memory_limiter, resourcedetection, resource/node, batch]
+          exporters: [otlp, debug]
 {{- end }}
