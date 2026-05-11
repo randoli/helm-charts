@@ -2,7 +2,7 @@
 # Full upstream value reference:
 # https://github.com/grafana/loki/blob/main/production/helm/loki/values.yaml
 loki:
-  fullnameOverride: "randoli-rok-loki"
+  fullnameOverride: "randoli-obs-loki"
 
   # SingleBinary mode: all Loki components run in a single pod.
   # Suitable for small installs without HA. Requires filesystem or S3 storage.

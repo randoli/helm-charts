@@ -9,7 +9,7 @@ rules:
     resources:
       - secrets
     resourceNames:
-      - randoli-rok-alert-config
+      - randoli-obs-alert-config
     verbs: 
       - get
   - apiGroups:

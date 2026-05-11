@@ -3,7 +3,7 @@
 # https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus/values.yaml
 prometheus:
   server:
-    fullnameOverride: "randoli-prometheus"
+    fullnameOverride: "randoli-obs-prometheus"
 
     extraFlags:
       - web.enable-lifecycle
@@ -330,8 +330,14 @@ prometheus:
     serviceAnnotations:
       randoli.prometheus.io/probe: pushgateway
 
+  prometheus-node-exporter:
+    fullnameOverride: "randoli-obs-prometheus-node-exporter"
+
+  kube-state-metrics:
+    fullnameOverride: "randoli-obs-kube-state-metrics"
+
   alertmanager:
-    fullnameOverride: "randoli-alerts"
+    fullnameOverride: "randoli-obs-alerts"
     config:
       enabled: true
       # Default route — override receivers/route for Slack or email notifications.

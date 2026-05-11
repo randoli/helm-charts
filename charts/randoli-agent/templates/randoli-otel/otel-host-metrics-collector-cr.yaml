@@ -4,7 +4,7 @@ kind: OpenTelemetryCollector
 metadata:
   name: randoli-otel-hostmetrics
   labels:
-    randoli/app-type: otel-hostmetrics
+    randoli/app-type: otel
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:

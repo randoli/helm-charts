@@ -10,26 +10,29 @@ kubescape-operator:
   clusterName: "cluster"
 
   kubescape:
-    name: randoli-rok-kubescape
+    name: randoli-sec-kubescape
     continuousScan: enable
     submit: true
     serviceMonitor:
       enabled: false
 
   operator:
-    name: randoli-rok-kubescape-operator
+    name: randoli-sec-kubescape-operator
 
   kubevuln:
-    name: randoli-rok-kubevuln
+    name: randoli-sec-kubevuln
 
   storage:
-    name: "randoli-rok-kubescape-storage"
+    name: "randoli-sec-kubescape-storage"
 
   nodeAgent:
-    name: randoli-rok-kubescape-node-agent
+    name: randoli-sec-kubescape-node-agent
 
   synchronizer:
-    name: randoli-rok-kubescape-synchronizer
+    name: randoli-sec-kubescape-synchronizer
+
+  prometheusExporter:
+    name: randoli-sec-kubescape-prometheus-exporter
 
   # Randoli App Insights: scan statefulsets and daemonsets in addition to deployments
   kubescapeScheduler:

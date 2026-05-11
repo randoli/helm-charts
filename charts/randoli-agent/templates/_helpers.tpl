@@ -120,7 +120,7 @@ false
 {{- if not (empty .Values.observability.traceConfig.storage.url)  -}}
 {{ .Values.observability.traceConfig.storage.url }}
 {{- else -}}
-{{- printf "http://randoli-rok-tempo.%s.svc:3200" .Release.Namespace -}}
+{{- printf "http://randoli-obs-tempo.%s.svc:3200" .Release.Namespace -}}
 {{- end -}}
 {{- end -}}
 
@@ -128,7 +128,7 @@ false
 {{- if not (empty .Values.observability.traceConfig.storage.urlOtlp)  -}}
 {{ .Values.observability.traceConfig.storage.urlOtlp }}
 {{- else -}}
-{{- printf "randoli-rok-tempo.%s.svc:4317" .Release.Namespace -}}
+{{- printf "randoli-obs-tempo.%s.svc:4317" .Release.Namespace -}}
 {{- end -}}
 {{- end -}}
 
@@ -144,7 +144,7 @@ https://telemetry-app.randoli.io,https://console.insights.randoli.io
 {{- if not (empty .Values.observability.logs.lokiUrl)  -}}
 {{ .Values.observability.logs.lokiUrl }}
 {{- else -}}
-{{- printf "http://randoli-rok-loki.%s.svc:3100" .Release.Namespace -}}
+{{- printf "http://randoli-obs-loki.%s.svc:3100" .Release.Namespace -}}
 {{- end -}}
 {{- end -}}
 

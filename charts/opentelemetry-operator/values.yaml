@@ -2,7 +2,7 @@
 # Full upstream value reference:
 # https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-operator/values.yaml
 opentelemetry-operator:
-  fullnameOverride: "randoli-rok-otel"
+  fullnameOverride: "randoli-otel-operator"
 
   # CRDs are installed via the crds/ directory (Helm pre-install), so the upstream
   # chart must not render them again as tracked templates.

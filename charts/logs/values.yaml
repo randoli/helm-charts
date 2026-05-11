@@ -2,7 +2,7 @@
 # Full upstream value reference:
 # https://github.com/kaasops/vector-operator/blob/main/helm/values.yaml
 vector-operator:
-  fullnameOverride: "randoli-logs"  # stable ClusterRole name, safe for multi-release clusters
+  fullnameOverride: "randoli-obs-vector-operator"  # stable ClusterRole name, safe for multi-release clusters
 
   replicaCount: 1
 
@@ -31,7 +31,7 @@ vector-operator:
 
   vector:
     enable: true
-    name: "randoli-rok-vector"
+    name: "randoli-obs-vector"
     useApiServerCache: false
     agent:
       image: timberio/vector:0.41.X-distroless-libc

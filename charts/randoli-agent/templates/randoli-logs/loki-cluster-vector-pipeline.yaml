@@ -2,7 +2,7 @@
 apiVersion: observability.kaasops.io/v1alpha1
 kind: ClusterVectorPipeline
 metadata:
-  name: randoli-rok-loki-log-sync
+  name: randoli-obs-loki-log-sync
 spec:
   sinks:
     loki:
@@ -189,4 +189,4 @@ spec:
         match(string!(.message),
         r'(^\d{4}-\d{2}-\d{2}|^\d{2}:\d{2}:\d{2}|^\{"|^[A-Z]+\s)')
       type: reduce
-{{end}}       
+{{end}}
