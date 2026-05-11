@@ -1,7 +1,7 @@
 apiVersion: observability.kaasops.io/v1alpha1
 kind: ClusterVectorPipeline
 metadata:
-  name: vector-internal-metrics
+  name: randoli-rok-vector-internal-metrics
   namespace: {{ .Release.Namespace }}
 spec:
   sinks:
@@ -18,17 +18,23 @@ spec:
   transforms:
     filter_metrics:
       condition: >-
-        .name == "component_received_events_total" || 
-        .name == "component_sent_events_total" || 
-        .name == "buffer_size_events" || 
+        .name == "buffer_byte_size" ||         
+        .name == "buffer_discarded_events_total" ||  
+        .name == "buffer_max_byte_size" ||
+        .name == "buffer_size_events" ||     
+        .name == "component_discarded_events_total" ||  
         .name == "component_errors_total" || 
-        .name == "http_client_errors_total" ||
-        .name == "component_discarded_events_total" || 
+        .name == "component_latency_mean_seconds" || 
+        .name == "component_latency_seconds" || 
+        .name == "component_received_event_bytes_total" || 
+        .name == "component_received_events_total" ||  
+        .name == "component_sent_event_bytes_total" || 
+        .name == "component_sent_events_total" ||  
+        .name == "connection_send_errors_total" ||  
+        .name == "connection_read_errors_total" ||          
+        .name == "http_client_errors_total" ||         
+        .name == "http_client_responses_total" ||    
         .name == "send_errors_total" || 
-        .name == "connection_send_errors_total" || 
-        .name == "connection_read_errors_total" || 
-        .name == "http_client_responses_total" || 
-        .name == "buffer_discarded_events_total" || 
         .name == "utilization"
       inputs:
         - vector_metrics
