@@ -50,10 +50,17 @@ dependencies:
     version: 1.24.1
     condition: observability.tempo.enabled
     tags:
-      - observability
-  - name: network
-    version: 1.8.2
+     - observability  
+  # - name: network
+  #   version: 1.8.2
+  #   condition: observability.netobserv.enabled
+  #   tags:
+  #   - observability     
+  #   - costManagement
+  - name: network-upgraded
+    version: 1.11.2
     condition: observability.netobserv.enabled
+    alias: networkUpgraded
     tags:
       - observability
       - costManagement

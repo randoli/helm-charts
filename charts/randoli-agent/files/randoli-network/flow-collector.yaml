@@ -3,8 +3,9 @@ kind: FlowCollector
 metadata:
   name: cluster
 spec:
+  deploymentModel: Service
   networkPolicy:
-    enable: false
+    enable: true
   namespace: netobserv
   consolePlugin:
     advanced:
@@ -18,6 +19,11 @@ spec:
     enable: false
   processor:
     addZone: true
+    service:
+      tlsType: Provided
+      providedCertificates:
+        secretName: flowlogs-pipeline-cert
+        caConfigMap: netobserv-ca
     subnetLabels:
       customLabels:
         - cidrs:

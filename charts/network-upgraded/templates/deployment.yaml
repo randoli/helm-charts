@@ -1,0 +1,113 @@
+{{- if .Values.certManager.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netobserv-controller-manager
+  labels:
+    part-of: netobserv-operator
+    app: netobserv-operator
+    control-plane: controller-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netobserv-operator
+      control-plane: controller-manager
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        part-of: netobserv-operator
+        app: netobserv-operator
+        control-plane: controller-manager
+    spec:
+      containers:
+        - args:
+            - --health-probe-bind-address=:8081
+            - --metrics-bind-address=:8443
+            - --leader-elect
+            - --ebpf-agent-image=$(RELATED_IMAGE_EBPF_AGENT)
+            - --flowlogs-pipeline-image=$(RELATED_IMAGE_FLOWLOGS_PIPELINE)
+            - --console-plugin-image=$(RELATED_IMAGE_CONSOLE_PLUGIN)
+            - --console-plugin-compat-image=$(RELATED_IMAGE_CONSOLE_PLUGIN_COMPAT)
+            - --demo-loki-image=$(RELATED_IMAGE_DEMO_LOKI)
+            - --namespace=$(NAMESPACE)
+            - --downstream-deployment=$(DOWNSTREAM_DEPLOYMENT)
+            - --profiling-bind-address=$(PROFILING_BIND_ADDRESS)
+            - --metrics-cert-file=/etc/tls/private/tls.crt
+            - --metrics-cert-key-file=/etc/tls/private/tls.key
+          command:
+            - /manager
+          env:
+            - name: RELATED_IMAGE_EBPF_AGENT
+              value: '{{ .Values.ebpfAgent.image }}:{{ .Values.ebpfAgent.version }}'
+            - name: RELATED_IMAGE_FLOWLOGS_PIPELINE
+              value: '{{ .Values.flowlogsPipeline.image }}:{{ .Values.flowlogsPipeline.version }}'
+            - name: RELATED_IMAGE_CONSOLE_PLUGIN
+              value: '{{ if .Values.standaloneConsole.enable }}{{ .Values.standaloneConsole.image }}:{{ .Values.standaloneConsole.version }}{{ else }}{{ .Values.consolePlugin.image }}:{{ .Values.consolePlugin.version }}{{ end }}'
+            - name: RELATED_IMAGE_DEMO_LOKI
+              value: grafana/loki:3.5.0
+            - name: DOWNSTREAM_DEPLOYMENT
+              value: "false"
+            - name: PROFILING_BIND_ADDRESS
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: '{{ .Values.operator.image }}:{{ .Values.operator.version }}'
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          name: manager
+          ports:
+            - containerPort: 9443
+              name: webhook-server
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              memory: 400Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /tmp/k8s-webhook-server/serving-certs
+              name: cert
+              readOnly: true
+            - mountPath: /etc/tls/private
+              name: manager-metric-tls
+              readOnly: true
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: netobserv-controller-manager
+      terminationGracePeriodSeconds: 10
+{{- if .Values.operator.nodeAffinity }}
+      affinity:
+        nodeAffinity:
+{{- toYaml .Values.operator.nodeAffinity | nindent 10 }}
+{{- end }}
+      volumes:
+        - name: cert
+          secret:
+            defaultMode: 420
+            secretName: webhook-server-cert
+        - name: manager-metric-tls
+          secret:
+            defaultMode: 420
+            secretName: manager-metrics-tls
+{{- end }}  

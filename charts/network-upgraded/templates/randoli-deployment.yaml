@@ -1,0 +1,208 @@
+{{- if not .Values.certManager.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: randoli-rok-netobserv-controller-manager
+  labels:
+    app: netobserv-operator
+    control-plane: controller-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netobserv-operator
+      control-plane: controller-manager
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: netobserv-operator
+        control-plane: controller-manager
+    spec:
+      initContainers:
+        # Generate TLS
+        - name: generate-cert
+          image: python:3.11-slim
+          command:
+          - bash
+          - -c
+          - |
+            # Metrics cert
+            openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+              -subj "/CN=netobserv-metrics-service.{{ .Release.Namespace }}.svc" \
+              -keyout /metrics/tls.key \
+              -out /metrics/tls.crt && \
+            chmod 0644 /metrics/tls.key /metrics/tls.crt
+
+            # Webhook cert
+            openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+              -subj "/CN=netobserv-webhook-service.{{ .Release.Namespace }}.svc" \
+              -keyout /webhook/tls.key \
+              -out /webhook/tls.crt && \
+            chmod 0644 /webhook/tls.key /webhook/tls.crt
+
+             # Flowlogs pipeline cert
+            openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+              -subj "/CN=flowlogs-pipeline.{{ .Release.Namespace }}.svc" \
+              -keyout /flowlogs/tls.key \
+              -out /flowlogs/tls.crt
+            chmod 0644 /flowlogs/tls.key /flowlogs/tls.crt
+
+            # Copy flowlogs cert as CA for eBPF agent
+            cp /flowlogs/tls.crt /flowlogs/service-ca.crt
+
+          volumeMounts:
+            - name: metrics-certs
+              mountPath: /metrics
+            - name: webhook-certs
+              mountPath: /webhook
+            - name: flowlogs-certs
+              mountPath: /flowlogs
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false   
+
+        # Create Secret and ConfigMap if not exist
+        - name: create-k8s-resources
+          image: bitnami/kubectl:latest
+          command:
+            - bash
+            - -c
+            - |
+              set -e
+              NAMESPACE=netobserv
+              CA_NAMESPACE=netobserv-privileged
+
+              # Create flowlogs-pipeline Secret if missing
+              kubectl get secret flowlogs-pipeline-cert -n $NAMESPACE >/dev/null 2>&1 || \
+              kubectl create secret tls flowlogs-pipeline-cert \
+                --cert=/flowlogs/tls.crt \
+                --key=/flowlogs/tls.key \
+                -n $NAMESPACE
+
+              # Create netobserv-ca ConfigMap if missing
+              kubectl get configmap netobserv-ca -n $CA_NAMESPACE >/dev/null 2>&1 || \
+              kubectl create configmap netobserv-ca \
+                --from-file=service-ca.crt=/flowlogs/service-ca.crt \
+                -n $CA_NAMESPACE \
+                --dry-run=client -o yaml | kubectl apply -f -
+          volumeMounts:
+            - name: flowlogs-certs
+              mountPath: /flowlogs
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
+
+      containers:
+        - args:
+            - --health-probe-bind-address=:8081
+            - --metrics-bind-address=:8443
+            - --leader-elect
+            - --ebpf-agent-image=$(RELATED_IMAGE_EBPF_AGENT)
+            - --flowlogs-pipeline-image=$(RELATED_IMAGE_FLOWLOGS_PIPELINE)
+            - --console-plugin-image=$(RELATED_IMAGE_CONSOLE_PLUGIN)
+            - --downstream-deployment=$(DOWNSTREAM_DEPLOYMENT)
+            - --profiling-bind-address=$(PROFILING_BIND_ADDRESS)
+            - --metrics-cert-file=/etc/tls/private/tls.crt
+            - --metrics-cert-key-file=/etc/tls/private/tls.key
+          command:
+            - /manager
+          env:
+            - name: RELATED_IMAGE_EBPF_AGENT
+              value: '{{ .Values.ebpfAgent.image }}:{{ .Values.ebpfAgent.version }}'
+            - name: RELATED_IMAGE_FLOWLOGS_PIPELINE
+              value: '{{ .Values.flowlogsPipeline.image }}:{{ .Values.flowlogsPipeline.version }}'
+            - name: RELATED_IMAGE_CONSOLE_PLUGIN
+              value: '{{ if .Values.standaloneConsole.enable }}{{ .Values.standaloneConsole.image }}:{{ .Values.standaloneConsole.version }}{{ else }}{{ .Values.consolePlugin.image }}:{{ .Values.consolePlugin.version }}{{ end }}'
+            - name: RELATED_IMAGE_DEMO_LOKI
+              value: grafana/loki:3.5.0
+            - name: DOWNSTREAM_DEPLOYMENT
+              value: "false"
+            - name: PROFILING_BIND_ADDRESS
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: '{{ .Values.operator.image }}:{{ .Values.operator.version }}'
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          name: manager
+          ports:
+            - containerPort: 9443
+              name: webhook-server
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              memory: 400Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /tmp/k8s-webhook-server/serving-certs
+              name: webhook-certs
+              readOnly: true
+            - mountPath: /etc/tls/private
+              name: metrics-certs
+              readOnly: true
+            - name: flowlogs-certs
+              mountPath: /flowlogs
+              readOnly: true 
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: netobserv-controller-manager
+      terminationGracePeriodSeconds: 10
+      volumes:
+        - name: metrics-certs
+          emptyDir: {}
+        - name: webhook-certs
+          emptyDir: {}
+        - name: flowlogs-certs
+          emptyDir: {}
+      {{- if or .Values.tolerations .Values.global.tolerations }}
+      tolerations:
+        {{- with .Values.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.tolerations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.nodeSelector .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- with .Values.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+      {{- if or .Values.affinity .Values.global.affinity }}
+      affinity:
+        {{- with .Values.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.global.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }} 
+      {{- end }}
+{{- end }}      

@@ -1,0 +1,2502 @@
+---
+# Source: randoli-agent/charts/prometheus/charts/alertmanager/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: randoli-alerts
+  labels:
+    helm.sh/chart: alertmanager-1.13.1
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: "v0.27.0"
+    app.kubernetes.io/managed-by: Helm
+  namespace: randoli-agents
+automountServiceAccountToken: true
+---
+# Source: randoli-agent/charts/prometheus/charts/kube-state-metrics/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: true
+metadata:
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.27.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: "2.14.0"
+  name: randoli-kube-state-metrics
+  namespace: randoli-agents
+---
+# Source: randoli-agent/charts/prometheus/charts/prometheus-node-exporter/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: randoli-prometheus-node-exporter
+  namespace: randoli-agents
+  labels:
+    helm.sh/chart: prometheus-node-exporter-4.43.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-node-exporter
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: "1.8.2"
+automountServiceAccountToken: false
+---
+# Source: randoli-agent/charts/prometheus/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: v3.0.1
+    helm.sh/chart: prometheus-26.0.1
+    app.kubernetes.io/part-of: prometheus
+  name: randoli-prometheus
+  namespace: randoli-agents
+  annotations:
+    {}
+---
+# Source: randoli-agent/templates/serviceaccount.yaml
+#
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: true
+metadata:
+  name: randoli-agent
+  namespace: randoli-agents
+  labels:
+    app: randoli-agent
+    app.kubernetes.io/name: randoli-agent
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/component: "randoli-agent"
+    app.kubernetes.io/version: "1.18"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: randoli-agent-1.18.2
+---
+# Source: randoli-agent/charts/prometheus/charts/alertmanager/templates/randoli/randoli-alerts-template-cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: randoli-alert-templates
+  namespace: randoli-agents
+data:
+  randoli_email.tmpl: |-
+    {{ define "randoli.email.subject" -}}
+    [{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ if .CommonLabels.deployment }} in {{ .CommonLabels.deployment }}{{ else if .CommonLabels.node }} on {{ .CommonLabels.node }}{{ end }}{{ with .CommonLabels.cluster }} ({{ . }}){{ end }}
+    {{- end }}
+    
+    {{ define "randoli.email.body" }}
+    <html>
+    <head>
+      <style>
+        /* Fallback fluid container */
+        .container { width:100% !important; max-width:600px; margin:0 auto; }
+        /* Responsive button */
+        .button { display:inline-block; width:100%; max-width:200px; text-align:center; }
+        @media only screen and (max-width: 480px) {
+          .container { padding: 0 10px !important; }
+          .button { width:100% !important; }
+        }
+      </style>
+    </head>
+    <body style="margin:0; padding:0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px 0;">
+        <tr>
+          <td align="center">
+    
+            <!-- Top Logo -->
+            <table class="container" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+              <tr><td align="center">
+                <img src="https://cdn.prod.website-files.com/66e2aa7f74a05584d1dc32d8/67b4ede66602c10c41838925_logo_48px.png"
+                     alt="Randoli Logo"
+                     style="display:block; max-width:100%; height:auto; max-height:60px;">
+              </td></tr>
+            </table>
+    
+            <!-- Main Card -->
+            <table class="container" cellpadding="0" cellspacing="0"
+                   style="background-color:#ffffff; border-radius:8px; overflow:hidden;
+                          box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+    
+              <!-- Header -->
+              <tr>
+                <td style="background-color: #007398; padding:20px; text-align:center;">
+                  <h1 style="color:#ffffff; margin:0; font-size:24px;">
+                    [{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}
+                  </h1>
+                </td>
+              </tr>
+    
+              <!-- Body -->
+              <tr>
+                <td style="padding:20px; color:#333333; font-size:14px; line-height:1.6;">
+    
+                  <p><strong>Alert Summary</strong></p>
+                  <table width="100%" cellpadding="5" cellspacing="0"
+                         style="border-collapse:collapse; margin-bottom:20px;">
+                    <tbody>
+                      {{ with .CommonLabels.cluster }}
+                      <tr>
+                        <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Cluster</td>
+                        <td style="border-bottom:1px solid #eeeeee;">{{ . }}</td>
+                      </tr>
+                      {{ end }}
+                      {{ with .CommonLabels.namespace }}
+                      <tr>
+                        <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Namespace</td>
+                        <td style="border-bottom:1px solid #eeeeee;">{{ . }}</td>
+                      </tr>
+                      {{ end }}
+                      {{ with .CommonLabels.deployment }}
+                      <tr>
+                        <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Deployment</td>
+                        <td style="border-bottom:1px solid #eeeeee;">{{ . }}</td>
+                      </tr>
+                      {{ end }}
+                      {{ with .CommonLabels.node }}
+                      <tr>
+                        <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Node</td>
+                        <td style="border-bottom:1px solid #eeeeee;">{{ . }}</td>
+                      </tr>
+                      {{ end }}
+                      {{ with .CommonAnnotations.description }}
+                      <tr>
+                        <td style="font-weight:bold;">Description</td>
+                        <td>{{ . }}</td>
+                      </tr>
+                      {{ end }}
+                    </tbody>
+                  </table>
+    
+                  <!-- Button -->
+                  <p style="text-align:center; margin:30px 0;">
+                    <a href="{{ .CommonAnnotations.sourceUrl }}"
+                       class="button"
+                       style="padding:12px 24px; background-color:#007398; color:#ffffff;
+                              text-decoration:none; border-radius:4px; font-weight:bold;">
+                      View {{ .CommonLabels.alertType }}
+                    </a>
+                  </p>
+    
+                </td>
+              </tr>
+    
+              <!-- Footer -->
+              <tr>
+                <td style="background-color:#f4f4f4; padding:10px 20px;
+                           font-size:12px; color:#777777; text-align:center;">
+                  This is an automated notification from Randoli App Insights. Please do not reply.
+                </td>
+              </tr>
+    
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+    {{ end }}
+
+  randoli_slack.tmpl: |-
+    {{ define "randoli.slack.title" -}}
+    [{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ if .CommonLabels.deployment }} in {{ .CommonLabels.deployment }}{{ else if .CommonLabels.node }} on {{ .CommonLabels.node }}{{ end }}{{ with .CommonLabels.cluster }} ({{ . }}){{ end }}
+    {{- end }}
+    
+    {{ define "randoli.slack.text" -}}
+    {{- with .CommonLabels.cluster }}
+    *Cluster:* {{ . }}
+    {{- end }}
+    {{- with .CommonLabels.namespace }}
+    *Namespace:* {{ . }}
+    {{- end }}
+    {{- with .CommonLabels.deployment }}
+    *Deployment:* {{ . }}
+    {{- end }}
+    {{- with .CommonLabels.node }}
+    *Node:* {{ . }}
+    {{- end }}
+    {{- with .CommonAnnotations.description }}
+    *Description:* {{ . }}
+    {{- end }}
+    {{- end }}
+    
+    {{ define "randoli.slack.footer" }}
+    {{ with .CommonAnnotations.occurredAt }}Occurred At {{ . }}{{ end }}
+    {{ end }}
+---
+# Source: randoli-agent/charts/prometheus/templates/cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: v3.0.1
+    helm.sh/chart: prometheus-26.0.1
+    app.kubernetes.io/part-of: prometheus
+  name: randoli-prometheus
+  namespace: randoli-agents
+data:
+  allow-snippet-annotations: "false"
+  alerting_rules.yml: |
+    {}
+  alerts: |
+    {}
+  prometheus.yml: |
+    global:
+      evaluation_interval: 1m
+      scrape_interval: 1m
+      scrape_timeout: 10s
+    storage:
+      tsdb:
+        out_of_order_time_window: 30m
+    otlp:
+      promote_resource_attributes:
+      - service.instance.id
+      - service.name
+      - service.namespace
+      - cloud.availability_zone
+      - cloud.region
+      - container.name
+      - deployment.environment.name
+      - k8s.cluster.name
+      - k8s.container.name
+      - k8s.cronjob.name
+      - k8s.daemonset.name
+      - k8s.deployment.name
+      - k8s.job.name
+      - k8s.namespace.name
+      - k8s.pod.name
+      - k8s.replicaset.name
+      - k8s.statefulset.name
+      - host.id
+      - host.name
+      - host.type
+      - cloud.platform
+      - cloud.provider
+      - match.label
+      - postgresql.table.name
+      - postgresql.schema.name
+      - postgresql.index.name
+      - postgresql.database.name
+    rule_files:
+    - /etc/config/recording_rules.yml
+    - /etc/config/alerting_rules.yml
+    - /etc/config/rules
+    - /etc/config/alerts
+    scrape_configs:
+    - job_name: prometheus
+      static_configs:
+      - targets:
+        - localhost:9090
+    - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      job_name: kubernetes-apiservers
+      kubernetes_sd_configs:
+      - role: endpoints
+      relabel_configs:
+      - action: keep
+        regex: default;kubernetes;https
+        source_labels:
+        - __meta_kubernetes_namespace
+        - __meta_kubernetes_service_name
+        - __meta_kubernetes_endpoint_port_name
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+    - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      job_name: kubernetes-nodes
+      kubernetes_sd_configs:
+      - role: node
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - replacement: kubernetes.default.svc:443
+        target_label: __address__
+      - regex: (.+)
+        replacement: /api/v1/nodes/$1/proxy/metrics
+        source_labels:
+        - __meta_kubernetes_node_name
+        target_label: __metrics_path__
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+    - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      job_name: kubernetes-nodes-cadvisor
+      kubernetes_sd_configs:
+      - role: node
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - replacement: kubernetes.default.svc:443
+        target_label: __address__
+      - regex: (.+)
+        replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+        source_labels:
+        - __meta_kubernetes_node_name
+        target_label: __metrics_path__
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+    - honor_labels: true
+      job_name: kubernetes-service-endpoints
+      kubernetes_sd_configs:
+      - role: endpoints
+      relabel_configs:
+      - action: keep
+        regex: true
+        source_labels:
+        - __meta_kubernetes_service_annotation_randoli_prometheus_io_scrape
+      - action: drop
+        regex: true
+        source_labels:
+        - __meta_kubernetes_service_annotation_randoli_prometheus_io_scrape_slow
+      - action: replace
+        regex: (https?)
+        source_labels:
+        - __meta_kubernetes_service_annotation_randoli_prometheus_io_scheme
+        target_label: __scheme__
+      - action: replace
+        regex: (.+)
+        source_labels:
+        - __meta_kubernetes_service_annotation_randoli_prometheus_io_path
+        target_label: __metrics_path__
+      - action: replace
+        regex: (.+?)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        source_labels:
+        - __address__
+        - __meta_kubernetes_service_annotation_randoli_prometheus_io_port
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_service_annotation_randoli_prometheus_io_param_(.+)
+        replacement: __param_$1
+      - action: labelmap
+        regex: __meta_kubernetes_service_label_(.+)
+      - action: replace
+        source_labels:
+        - __meta_kubernetes_namespace
+        target_label: namespace
+      - action: replace
+        source_labels:
+        - __meta_kubernetes_service_name
+        target_label: service
+      - action: replace
+        source_labels:
+        - __meta_kubernetes_pod_node_name
+        target_label: node
+    - honor_labels: true
+      job_name: kubernetes-service-endpoints-slow
+      kubernetes_sd_configs:
+      - role: endpoints
+      relabel_configs:
+      - action: keep
+        regex: true
+        source_labels:
+        - __meta_kubernetes_service_annotation_randoli_prometheus_io_scrape_slow
+      - action: replace
+        regex: (https?)
+        source_labels:
+        - __meta_kubernetes_service_annotation_randoli_prometheus_io_scheme
+        target_label: __scheme__
+      - action: replace
+        regex: (.+)
+        source_labels:
+        - __meta_kubernetes_service_annotation_randoli_prometheus_io_path
+        target_label: __metrics_path__
+      - action: replace
+        regex: (.+?)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        source_labels:
+        - __address__
+        - __meta_kubernetes_service_annotation_randoli_prometheus_io_port
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_service_annotation_randoli_prometheus_io_param_(.+)
+        replacement: __param_$1
+      - action: labelmap
+        regex: __meta_kubernetes_service_label_(.+)
+      - action: replace
+        source_labels:
+        - __meta_kubernetes_namespace
+        target_label: namespace
+      - action: replace
+        source_labels:
+        - __meta_kubernetes_service_name
+        target_label: service
+      - action: replace
+        source_labels:
+        - __meta_kubernetes_pod_node_name
+        target_label: node
+      scrape_interval: 5m
+      scrape_timeout: 30s
+    - honor_labels: true
+      job_name: prometheus-pushgateway
+      kubernetes_sd_configs:
+      - role: service
+      relabel_configs:
+      - action: keep
+        regex: pushgateway
+        source_labels:
+        - __meta_kubernetes_service_annotation_randoli_prometheus_io_probe
+    - honor_labels: true
+      job_name: kubernetes-services
+      kubernetes_sd_configs:
+      - role: service
+      metrics_path: /probe
+      params:
+        module:
+        - http_2xx
+      relabel_configs:
+      - action: keep
+        regex: true
+        source_labels:
+        - __meta_kubernetes_service_annotation_randoli_prometheus_io_probe
+      - source_labels:
+        - __address__
+        target_label: __param_target
+      - replacement: blackbox
+        target_label: __address__
+      - source_labels:
+        - __param_target
+        target_label: instance
+      - action: labelmap
+        regex: __meta_kubernetes_service_label_(.+)
+      - source_labels:
+        - __meta_kubernetes_namespace
+        target_label: namespace
+      - source_labels:
+        - __meta_kubernetes_service_name
+        target_label: service
+    - honor_labels: true
+      job_name: kubernetes-pods
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      - action: keep
+        regex: true
+        source_labels:
+        - __meta_kubernetes_pod_annotation_randoli_prometheus_io_scrape
+      - action: drop
+        regex: true
+        source_labels:
+        - __meta_kubernetes_pod_annotation_randoli_prometheus_io_scrape_slow
+      - action: replace
+        regex: (https?)
+        source_labels:
+        - __meta_kubernetes_pod_annotation_randoli_prometheus_io_scheme
+        target_label: __scheme__
+      - action: replace
+        regex: (.+)
+        source_labels:
+        - __meta_kubernetes_pod_annotation_randoli_prometheus_io_path
+        target_label: __metrics_path__
+      - action: replace
+        regex: (\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})
+        replacement: '[$2]:$1'
+        source_labels:
+        - __meta_kubernetes_pod_annotation_randoli_prometheus_io_port
+        - __meta_kubernetes_pod_ip
+        target_label: __address__
+      - action: replace
+        regex: (\d+);((([0-9]+?)(\.|$)){4})
+        replacement: $2:$1
+        source_labels:
+        - __meta_kubernetes_pod_annotation_randoli_prometheus_io_port
+        - __meta_kubernetes_pod_ip
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_annotation_randoli_prometheus_io_param_(.+)
+        replacement: __param_$1
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - action: replace
+        source_labels:
+        - __meta_kubernetes_namespace
+        target_label: namespace
+      - action: replace
+        source_labels:
+        - __meta_kubernetes_pod_name
+        target_label: pod
+      - action: drop
+        regex: Pending|Succeeded|Failed|Completed
+        source_labels:
+        - __meta_kubernetes_pod_phase
+      - action: replace
+        source_labels:
+        - __meta_kubernetes_pod_node_name
+        target_label: node
+    - honor_labels: true
+      job_name: kubernetes-pods-slow
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      - action: keep
+        regex: true
+        source_labels:
+        - __meta_kubernetes_pod_annotation_randoli_prometheus_io_scrape_slow
+      - action: replace
+        regex: (https?)
+        source_labels:
+        - __meta_kubernetes_pod_annotation_randoli_prometheus_io_scheme
+        target_label: __scheme__
+      - action: replace
+        regex: (.+)
+        source_labels:
+        - __meta_kubernetes_pod_annotation_randoli_prometheus_io_path
+        target_label: __metrics_path__
+      - action: replace
+        regex: (\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})
+        replacement: '[$2]:$1'
+        source_labels:
+        - __meta_kubernetes_pod_annotation_randoli_prometheus_io_port
+        - __meta_kubernetes_pod_ip
+        target_label: __address__
+      - action: replace
+        regex: (\d+);((([0-9]+?)(\.|$)){4})
+        replacement: $2:$1
+        source_labels:
+        - __meta_kubernetes_pod_annotation_randoli_prometheus_io_port
+        - __meta_kubernetes_pod_ip
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_annotation_randoli_prometheus_io_param_(.+)
+        replacement: __param_$1
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - action: replace
+        source_labels:
+        - __meta_kubernetes_namespace
+        target_label: namespace
+      - action: replace
+        source_labels:
+        - __meta_kubernetes_pod_name
+        target_label: pod
+      - action: drop
+        regex: Pending|Succeeded|Failed|Completed
+        source_labels:
+        - __meta_kubernetes_pod_phase
+      - action: replace
+        source_labels:
+        - __meta_kubernetes_pod_node_name
+        target_label: node
+      scrape_interval: 5m
+      scrape_timeout: 30s
+    - job_name: 'opencost'
+      scrape_interval: 1m
+      scrape_timeout: 10s
+      metrics_path: "/metrics"
+      static_configs:
+        - targets: ['randoli-cmk-opencost.randoli-agents.svc:9003']
+    - job_name: 'network-cost-metrics'
+      scrape_interval: 1m
+      scrape_timeout: 10s
+      metrics_path: "/metrics"
+      static_configs:
+        - targets: ['randoli-cmk-opencost.randoli-agents.svc:8080']
+    
+    alerting:
+      alertmanagers:
+      - kubernetes_sd_configs:
+          - role: pod
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_namespace]
+          regex: randoli-agents
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_instance]
+          regex: randoli-non-root
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+          regex: alertmanager
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_container_port_number]
+          regex: "9093"
+          action: keep
+  recording_rules.yml: |
+    {}
+  rules: |
+    {}
+---
+# Source: randoli-agent/templates/config-map-manager-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: randoli-agent-config
+  namespace: randoli-agents
+  labels:
+    app.kubernetes.io/version: "1.18"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: randoli-agent-1.18.2
+data:
+  AGENT_CONTROLLER_DIAL_TIMEOUT: 10000ms
+  APP_NAME: randoli-agent
+  APP_NAMESPACE: randoli-agents
+  CONSOLE_URL: https://console.insights.randoli.io
+  CLIENT_CERT_PATH: /app/certs/client-cert.pem
+  CLIENT_PRIVATE_KEY_PATH: /app/certs/client-key.pem
+  CONTEXT_PATH: /
+  DEBUG: 'false'
+  HTTP_SERVICE_PORT: '8080'
+  KEYCLOAK_TIMEOUT: 1m0s
+  OPENCOST_BACKEND_URL: http://randoli-cmk-opencost.randoli-agents.svc:9003
+  OPENCOST_POD_PREFIX: randoli-cmk-opencost
+  PROMETHEUS_URL: 'http://randoli-prometheus.randoli-agents.svc:80'
+  PROMETHEUS_INSECURE_SKIP_VERIFY: "true"
+  TLS_ENABLED: 'true'
+  RIGHTSIZING_RECOMMENDATIONS_ENABLED: 'false'
+  RIGHTSIZING_INSTALL_VPA: 'false'
+  RIGHTSIZING_MIN_POD_CPU_MILLICORES: '25'
+  RIGHTSIZING_MIN_POD_RAM_MB: '25'
+  SECURITY_SCANS_MODE: 'OFF'
+  SECURITY_SCANS_CRON_SPEC: '0 10,20 * * *'
+  SECURITY_SCANS_INSTALL_KUBESCAPE: 'false'
+  ENABLE_DEFAULT_TIMELINE_PROMETHEUS_QUERIES: 'true'
+  PROMETHEUS_CUSTOM_QUERIES_PATH: '/prometheus'
+  OPENCOST_INSTALL: 'false'
+  IMAGE_REGISTRY: 'docker.io'
+  IMAGE_REPOSITORY: 'randoli/insights-agent'
+  IMAGE_TAG: '1.18'
+  IMAGE_DIGEST: ''
+  IMAGE_PULL_POLICY: 'Always'
+  RESOURCES_LIMITS_CPU: '1'
+  RESOURCES_LIMITS_MEMORY: '1.5Gi'
+  RESOURCES_REQUESTS_CPU: '150m'
+  RESOURCES_REQUESTS_MEMORY: '1.5Gi'
+  PIXIE_INSTALL: 'false'
+  LOG_ANALYZERS_ENABLED: 'false'
+  VECTOR_INSTALL: 'false'
+  VECTOR_HTTP_SINKER_URL: 'http://randoli-agent.randoli-agents:8080/log-sink/'
+  PROMETHEUS_INSTALL: 'true'
+  TEKTON_PIPELINE_ENABLED: 'false'
+  JAEGER_QUERY_SVC_GRPC: randoli-rok-jaeger-query.randoli-agents:16685
+  JAEGER_QUERY_SVC_HTTP: http://randoli-rok-jaeger-query.randoli-agents:16686
+  PROMETHEUS_ALERTMANAGER_URL: http://randoli-alerts.randoli-agents:9093
+  TRACE_STORAGE_BACKEND_TYPE: 'TEMPO'
+  TRACE_STORAGE_BACKEND_URL: http://randoli-rok-tempo.randoli-agents:3200
+  SUPERVISOR_AGENT_HTTP_URL: 'http://sre-agent/chat'
+  POPULATE_RES_INDEX_FROM_DB: ''
+  FLIGHT_SQL_HOST: localhost:31337
+  OPENSEARCH_SKIP_TLS_VERIFY: 'false'
+  RANDOLI_AGENT_HTTP_ENDPOINT: 'http://randoli-agent.randoli-agents:8080'
+  ENABLE_SUPERVISOR_AGENT_REPORTS: 'false'
+  OTEL_ENABLED: 'true'
+  OTEL_EXPORTER_OTLP_ENDPOINT: 'http://randoli-otel-collector.randoli-agents.svc:4317'
+---
+# Source: randoli-agent/templates/randoli-tproxy/config-map.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: randoli-tproxy
+  namespace: randoli-agents
+data:
+  LOKI_BASE_URL: http://randoli-rok-loki.randoli-agents.svc:3100
+  LISTEN_ADDR: ':8080'
+  ROUTE_PREFIX: /api/loki
+  ENABLE_CORS: 'true'
+  CORS_ALLOW_ORIGIN: "*"
+  ALLOWED_LOKI_PATHS: /loki/api/v1/query,/loki/api/v1/query_range,/loki/api/v1/labels,/loki/api/v1/label/service_name/values,/loki/api/v1/label/k8s_pod_namespace/values,/loki/api/v1/label/k8s_pod_name/values,/loki/api/v1/label/k8s_container_name/values,/loki/api/v1/label/severity/values
+  ALLOWED_TEMPO_PATHS: /api/v2/search/,/api/v2/traces/,/api/v2/services/,/api/v2/spans/,/api/v1/search/,/api/v1/traces/,/api/v1/services/,/api/v1/spans/,/api/search,/api/search/tag/name/values,/api/search/tag/service.name/values,/api/search/tags,/api/traces/*  
+  ALLOWED_PROMETHEUS_PATHS: /api/v1/query_range
+  KEYCLOAK_ISSUER_URL: https://sso.randoli.io/auth/realms/sso
+  TEMPO_BASE_URL: http://randoli-rok-tempo.randoli-agents:3200
+  PROMETHEUS_BASE_URL: http://randoli-prometheus.randoli-agents.svc:80
+---
+# Source: randoli-agent/charts/prometheus/templates/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: v3.0.1
+    helm.sh/chart: prometheus-26.0.1
+    app.kubernetes.io/part-of: prometheus
+  name: randoli-prometheus
+  namespace: randoli-agents
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "15Gi"
+---
+# Source: randoli-agent/templates/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: randoli-agent
+  labels:
+    app.kubernetes.io/version: "1.18"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: randoli-agent-1.18.2
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  volumeMode: Filesystem
+---
+# Source: randoli-agent/charts/prometheus/charts/kube-state-metrics/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.27.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: "2.14.0"
+  name: "randoli-non-root-randoli-kube-state-metrics"
+rules:
+
+- apiGroups: ["certificates.k8s.io"]
+  resources:
+  - certificatesigningrequests
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["list", "watch"]
+
+- apiGroups: ["batch"]
+  resources:
+  - cronjobs
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - daemonsets
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - deployments
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - endpoints
+  verbs: ["list", "watch"]
+
+- apiGroups: ["autoscaling"]
+  resources:
+  - horizontalpodautoscalers
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "networking.k8s.io"]
+  resources:
+  - ingresses
+  verbs: ["list", "watch"]
+
+- apiGroups: ["batch"]
+  resources:
+  - jobs
+  verbs: ["list", "watch"]
+
+- apiGroups: ["coordination.k8s.io"]
+  resources:
+  - leases
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - limitranges
+  verbs: ["list", "watch"]
+
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources:
+    - mutatingwebhookconfigurations
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - namespaces
+  verbs: ["list", "watch"]
+
+- apiGroups: ["networking.k8s.io"]
+  resources:
+  - networkpolicies
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - nodes
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - persistentvolumeclaims
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - persistentvolumes
+  verbs: ["list", "watch"]
+
+- apiGroups: ["policy"]
+  resources:
+    - poddisruptionbudgets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - pods
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - replicasets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - replicationcontrollers
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - resourcequotas
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - secrets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - services
+  verbs: ["list", "watch"]
+
+- apiGroups: ["apps"]
+  resources:
+  - statefulsets
+  verbs: ["list", "watch"]
+
+- apiGroups: ["storage.k8s.io"]
+  resources:
+    - storageclasses
+  verbs: ["list", "watch"]
+
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources:
+    - validatingwebhookconfigurations
+  verbs: ["list", "watch"]
+
+- apiGroups: ["storage.k8s.io"]
+  resources:
+    - volumeattachments
+  verbs: ["list", "watch"]
+---
+# Source: randoli-agent/charts/prometheus/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: v3.0.1
+    helm.sh/chart: prometheus-26.0.1
+    app.kubernetes.io/part-of: prometheus
+  name: randoli-non-root-randoli-prometheus
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      - services
+      - endpoints
+      - pods
+      - ingresses
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "extensions"
+      - "networking.k8s.io"
+    resources:
+      - ingresses/status
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "discovery.k8s.io"
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - "/metrics"
+    verbs:
+      - get
+---
+# Source: randoli-agent/templates/cluste-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: randoli-non-root-randoli-agent-role
+  labels:
+    app.kubernetes.io/version: "1.18"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: randoli-agent-1.18.2
+rules:
+  - verbs:
+      - list
+      - watch
+      - get
+    apiGroups:
+      - ''
+    resources:
+      - nodes
+      - namespaces
+      - services
+      - persistentvolumes
+      - endpoints
+  - verbs:
+      - list
+    apiGroups:
+      - storage.k8s.io
+    resources:
+      - storageclasses
+  - verbs:
+      - list
+      - watch
+    apiGroups:
+      - ''
+    resources:
+      - events
+      - configmaps
+  - verbs:
+      - list
+      - watch
+      - get
+    apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+  - verbs:
+      - list
+      - watch
+      - get
+    apiGroups:
+      - 'apps'
+      - core.strimzi.io
+    resources:
+      - pods
+      - deployments
+      - replicasets
+      - statefulsets
+      - daemonsets
+      - strimzipodsets
+  - verbs:
+      - get
+    apiGroups:
+      - metrics.k8s.io
+    resources:
+      - nodes
+  - verbs:
+      - get
+      - list
+      - watch
+    apiGroups:
+      - ''
+    resources:
+      - pods
+  - verbs:
+      - get
+    apiGroups:
+      - ''
+    resources:
+      - pods/log
+  - verbs:
+      - list
+    apiGroups:
+      - batch
+    resources:
+      - cronjobs
+      - jobs
+  - verbs:
+      - get
+    apiGroups:
+      - autoscaling
+    resources:
+      - horizontalpodautoscalers
+  - verbs:
+      - create
+      - delete
+      - list
+    apiGroups:
+      - autoscaling.k8s.io
+    resources:
+      - verticalpodautoscalers
+  - verbs:
+      - list
+    apiGroups:
+      - autoscaling.k8s.io
+    resources:
+      - verticalpodautoscalercheckpoints
+  - verbs:
+      - get
+      - list
+      - watch
+    apiGroups:
+      - spdx.softwarecomposition.kubescape.io
+    resources:
+      - workloadconfigurationscans
+      - workloadconfigurationscansummaries
+      - vulnerabilitymanifestsummaries
+      - vulnerabilitymanifests
+      - vulnerabilitysummaries
+---
+# Source: randoli-agent/charts/prometheus/charts/kube-state-metrics/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.27.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: "2.14.0"
+  name: randoli-non-root-randoli-kube-state-metrics
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: randoli-non-root-randoli-kube-state-metrics
+subjects:
+- kind: ServiceAccount
+  name: randoli-kube-state-metrics
+  namespace: randoli-agents
+---
+# Source: randoli-agent/charts/prometheus/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: v3.0.1
+    helm.sh/chart: prometheus-26.0.1
+    app.kubernetes.io/part-of: prometheus
+  name: randoli-non-root-randoli-prometheus
+subjects:
+  - kind: ServiceAccount
+    name: randoli-prometheus
+    namespace: randoli-agents
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: randoli-non-root-randoli-prometheus
+---
+# Source: randoli-agent/templates/cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: randoli-non-root-randoli-agent-crb
+  labels:
+    app.kubernetes.io/version: "1.18"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: randoli-agent-1.18.2
+subjects:
+  - kind: ServiceAccount
+    name: randoli-agent
+    namespace: randoli-agents
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: randoli-non-root-randoli-agent-role
+---
+# Source: randoli-agent/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: randoli-non-root-randoli-agent-role
+  namespace: randoli-agents
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - secrets
+    resourceNames:
+      - randoli-rok-alert-config
+    verbs: 
+      - get
+  - apiGroups:
+      - ''
+    resources:
+      - configmaps
+    resourceNames:
+      - randoli-alerts
+    verbs: 
+      - get
+      - update
+  - apiGroups:
+      - ''
+    resources:
+      - pods
+    verbs: 
+      - delete
+---
+# Source: randoli-agent/templates/role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: randoli-non-root-randoli-agent-rb
+  namespace: randoli-agents
+subjects:
+  - kind: ServiceAccount
+    name: randoli-agent
+    namespace: randoli-agents
+roleRef:
+  kind: Role
+  name: randoli-non-root-randoli-agent-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: randoli-agent/charts/prometheus/charts/alertmanager/templates/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: randoli-alerts
+  labels:
+    helm.sh/chart: alertmanager-1.13.1
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: "v0.27.0"
+    app.kubernetes.io/managed-by: Helm
+  namespace: randoli-agents
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9093
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/instance: randoli-non-root
+---
+# Source: randoli-agent/charts/prometheus/charts/alertmanager/templates/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: randoli-alerts-headless
+  labels:
+    helm.sh/chart: alertmanager-1.13.1
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: "v0.27.0"
+    app.kubernetes.io/managed-by: Helm
+  namespace: randoli-agents
+spec:
+  clusterIP: None
+  ports:
+    - port: 9093
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/instance: randoli-non-root
+---
+# Source: randoli-agent/charts/prometheus/charts/kube-state-metrics/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: randoli-kube-state-metrics
+  namespace: randoli-agents
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.27.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: "2.14.0"
+  annotations:
+    randoli.prometheus.io/scrape: 'true'
+spec:
+  type: "ClusterIP"
+  ports:
+  - name: "http"
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
+  
+  selector:    
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: randoli-non-root
+---
+# Source: randoli-agent/charts/prometheus/charts/prometheus-node-exporter/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: randoli-prometheus-node-exporter
+  namespace: randoli-agents
+  labels:
+    helm.sh/chart: prometheus-node-exporter-4.43.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-node-exporter
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: "1.8.2"
+  annotations:
+    randoli.prometheus.io/scrape: "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9111
+      targetPort: 9111
+      protocol: TCP
+      name: metrics
+  selector:
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: randoli-non-root
+---
+# Source: randoli-agent/charts/prometheus/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: v3.0.1
+    helm.sh/chart: prometheus-26.0.1
+    app.kubernetes.io/part-of: prometheus
+  name: randoli-prometheus
+  namespace: randoli-agents
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 9090
+  selector:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/instance: randoli-non-root
+  sessionAffinity: None
+  type: "ClusterIP"
+---
+# Source: randoli-agent/templates/randoli-tproxy/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: randoli-tproxy
+  labels:
+    app.kubernetes.io/name: randoli-tproxy
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/component: randoli-tproxy
+spec:
+  ports:
+    - name: loki-proxy
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/name: randoli-tproxy
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/component: randoli-tproxy
+  type: ClusterIP
+---
+# Source: randoli-agent/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: randoli-agent
+  labels:
+    app.kubernetes.io/version: "1.18"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: randoli-agent-1.18.2
+spec:
+  ports:
+    - name: agent
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: gizmosql
+      protocol: TCP
+      port: 31337
+      targetPort: 31337  
+  selector:
+    app.kubernetes.io/name: randoli-agent
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/component: randoli-agent
+  type: ClusterIP
+---
+# Source: randoli-agent/charts/prometheus/charts/prometheus-node-exporter/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: randoli-prometheus-node-exporter
+  namespace: randoli-agents
+  labels:
+    helm.sh/chart: prometheus-node-exporter-4.43.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-node-exporter
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: "1.8.2"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-node-exporter
+      app.kubernetes.io/instance: randoli-non-root
+  revisionHistoryLimit: 10
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+      labels:
+        helm.sh/chart: prometheus-node-exporter-4.43.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: prometheus-node-exporter
+        app.kubernetes.io/name: prometheus-node-exporter
+        app.kubernetes.io/instance: randoli-non-root
+        app.kubernetes.io/version: "1.8.2"
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+      serviceAccountName: randoli-prometheus-node-exporter
+      containers:
+        - name: node-exporter
+          image: quay.io/prometheus/node-exporter:v1.8.2
+          imagePullPolicy: IfNotPresent
+          args:
+            - --path.procfs=/host/proc
+            - --path.sysfs=/host/sys
+            - --path.rootfs=/host/root
+            - --path.udev.data=/host/root/run/udev/data
+            - --web.listen-address=[$(HOST_IP)]:9111
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          env:
+            - name: HOST_IP
+              value: 0.0.0.0
+          ports:
+            - name: metrics
+              containerPort: 9111
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: 9111
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: 9111
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              readOnly:  true
+            - name: sys
+              mountPath: /host/sys
+              readOnly: true
+            - name: root
+              mountPath: /host/root
+              mountPropagation: HostToContainer
+              readOnly: true
+      hostNetwork: true
+      hostPID: true
+      hostIPC: false
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values:
+                - fargate
+              - key: type
+                operator: NotIn
+                values:
+                - virtual-kubelet
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: root
+          hostPath:
+            path: /
+---
+# Source: randoli-agent/charts/prometheus/charts/kube-state-metrics/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: randoli-kube-state-metrics
+  namespace: randoli-agents
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.27.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: "2.14.0"
+spec:
+  selector:
+    matchLabels:      
+      app.kubernetes.io/name: kube-state-metrics
+      app.kubernetes.io/instance: randoli-non-root
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      labels:        
+        helm.sh/chart: kube-state-metrics-5.27.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: kube-state-metrics
+        app.kubernetes.io/name: kube-state-metrics
+        app.kubernetes.io/instance: randoli-non-root
+        app.kubernetes.io/version: "2.14.0"
+    spec:
+      automountServiceAccountToken: true
+      hostNetwork: false
+      serviceAccountName: randoli-kube-state-metrics
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: kube-state-metrics
+        args:
+        - --port=8080
+        - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
+        imagePullPolicy: IfNotPresent
+        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.14.0
+        ports:
+        - containerPort: 8080
+          name: "http"
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            httpHeaders:
+            path: /livez
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            httpHeaders:
+            path: /readyz
+            port: 8081
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          {}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+---
+# Source: randoli-agent/charts/prometheus/templates/deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: v3.0.1
+    helm.sh/chart: prometheus-26.0.1
+    app.kubernetes.io/part-of: prometheus
+  name: randoli-prometheus
+  namespace: randoli-agents
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: server
+      app.kubernetes.io/name: prometheus
+      app.kubernetes.io/instance: randoli-non-root
+  replicas: 1
+  revisionHistoryLimit: 10
+  strategy:
+    type: Recreate
+    rollingUpdate: null
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: server
+        app.kubernetes.io/name: prometheus
+        app.kubernetes.io/instance: randoli-non-root
+        app.kubernetes.io/version: v3.0.1
+        helm.sh/chart: prometheus-26.0.1
+        app.kubernetes.io/part-of: prometheus
+    spec:
+      enableServiceLinks: true
+      serviceAccountName: randoli-prometheus
+      containers:
+        - name: prometheus-server-configmap-reload
+          image: "quay.io/prometheus-operator/prometheus-config-reloader:v0.78.2"
+          imagePullPolicy: "IfNotPresent"
+          args:
+            - --watched-dir=/etc/config
+            - --listen-address=0.0.0.0:8080
+            - --reload-url=http://127.0.0.1:9090/-/reload
+          ports:
+            - containerPort: 8080
+              name: metrics
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: metrics
+              scheme: HTTP
+            initialDelaySeconds: 2
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: metrics
+              scheme: HTTP
+            periodSeconds: 10
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+              readOnly: true
+
+        - name: prometheus-server
+          image: "quay.io/prometheus/prometheus:v3.0.1"
+          imagePullPolicy: "IfNotPresent"
+          args:
+            - --storage.tsdb.retention.time=3d
+            - --storage.tsdb.retention.size=12GB
+            - --config.file=/etc/config/prometheus.yml
+            - --storage.tsdb.path=/data
+            - --web.console.libraries=/etc/prometheus/console_libraries
+            - --web.console.templates=/etc/prometheus/consoles
+            - --web.enable-lifecycle
+            - --web.enable-otlp-receiver
+          ports:
+            - containerPort: 9090
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9090
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 4
+            failureThreshold: 3
+            successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9090
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+            - name: storage-volume
+              mountPath: /data
+              subPath: ""
+      dnsPolicy: ClusterFirst
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+      terminationGracePeriodSeconds: 300
+      volumes:
+        - name: config-volume
+          configMap:
+            name: randoli-prometheus
+        - name: storage-volume
+          persistentVolumeClaim:
+            claimName: randoli-prometheus
+---
+# Source: randoli-agent/templates/randoli-tproxy/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: randoli-tproxy
+  namespace: randoli-agents
+  labels:
+    app.kubernetes.io/name: randoli-tproxy
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/component: randoli-tproxy
+  annotations:
+    resource.opentelemetry.io/service.name: randoli-tproxy  
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: randoli-tproxy
+      app.kubernetes.io/instance: randoli-non-root
+      app.kubernetes.io/component: randoli-tproxy
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/name: randoli-tproxy
+        app.kubernetes.io/instance: randoli-non-root
+        app.kubernetes.io/component: randoli-tproxy
+    spec:
+      containers:
+        - name: randoli-tproxy
+          image: docker.io/randoli/telemetry-proxy:0.1.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: randoli-tproxy
+          resources:
+            limits:
+              cpu: 200m
+              memory: "512Mi"
+            requests:
+              cpu: 30m
+              memory: "128Mi"
+---
+# Source: randoli-agent/charts/prometheus/charts/alertmanager/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: randoli-alerts
+  labels:
+    helm.sh/chart: alertmanager-1.13.1
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/version: "v0.27.0"
+    app.kubernetes.io/managed-by: Helm
+  namespace: randoli-agents
+spec:
+  replicas: 1
+  minReadySeconds: 0
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alertmanager
+      app.kubernetes.io/instance: randoli-non-root
+  serviceName: randoli-alerts-headless
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: alertmanager
+        app.kubernetes.io/instance: randoli-non-root
+      annotations:
+    spec:
+      automountServiceAccountToken: true
+      serviceAccountName: randoli-alerts
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+      containers:
+        - name: alertmanager-configmap-reload
+          image: "quay.io/prometheus-operator/prometheus-config-reloader:v0.66.0"
+          imagePullPolicy: "IfNotPresent"
+          args:
+            - --watched-dir=/etc/alertmanager
+            - --reload-url=http://127.0.0.1:9093/-/reload
+          resources:
+            {}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alertmanager
+        - name: alertmanager
+          securityContext:
+            runAsGroup: 65534
+            runAsNonRoot: true
+            runAsUser: 65534
+          image: "quay.io/prometheus/alertmanager:v0.27.0"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+          args:
+            - --storage.path=/alertmanager
+            - --config.file=/etc/alertmanager/alertmanager.yml
+          ports:
+            - name: http
+              containerPort: 9093
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alertmanager
+            - name: storage
+              mountPath: /alertmanager
+            - mountPath: /randoli/templates
+              name: randoli-alert-templates
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: randoli-alerts
+        - configMap:
+            name: randoli-alert-templates
+          name: randoli-alert-templates
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
+---
+# Source: randoli-agent/templates/statefulset-agent.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: randoli-agent
+  namespace: randoli-agents
+  labels:
+    app.kubernetes.io/name: randoli-agent
+    app.kubernetes.io/instance: randoli-non-root
+    app.kubernetes.io/component: randoli-agent
+    app.kubernetes.io/version: "1.18"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: randoli-agent-1.18.2
+  annotations:
+    resource.opentelemetry.io/service.name: randoli-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: randoli-agent
+      app.kubernetes.io/instance: randoli-non-root
+      app.kubernetes.io/component: randoli-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: randoli-agent
+        app.kubernetes.io/instance: randoli-non-root
+        app.kubernetes.io/component: randoli-agent
+    spec:
+      volumes:
+        - name: agent-pv
+          persistentVolumeClaim:
+            claimName: randoli-agent
+        - name: tls-certs
+          secret:
+            secretName: randoli-agent-cert
+            items:
+              - key: client-cert.pem
+                path: client-cert.pem
+              - key: client-key.pem
+                path: client-key.pem
+            defaultMode: 420
+        - name: shared-migrations
+          emptyDir: {}
+        - name: gizmosql-tmp
+          emptyDir: {}
+      
+      initContainers:
+        - name: init
+          image: "docker.io/randoli/insights-agent:1.18"
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "copying migrations..."
+              cp -r /migration-scripts/* /migrations/
+              cp -r /migrate /migrations/migrate
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi    
+          volumeMounts:
+            - name: shared-migrations
+              mountPath: /migrations
+            - name: agent-pv
+              mountPath: /persistence
+        - name: migrate-db
+          image: datacatering/duckdb:v1.4.1
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "waiting for migration scripts..." &&
+              while [ ! -f /migrations/migrate ]; do sleep 1; done
+              chmod +x /migrations/migrate
+              ln -s /duckdb /bin/duckdb
+
+              # remove .wal file
+              rm -rf /persistence/agent.db.wal
+
+              echo "running migrations..."
+              /migrations/migrate /persistence/agent.db
+
+              echo "setting up permissions..."
+              chown :1001 /persistence/agent.db
+              chmod 660 /persistence/agent.db
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi       
+          volumeMounts:
+            - name: shared-migrations
+              mountPath: /migrations
+            - name: agent-pv
+              mountPath: /persistence
+      containers:
+        - name: randoli-agent
+          image: "docker.io/randoli/insights-agent:1.18"
+          imagePullPolicy: Always
+          args:
+            - |
+              echo "Waiting for the FlightSQL server to be ready..."
+              while ! nc -z localhost 31337; do
+                sleep 1
+              done
+              echo "Starting agent..."
+              exec /tmp/guvnor
+          command:
+            - /bin/sh
+            - -c
+          envFrom:
+            - secretRef:
+                name: randoli-agent-secret
+            - configMapRef:
+                name: randoli-agent-config
+          resources:
+            limits:
+              cpu: 1
+              memory: 1.5Gi
+            requests:
+              cpu: 150m
+              memory: 1.5Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          volumeMounts:
+            - name: agent-pv
+              mountPath: /persistence
+            - name: tls-certs
+              mountPath: /app/certs
+          env:
+            - name: FLIGHT_SQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: randoli-agent-db
+                  key: username
+            - name: FLIGHT_SQL_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: randoli-agent-db
+                  key: password
+        - name: gizmosql
+          image: docker.io/gizmodata/gizmosql:v1.12.5
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - gizmosql_client --command Execute --host localhost --port 31337 --username
+                "$GIZMOSQL_USERNAME" --password "$GIZMOSQL_PASSWORD" --query "SELECT 1503+1503"
+                | grep -q 3006 || exit 1
+            failureThreshold: 2
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 2
+          ports:
+          - containerPort: 31337
+          volumeMounts:
+          - name: agent-pv
+            mountPath: /persistence
+          - name: gizmosql-tmp
+            mountPath: /var/gizmosql-tmp    
+          env:
+          - name: GIZMOSQL_PATH
+            value: /persistence/agent.db
+          - name: GIZMOSQL_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: randoli-agent-db
+                key: username
+          - name: GIZMOSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: randoli-agent-db
+                key: password
+          - name: DATABASE_BACKEND
+            value: duckdb
+          - name: DATABASE_FILENAME
+            value: /persistence/agent.db
+          - name: TLS_ENABLED
+            value: "0"
+          - name: PRINT_QUERIES
+            value: "0"
+          - name: SECRET_KEY
+            value: "randoli_db_test"
+          - name: INIT_SQL_COMMANDS
+            value: |
+              PRAGMA memory_limit='1GB';
+              PRAGMA threads=2;
+              PRAGMA max_temp_directory_size='5GB';
+              PRAGMA preserve_insertion_order=false;
+              CREATE SCHEMA IF NOT EXISTS insights_agent;
+              PRAGMA schema='insights_agent';
+              PRAGMA search_path='insights_agent';
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          resources:
+            limits:
+              cpu: 1
+              memory: 3Gi
+            requests:
+              cpu: 150m
+              memory: 2Gi
+      serviceAccountName: randoli-agent
+      serviceAccount: randoli-agent
+      securityContext:
+        fsGroup: 1001
+---
+# Source: randoli-agent/templates/randoli-logs/loki-cluster-vector-pipeline.yaml
+apiVersion: observability.kaasops.io/v1alpha1
+kind: ClusterVectorPipeline
+metadata:
+  name: randoli-rok-loki-log-sync
+spec:
+  sinks:
+    loki:
+      encoding:
+        codec: json
+        only_fields:
+          - message
+          - trace_id
+      endpoint: http://randoli-rok-loki.randoli-agents.svc:3100
+      inputs:
+        - extract_trace_from_text
+      labels:
+        forwarder: vector
+        k8s_container_image: '{{ kubernetes.container_image }}'
+        k8s_container_name: '{{ kubernetes.container_name }}'
+        k8s_pod_ip: '{{ kubernetes.pod_ip }}'
+        k8s_pod_name: '{{ kubernetes.pod_name }}'
+        k8s_pod_namespace: '{{ kubernetes.pod_namespace }}'
+        k8s_pod_node_name: '{{ kubernetes.pod_node_name }}'
+        k8s_pod_uid: '{{ kubernetes.pod_uid }}'
+        severity: '{{ severity }}'
+        service_name: '{{ service_name }}'
+        source_type: '{{ source_type }}'
+      tenant_id: self-monitoring
+      type: loki
+      # Disable healthcheck
+      healthcheck:
+        enabled: false
+      # Retry configuration
+      request:
+        retry_attempts: 10
+        retry_initial_backoff_secs: 1
+        retry_max_duration_secs: 300
+        timeout_secs: 60
+  sources:
+    k8s_log_source:
+      extra_label_selector: app.kubernetes.io/name!=vector
+      read_from: end
+      type: kubernetes_logs
+  transforms:
+    dedot_transform:
+      inputs:
+        - drop_empty_message
+      source: >-
+        . = map_keys(., recursive: true) -> |key| { replace(key, r'[./-]', "_")
+        }
+      type: remap
+    drop_empty_containers:
+      condition: '!(.kubernetes.container_name == null)'
+      inputs:
+        - merge_multiline_logs
+      type: filter
+    drop_empty_message:
+      condition: >-
+        !(strip_whitespace!(.message) == "") || !(.kubernetes.container_name ==
+        null)
+      inputs:
+        - drop_empty_containers
+      type: filter
+    drop_fields:
+      drop_on_abort: true
+      inputs:
+        - dedot_transform
+      source: |-
+        del(.kubernetes.node_labels)
+        del(.kubernetes.container_image_id)
+        del(.kubernetes.namespace_labels)
+        del(.kubernetes.pod_ip)
+        del(.kubernetes.pod_ips)
+        del(.kubernetes.pod_uid)
+      type: remap
+    extract_message:
+      inputs:
+        - drop_fields
+      source: >
+        parsed = parse_json!(.message)
+
+        .message = parsed
+
+        # Now .message contains the parsed object, and kubernetes.* fields still
+        exist
+      type: remap
+    extract_severity:
+      inputs:
+        - extract_message
+      source: >
+        # Extract severity from the message string
+
+        severity = "unknown"
+
+
+        message_str = string!(.message)
+
+
+        if contains(message_str, "CRITICAL") || contains(message_str,
+        "critical") {
+          severity = "CRITICAL"
+        } else if contains(message_str, "ERROR") || contains(message_str,
+        "error") {
+          severity = "ERROR"
+        } else if contains(message_str, "WARN") || contains(message_str,
+        "warning") || contains(message_str, "WARNING") {
+          severity = "WARNING"
+        } else if contains(message_str, "INFO") || contains(message_str, "info")
+        {
+          severity = "INFO"
+        } else if contains(message_str, "DEBUG") || contains(message_str,
+        "debug") {
+          severity = "DEBUG"
+        }
+
+
+        .severity = severity
+      type: remap
+    extract_service_name:
+      inputs:
+        - extract_severity
+      source: |
+        service_name = null
+
+        if exists(.kubernetes.pod_annotations.resource_opentelemetry_io_service_name) {
+          service_name = .kubernetes.pod_annotations.resource_opentelemetry_io_service_name
+        }
+
+        .service_name = service_name
+      type: remap 
+    extract_trace_from_json:
+      inputs:
+        - extract_service_name
+      source: |
+        trace_id = null
+
+        if exists(.message.trace_details.trace_id) {
+          trace_id = .message.trace_details.trace_id
+        }
+
+        .trace_id = trace_id
+      type: remap  
+    extract_trace_from_text:
+      inputs:
+        - extract_trace_from_json
+      source: |
+        # If we didn't find trace_id in JSON, try regex on plain text
+         if is_null(.trace_id) {
+            # Convert message back to string for regex matching
+            message_str = encode_json(.message)
+            
+            # Match pattern: traceId: <hexadecimal> (case insensitive)
+            matches = parse_regex(message_str, r'(?i)traceId:\s*(?P<trace_id>[a-f0-9]{32})') ?? null
+            
+            if !is_null(matches) {
+              .trace_id = matches.trace_id
+            }
+          }
+      type: remap        
+    merge_multiline_logs:
+      expire_after_ms: 2000
+      group_by:
+        - kubernetes.pod_name
+        - kubernetes.container_name
+        - stream
+      inputs:
+        - k8s_log_source
+      merge_strategies:
+        message: concat_newline
+      starts_when: >-
+        match(string!(.message),
+        r'(^\d{4}-\d{2}-\d{2}|^\d{2}:\d{2}:\d{2}|^\{"|^[A-Z]+\s)')
+      type: reduce
+---
+# Source: randoli-agent/charts/prometheus/charts/alertmanager/templates/randoli/rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: randoli-alerts-cm-applier
+  annotations:
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook: pre-install,pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+---
+# Source: randoli-agent/templates/randoli-db/rbac-job.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agent-manifests-applier
+  annotations:
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook: pre-install,post-delete
+---
+# Source: randoli-agent/charts/prometheus/charts/alertmanager/templates/randoli/apply-config-map-job.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: randoli-alerts-cms
+  annotations:
+    helm.sh/hook-weight: "-4"
+    helm.sh/hook: pre-install
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+data:
+  configmap.yaml: |-
+
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: randoli-alerts
+      labels:
+        helm.sh/chart: alertmanager-1.13.1
+        app.kubernetes.io/name: alertmanager
+        app.kubernetes.io/instance: randoli-non-root
+        app.kubernetes.io/version: "v0.27.0"
+        app.kubernetes.io/managed-by: Helm
+      namespace: randoli-agents
+    data:
+      alertmanager.yml: |
+        global: {}
+        templates:
+        - /etc/alertmanager/*.tmpl
+        route:
+          group_wait: 10s
+          group_interval: 5m
+          receiver: default-receiver
+          repeat_interval: 3h
+        receivers:
+          - name: default-receiver
+            # slack_configs:
+            #  - channel: '@you'
+            #    send_resolved: true
+---
+# Source: randoli-agent/charts/prometheus/charts/alertmanager/templates/randoli/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: randoli-non-root-alerts-cm-applier-role
+  annotations:
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook: pre-install,pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+rules:
+- verbs: ["get", "delete"]
+  apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["randoli-alerts"]
+- verbs: ["create"]
+  apiGroups: [""]
+  resources: ["configmaps"]
+---
+# Source: randoli-agent/templates/randoli-db/rbac-job.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: randoli-non-root-agent-manifests-applier-role
+  annotations:
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook: pre-install,post-delete
+rules:
+- verbs: ["create"]
+  apiGroups: [""]
+  resources: ["secrets"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["randoli-agent-db"]
+  verbs: ["get", "delete"]
+---
+# Source: randoli-agent/charts/prometheus/charts/alertmanager/templates/randoli/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: randoli-alerts-cm-applier-binding
+  annotations:
+    helm.sh/hook-weight: "-4"
+    helm.sh/hook: pre-install,pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+subjects:
+- kind: ServiceAccount
+  name: randoli-alerts-cm-applier
+  namespace: randoli-agents
+roleRef:
+  kind: Role
+  name: randoli-non-root-alerts-cm-applier-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: randoli-agent/templates/randoli-db/rbac-job.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agent-manifests-applier-binding
+  annotations:
+    helm.sh/hook-weight: "-4"
+    helm.sh/hook: pre-install,post-delete
+subjects:
+- kind: ServiceAccount
+  name: agent-manifests-applier
+  namespace: randoli-agents
+roleRef:
+  kind: Role
+  name: randoli-non-root-agent-manifests-applier-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: randoli-agent/charts/prometheus/charts/alertmanager/templates/randoli/apply-config-map-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: apply-randoli-alerts-cm
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 3 
+  template:
+    spec:
+      serviceAccountName: randoli-alerts-cm-applier
+      containers:
+      - name: apply-cm
+        image: docker.io/bitnamilegacy/kubectl:1.33.1
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "⏳ Applying randoli alerts Config Map..."
+          kubectl apply -f /cms/configmap.yaml
+          echo "✅ Randoli alerts Config Map Applied"
+        volumeMounts:
+        - name: cms
+          mountPath: /cms
+      restartPolicy: Never
+      volumes:
+      - name: cms
+        configMap:
+          name: randoli-alerts-cms
+---
+# Source: randoli-agent/charts/prometheus/charts/alertmanager/templates/randoli/delete-config-map-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: delete-randoli-alerts-cm
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      serviceAccountName: randoli-alerts-cm-applier
+      containers:
+      - name: delete-cms
+        image: docker.io/bitnamilegacy/kubectl:1.33.1
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "⏳ Deleting Randoli Alerts CMs..."
+          set -e
+
+          NAMESPACE="randoli-agents"
+          CONFIGMAP_NAME="randoli-alerts"
+
+          # Check and delete ConfigMap if it exists
+          if kubectl get configmap "$CONFIGMAP_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
+            echo "Deleting ConfigMap $CONFIGMAP_NAME..."
+            kubectl delete configmap "$CONFIGMAP_NAME" -n "$NAMESPACE" --wait=true
+          else
+            echo "ConfigMap $CONFIGMAP_NAME not found, skipping."
+          fi
+      restartPolicy: Never
+---
+# Source: randoli-agent/templates/randoli-db/delete-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: delete-agent-manifests
+  annotations:
+    helm.sh/hook: post-delete
+    helm.sh/hook-delete-policy: hook-succeeded
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      serviceAccountName: agent-manifests-applier
+      containers:
+      - name: delete-agent-manifests
+        image: docker.io/bitnamilegacy/kubectl:1.33.1
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "⏳ Deleting Randoli Manifests..."
+          set -e
+
+          NAMESPACE="randoli-agents"
+          SECRET_NAME="randoli-agent-db"
+
+          # Check and delete secret if it exists
+          if kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
+            echo "Deleting Secret $SECRET_NAME..."
+            kubectl delete secret "$SECRET_NAME" -n "$NAMESPACE"
+          else
+            echo "Secret $SECRET_NAME not found, skipping."
+          fi
+      restartPolicy: Never
+---
+# Source: randoli-agent/templates/randoli-db/job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: apply-agent-manifests
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-delete-policy: hook-succeeded
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 3 
+  template:
+    spec:
+      serviceAccountName: agent-manifests-applier
+      containers:
+      - name: apply-manifests
+        image: docker.io/bitnamilegacy/kubectl:1.33.1
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "⏳ Applying Agent Mafinests..."
+          set -e
+
+          NAMESPACE="randoli-agents"
+          SECRET_NAME="randoli-agent-db"
+
+          # Create Secret only if it doesn't exists
+          if kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
+            echo "Secret $SECRET_NAME already exists, skipping"
+          else
+            echo "Creating secret $SECRET_NAME..."
+            kubectl create secret generic $SECRET_NAME -n "$NAMESPACE" --from-literal=username=admin --from-literal=password=$(openssl rand -base64 16)
+          fi
+      restartPolicy: Never

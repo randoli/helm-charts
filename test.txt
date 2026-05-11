@@ -1,0 +1,13 @@
+pipeline logs - 
+
+2026/04/02 07:11:08 
+failed to upload metrics: exporter export timeout: rpc error: code = Unavailable desc = name resolver error: produced zero addresses
+
+eBPF agent logs - 
+
+time="2026-04-02T07:10:25Z" level=info msg="Starting GRPC client with TLS" component=grpc.Client
+time="2026-04-02T07:10:34Z" level=error msg="couldn't send flow records to collector" 
+collector="flowlogs-pipeline.netobserv.svc.cluster.local.:2055" 
+component=exporter/GRPCProto error="rpc error: code = Unavailable 
+desc = connection error: desc = \"transport: authentication handshake failed: tls: failed to verify certificate: x509: 
+certificate is not valid for any names, but wanted to match flowlogs-pipeline.netobserv.svc.cluster.local.\""
