@@ -3,7 +3,7 @@ entries:
   randoli-agent:
   - apiVersion: v2
     appVersion: "1.19"
-    created: "2026-05-11T23:07:15.928697958-04:00"
+    created: "2026-05-12T01:01:32.706088857-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -80,7 +80,7 @@ entries:
     version: 2.0.0-rc.1
   - apiVersion: v2
     appVersion: "1.19"
-    created: "2026-05-11T23:07:15.803438766-04:00"
+    created: "2026-05-12T01:01:32.618812954-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -157,7 +157,7 @@ entries:
     version: 1.19.0
   - apiVersion: v2
     appVersion: "1.18"
-    created: "2026-05-11T23:07:15.748514971-04:00"
+    created: "2026-05-12T01:01:32.584747317-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -233,7 +233,7 @@ entries:
     version: 1.18.2
   - apiVersion: v2
     appVersion: "1.18"
-    created: "2026-05-11T23:07:15.695797174-04:00"
+    created: "2026-05-12T01:01:32.548587927-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -309,7 +309,7 @@ entries:
     version: 1.18.1
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2026-05-11T23:07:15.643026018-04:00"
+    created: "2026-05-12T01:01:32.508628083-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -385,7 +385,7 @@ entries:
     version: 1.18.0
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2026-05-11T23:07:15.588547739-04:00"
+    created: "2026-05-12T01:01:32.464590821-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -455,7 +455,7 @@ entries:
     version: 1.17.9
   - apiVersion: v2
     appVersion: "1.17"
-    created: "2026-05-11T23:07:15.517603537-04:00"
+    created: "2026-05-12T01:01:32.417482852-04:00"
     dependencies:
     - condition: observability.otel.operator.enabled
       name: opentelemetry-operator
@@ -523,4 +523,4 @@ entries:
     urls:
     - https://randoli.github.io/helm-charts/randoli-agent-1.17.8.tgz
     version: 1.17.8
-generated: "2026-05-11T23:07:15.417890714-04:00"
+generated: "2026-05-12T01:01:32.365466851-04:00"

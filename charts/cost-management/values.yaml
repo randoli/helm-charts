@@ -52,7 +52,7 @@ opencost:
           - name: METRIC_GENERATION_INTERVAL
             value: "2m"
           - name: PROMETHEUS_URL
-            value: "http://randoli-prometheus.$(POD_NAMESPACE).svc:80"
+            value: "http://randoli-obs-prometheus.$(POD_NAMESPACE).svc:80"
           - name: PROMETHEUS_TIMEOUT
             value: "30s"
 
@@ -60,7 +60,7 @@ opencost:
       internal:
         enabled: true
         # Matches fullnameOverride set in charts/prometheus/values.yaml
-        serviceName: "randoli-prometheus"
+        serviceName: "randoli-obs-prometheus"
         namespaceName: "{{ .Release.Namespace }}"
         port: 80
 
