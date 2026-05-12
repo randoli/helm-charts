@@ -1,5 +1,4 @@
-{{- $otel := .Values.observability.otel | default dict }}
-{{- if or $otel.explodeCRs (eq (include "apply-open-telemetry-crs" . | trim) "true") -}}
+{{- if .Values.tags.observability -}}
 apiVersion: v1
 kind: ServiceAccount
 {{- with .Values.global.imagePullSecrets }}
@@ -34,4 +33,4 @@ roleRef:
   kind: ClusterRole
   name: {{ .Release.Name }}-otel-collector-clusterrole
   apiGroup: rbac.authorization.k8s.io
-{{end}}  
+{{- end }}

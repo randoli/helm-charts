@@ -42,8 +42,6 @@ observability:
   otel:
     operator:
       #enabled: false
-    #applyCRs: false
-    #explodeCRs: false
     applyTargetAllocator: true
   logs:
     applyVectorPipeline: true
@@ -55,7 +53,7 @@ observability:
     analyzers:
       enabled: true
   vector:
-    #enabled: false
+    enabled: true
   security:
     #enabled: false
     #OFF|INTERVAL_SCANNING
@@ -85,23 +83,61 @@ observability:
   agentInstrumentation:
     enabled: true
     otlpEndpoint:
+  hostMetrics:
+    # "node-exporter" (default) keeps the prometheus-community node-exporter DaemonSet.
+    # "otel-host-metrics" disables it and deploys an OTel Collector DaemonSet instead.
+    #
+    # IMPORTANT: when switching to "otel-host-metrics" you must also set:
+    #   prometheus.prometheus-node-exporter.enabled: false
+    #
+    # Metric name differences to be aware of when changing this:
+    #   node-exporter  → node_cpu_seconds_total, node_memory_MemAvailable_bytes, node_load1, …
+    #   otel-host-metrics → system_cpu_time_total, system_memory_usage, system_cpu_load_average_1m, …
+    # Any dashboards or alert rules that reference node_* metrics will need updating.
+    provider: "node-exporter"
+    # Image for the OTel host-metrics collector DaemonSet.
+    # Must include the hostmetricsreceiver (opentelemetry-collector-contrib or equivalent).
+    collectorImage: "otel/opentelemetry-collector-contrib:0.123.0"
+    # How often to collect host metrics.
+    collectionInterval: "60s"
 
 costManagement:
   vpaOperator:
     #enabled: false
-  opencost:
-    metrics:
-      kubeStateMetrics:
-        emitKsmV1Metrics: "false"
-        emitKsmV1MetricsOnly: "true"
-    exporter:
-      extraVolumeMounts:
-        - name: metrics-config-volume
-          mountPath: /var/configs
-  extraVolumes:
-    - name: metrics-config-volume
-      configMap:
-        name: randoli-cost-metrics-config
+  opencost:             # values for the upstream opencost dependency (wrapper key)
+    opencost:           # upstream's "opencost:" config block
+      metrics:
+        kubeStateMetrics:
+          emitKsmV1Metrics: "false"
+          emitKsmV1MetricsOnly: "true"
+      exporter:
+        extraVolumeMounts:
+          - name: metrics-config-volume
+            mountPath: /var/configs
+    extraVolumes:       # upstream's top-level extraVolumes
+      - name: metrics-config-volume
+        configMap:
+          name: randoli-cost-metrics-config
+logs:
+  vector-operator:
+    # Operator Deployment scheduling.
+    # global.* values are NOT automatically propagated here — set these explicitly
+    # to match global.tolerations / global.nodeSelector / global.affinity / global.imagePullSecrets.
+    tolerations: []
+    nodeSelector: {}
+    affinity: {}
+    imagePullSecrets: []
+    vector:
+      agent:
+        # Vector agent daemonset scheduling.
+        # tolerations     → set same as global.daemonsets.tolerations
+        # imagePullSecrets → set same as global.imagePullSecrets
+        # configCheck.tolerations → set same as global.tolerations
+        tolerations: []
+        imagePullSecrets: []
+        configCheck:
+          tolerations: []
+
 tags:
   observability: false
   costManagement: false
@@ -197,130 +233,138 @@ serviceAccount:
   labels: {}
 
 securityScans:
-  capabilities:
-    admissionController: disable
-  storage:
-    mtls:
-      enabled: false
+  kubescape-operator:
+    # Must match the Helm install namespace (-n flag).
+    # Override at install time if using a different namespace:
+    #   --set "securityScans.kubescape-operator.ksNamespace=<your-namespace>"
+    ksNamespace: "randoli-agents"
+    capabilities:
+      admissionController: disable
+      prometheusExporter: enable
+    storage:
+      mtls:
+        enabled: false
 
 network:
-  standaloneConsole:
-    enable: true
+  # TLS configuration — one of the two modes must be set when netobserv is enabled.
+  # See charts/network/README.md for full instructions.
+  tls:
+    # Mode A (recommended): reference a pre-existing TLS Secret.
+    # Create the secret before helm install:
+    #   kubectl create secret tls <name> --cert=tls.crt --key=tls.key -n <namespace>
+    existingSecret:
+      name: ""          # set to the secret name to use Mode A
+      certKey: tls.crt
+      keyKey: tls.key
+
+    # Mode B (fallback): auto-generate a self-signed cert via a pre-install Job.
+    generateJob:
+      enabled: true    # set to true to use Mode B
 
 prometheus:
-  server:
-    retention: "30d"
-    retentionSize: "45GB"
-    persistentVolume:
-      size: 50Gi
-  serverFiles:
-    prometheus.yml:
-      otlp:
-        promote_resource_attributes:
-          - service.instance.id
-          - service.name
-          - service.namespace
-          - cloud.availability_zone
-          - cloud.region
-          - container.name
-          - deployment.environment.name
-          - k8s.cluster.name
-          - k8s.container.name
-          - k8s.cronjob.name
-          - k8s.daemonset.name
-          - k8s.deployment.name
-          - k8s.job.name
-          - k8s.namespace.name
-          - k8s.pod.name
-          - k8s.replicaset.name
-          - k8s.statefulset.name
-          # custom attributes
-          - host.id
-          - host.name
-          - host.type
-          - cloud.platform
-          - cloud.provider
-          - match.label
-          - postgresql.table.name
-          - postgresql.schema.name
-          - postgresql.index.name
-          - postgresql.database.name
+  prometheus:
+    # Set to false when using observability.hostMetrics.provider: otel-host-metrics
+    prometheus-node-exporter:
+      enabled: true
+    server:
+      retention: "30d"
+      retentionSize: "45GB"
+      persistentVolume:
+        size: 50Gi
+    serverFiles:
+      prometheus.yml:
+        otlp:
+          promote_resource_attributes:
+            - service.instance.id
+            - service.name
+            - service.namespace
+            - cloud.availability_zone
+            - cloud.region
+            - container.name
+            - deployment.environment.name
+            - k8s.cluster.name
+            - k8s.container.name
+            - k8s.cronjob.name
+            - k8s.daemonset.name
+            - k8s.deployment.name
+            - k8s.job.name
+            - k8s.namespace.name
+            - k8s.pod.name
+            - k8s.replicaset.name
+            - k8s.statefulset.name
+            # custom attributes
+            - host.id
+            - host.name
+            - host.type
+            - cloud.platform
+            - cloud.provider
+            - match.label
+            - postgresql.table.name
+            - postgresql.schema.name
+            - postgresql.index.name
+            - postgresql.database.name
+            - k8s.node.name
 
 loki:
-  deploymentMode: SingleBinary
   loki:
-    auth_enabled: false
-    storage:
-      type: "filesystem"
-    commonConfig:
-      replication_factor: 1
-    schemaConfig:
-      configs:
-        - from: 2024-01-01
-          store: tsdb
-          object_store: filesystem
-          schema: v13
-          index:
-            prefix: index_
-            period: 24h
+    deploymentMode: SingleBinary
+    loki:
+      auth_enabled: false
+      storage:
+        type: "filesystem"
+      commonConfig:
+        replication_factor: 1
+      schemaConfig:
+        configs:
+          - from: 2024-01-01
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index:
+              prefix: index_
+              period: 24h
 
-  singleBinary:
-    replicas: 1
-    resources:
-      limits:
-        cpu: 2
-        memory: 2Gi
-      requests:
-        cpu: 0.5
-        memory: 1Gi
-    extraEnv:
-      # Keep a little bit lower than memory limits
-      - name: GOMEMLIMIT
-        value: 1750MiB
-    persistence:
-      size: 100Gi
+    singleBinary:
+      replicas: 1
+      resources:
+        limits:
+          cpu: 2
+          memory: 2Gi
+        requests:
+          cpu: 0.5
+          memory: 1Gi
+      extraEnv:
+        # Keep a little bit lower than memory limits
+        - name: GOMEMLIMIT
+          value: 1750MiB
+      persistence:
+        size: 100Gi
 
-  tableManager:
-    retention_deletes_enabled: true
-    retention_period: 30d
+    tableManager:
+      retention_deletes_enabled: true
+      retention_period: 30d
 
-  test:
-    enabled: false
+    test:
+      enabled: false
 
-  # Disable canary
-  lokiCanary:
-    enabled: false
+    # Disable canary
+    lokiCanary:
+      enabled: false
 
-  # Disable gateway
-  gateway:
-    enabled: false
+    # Disable gateway
+    gateway:
+      enabled: false
 
-  # Disable caching
-  chunksCache:
-    enabled: false
+    # Disable caching
+    chunksCache:
+      enabled: false
 
-  resultsCache:
-    enabled: false
+    resultsCache:
+      enabled: false
 
 opentelemetry-operator:
-  admissionWebhooks:
-    namespaceSelector:
-      matchExpressions:
-        - key: kubernetes.io/metadata.name
-          operator: NotIn
-          values:
-            - kube-system
-            - kube-node-lease
-            - kube-public
-tempo:
-  tempo:
-    retention: 730h
-  persistence:
-    size: 50Gi
-
-vpa:
-  admissionController:
-    mutatingWebhookConfiguration:
+  opentelemetry-operator:
+    admissionWebhooks:
       namespaceSelector:
         matchExpressions:
           - key: kubernetes.io/metadata.name
@@ -329,10 +373,30 @@ vpa:
               - kube-system
               - kube-node-lease
               - kube-public
+tempo:
+  tempo:
+    retention: 730h
+    persistence:
+      size: 50Gi
+
+vpa:
+  # Agent-level config — read by randoli-agent templates (not passed to VPA)
   recommender:
     minCpuMillicores: 25
     minMemoryMb: 25
-    extraArgs:
-      - "--pod-recommendation-min-cpu-millicores=25"
-      - "--pod-recommendation-min-memory-mb=25"
+  vertical-pod-autoscaler:
+    admissionController:
+      mutatingWebhookConfiguration:
+        namespaceSelector:
+          matchExpressions:
+            - key: kubernetes.io/metadata.name
+              operator: NotIn
+              values:
+                - kube-system
+                - kube-node-lease
+                - kube-public
+    recommender:
+      extraArgs:
+        - "--pod-recommendation-min-cpu-millicores=25"
+        - "--pod-recommendation-min-memory-mb=25"
 

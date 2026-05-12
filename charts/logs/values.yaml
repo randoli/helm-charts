@@ -1,103 +1,62 @@
-fullnameOverride: "randoli-rok-vector"
-nameOverride: ""
-namespaceOverride: ""
+# Values passed through to the upstream vector-operator chart.
+# Full upstream value reference:
+# https://github.com/kaasops/vector-operator/blob/main/helm/values.yaml
+vector-operator:
+  fullnameOverride: "randoli-obs-vector-operator"  # stable ClusterRole name, safe for multi-release clusters
 
-replicaCount: 1
+  replicaCount: 1
 
-image:
-  repository: kaasops/vector-operator
-  tag: "" # rewrites Chart.AppVersion
-  pullPolicy: IfNotPresent
+  image:
+    repository: kaasops/vector-operator
+    tag: ""  # uses chart appVersion (v0.4.1)
+    pullPolicy: IfNotPresent
 
-# -- enables CRD creation and management.
-# -- with this option, if you remove this chart, all crd resources will be deleted with it.
-createCRD: true
+  createCRD: true
 
-strategy: {}
-# rollingUpdate:
-#  maxSurge: 25%
-#  maxUnavailable: 25%
-# type: RollingUpdate
+  resources:
+    limits:
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 50Mi
 
-imagePullSecrets: []
+  # Operator Deployment scheduling.
+  # To apply global scheduling constraints from the randoli-agent umbrella chart,
+  # set logs.vector-operator.tolerations / nodeSelector / affinity / imagePullSecrets
+  # to match global.tolerations / global.nodeSelector / global.affinity / global.imagePullSecrets.
+  tolerations: []
+  nodeSelector: {}
+  affinity: {}
+  imagePullSecrets: []
 
-nodeSelector: {}
+  vector:
+    enable: true
+    name: "randoli-obs-vector"
+    useApiServerCache: false
+    agent:
+      image: timberio/vector:0.41.X-distroless-libc
+      resources:
+        limits:
+          memory: 2Gi
+        requests:
+          cpu: 50m
+          memory: 192Mi
+      # Vector agent daemonset scheduling.
+      # To apply global scheduling constraints:
+      #   tolerations     → set same as global.daemonsets.tolerations
+      #   imagePullSecrets → set same as global.imagePullSecrets
+      #   configCheck.tolerations → set same as global.tolerations
+      tolerations: []
+      imagePullSecrets: []
+      configCheck:
+        tolerations: []
 
-securityContext: {}
-  # allowPrivilegeEscalation: false
-  # runAsGroup: 1000
-  # runAsNonRoot: true
-  # readOnlyRootFilesystem: true
-  # seccompProfile:
-  #   type: RuntimeDefault
-  # capabilities:
-  #   drop:
-  #     - ALL
+  rbac:
+    create: true
 
-podSecurityContext: {}
+  serviceAccount:
+    create: true
+    annotations: {}
 
-tolerations: []
-
-resources:
-  limits:
-    memory: 1Gi
-  requests:
-    cpu: 50m
-    memory: 50Mi
-
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name:
-
-rbac:
-  create: true
-  annotations: {}
-  extraLabels: {}
-
-# extra Labels for Pods, Deployment
-extraLabels: {}
-
-# Annotations to be added to the deployment
-annotations: {}
-
-# Args to path to operator
-args:
-#  - "-watch-namespace=vector" # Namespace to filter the list of watched objects
-#  - "-watch-name=vector-operator" # Filter the list of watched objects by checking the app.kubernetes.io/managed-by label
-
-vector:
-  enable: true
-  name: "randoli-rok-vector"
-  useApiServerCache: false
-  agent:
-    image: timberio/vector:0.41.X-distroless-libc
-    resources:
-      limits:
-        memory: 2Gi
-      requests:
-        cpu: 50m
-        memory: 192Mi
-
-secrets: {}
-# - name: elastic-creds
-#   data:
-#     username: "logstash"
-#     password: "password"
-
-clustervectorpipeline: {}
-#  - name: ""
-#    sources: {}
-#    transforms: {}
-#    sinks: {}
-#  - name: ""
-#    sources: {}
-#    transforms: {}
-#    sinks: {}
-
-openshift:
-  enabled: false
+  openshift:
+    enabled: false

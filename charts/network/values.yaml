@@ -1,10 +1,63 @@
+# Values passed through to the upstream netobserv-operator chart.
+# Full upstream value reference:
+# https://github.com/netobserv/netobserv-operator/blob/main/helm/values.yaml
+netobserv-operator:
+  certManager:
+    enable: false   # Disabled — TLS is managed by the tls section below
+  standaloneConsole:
+    enable: false
+  operator:
+    nodeAffinity: {}
+
+# Namespace used in the FlowCollector spec.namespace field.
+# Must match spec.namespace in charts/randoli-agent/files/randoli-network/flow-collector.yaml.
+# The eBPF agents run in <netobservNamespace>-privileged.
+netobservNamespace: "netobserv"
+
+# ---------------------------------------------------------------------------
+# Randoli TLS configuration
+#
+# The netobserv operator and its sub-components require TLS certificates in
+# several places.  All certificate names are hardcoded by the upstream chart
+# and cannot be changed:
+#
+#   In the release namespace (operator):
+#     webhook-server-cert    — CRD conversion webhook service
+#     manager-metrics-tls    — operator metrics endpoint
+#
+#   In <netobservNamespace> (flowlogs-pipeline):
+#     flowlogs-pipeline-cert — TLS between eBPF agents and flowlogs-pipeline
+#
+#   In <netobservNamespace> and <netobservNamespace>-privileged (eBPF agents):
+#     netobserv-ca ConfigMap — CA bundle used by eBPF agents to verify FLP cert
+#
+# Choose exactly ONE of the two modes below.
+# ---------------------------------------------------------------------------
+tls:
+  # Mode A — Pre-existing Secret (recommended)
+  # Create a secret containing all required cert material before helm install,
+  # then set its name here.  See README.md for the full openssl workflow.
+  #
+  # Required keys in the secret:
+  #   certKey   — webhook + metrics cert
+  #   keyKey    — webhook + metrics private key
+  #   caKey     — CA cert (written to netobserv-ca ConfigMap for eBPF agents)
+  #   flpCertKey — flowlogs-pipeline cert (signed by the same CA)
+  #   flpKeyKey  — flowlogs-pipeline private key
+  existingSecret:
+    name: ""           # Name of the pre-existing Kubernetes secret
+    certKey: tls.crt   # Key for webhook/metrics certificate
+    keyKey: tls.key    # Key for webhook/metrics private key
+    caKey: ca.crt      # Key for CA certificate
+    flpCertKey: flp.crt # Key for flowlogs-pipeline certificate
+    flpKeyKey: flp.key  # Key for flowlogs-pipeline private key
+
+  # Mode B — Auto-generate via pre-install Job (fallback)
+  # A Helm pre-install Job generates a self-signed CA and all required
+  # certificates, then creates all Secrets and ConfigMaps automatically.
+  generateJob:
+    enabled: false
+    certGeneratorImage: "srimaln91/openssl-bash:latest"  # must have bash + openssl
+    kubectlImage: "bitnami/kubectl:latest"  # must have kubectl
+
 clusterDomain: cluster.local
-certManager:
-  # if existingIssuer.name is not provided, a new self-signed Issuer will be created
-  enabled: false
-  existingIssuer:
-    kind: ClusterIssuer
-    name: ""
-standaloneConsole:
-  enable: false
-tolerations: []

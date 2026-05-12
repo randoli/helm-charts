@@ -1,0 +1,179 @@
+{{- if .Values.tags.observability -}}
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: randoli-otel
+  labels:
+    randoli/app-type: otel-pipeline
+  annotations:
+    # ArgoCD sync wave: applied after the operator Deployment (wave 0) is healthy.
+    # Ignored by plain helm install — failurePolicy: Ignore on the webhook handles ordering there.
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  {{- if or .Values.tolerations .Values.global.tolerations }}
+  tolerations:
+    {{- with .Values.tolerations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.global.tolerations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  {{- if or .Values.nodeSelector .Values.global.nodeSelector }}
+  nodeSelector:
+    {{- with .Values.nodeSelector }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.global.nodeSelector }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  {{- if or .Values.affinity .Values.global.affinity }}
+  affinity:
+    {{- with .Values.affinity }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.global.affinity }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  image: docker.io/randoli/otelcol:v1.0.3
+  upgradeStrategy: automatic
+  mode: statefulset
+  serviceAccount: randoli-otel-collector
+  autoscaler:
+    maxReplicas: 5
+    minReplicas: 2
+    targetMemoryUtilization: 85
+  resources:
+    requests:
+      memory: "1000Mi"
+    limits:
+      memory: "1500Mi"
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+            cors:
+              allowed_origins:
+              - "*"
+              allowed_headers: ["*"]
+      prometheus:
+        config:
+          scrape_configs:
+          - job_name: 'otel-collector'
+            scrape_interval: 10s
+            static_configs:
+            - targets: [ '0.0.0.0:8888' ]
+            metric_relabel_configs:
+            - action: labeldrop
+              regex: (id|name)
+            - action: labelmap
+              regex: label_(.+)
+              replacement: $$1
+    exporters:
+      otlp/tempo:
+        endpoint: '{{ include "trace-storage-url-otlp" . }}'
+        tls:
+          insecure: true
+      otlphttp:
+        endpoint: "{{ include "prometheus-server-endpoint" . }}/api/v1/otlp"
+      debug:
+        verbosity: basic
+        sampling_initial: 5
+        sampling_thereafter: 200
+    processors:
+      randoli_otel_enricher: {}
+      memory_limiter:
+        check_interval: 5s
+        limit_mib: 900
+        spike_limit_mib: 200
+      batch:
+        send_batch_size: 512
+        send_batch_max_size: 1024
+        timeout: 5s
+      k8sattributes:
+        auth_type: "serviceAccount"
+        passthrough: false
+        extract:
+          metadata:
+            - k8s.pod.name
+            - k8s.pod.uid
+            - k8s.deployment.name
+            - k8s.namespace.name
+            - k8s.node.name
+            - k8s.pod.start_time
+            - container.image.name
+            - container.image.tag
+            - k8s.container.name
+        pod_association:
+          - sources:
+            - from: resource_attribute
+              name: k8s.pod.ip
+          - sources:
+              - from: connection
+    connectors:
+      spanmetrics: {}
+      llmmetrics: {}
+    service:
+      telemetry:
+        metrics:
+          level: "detailed"
+          readers:
+            - pull:
+                exporter:
+                  prometheus:
+                    host: "0.0.0.0"
+                    port: 8888
+        resource:
+          service.name: randoli-otel-collector
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors:
+            - memory_limiter
+            - k8sattributes
+            - randoli_otel_enricher
+            - batch
+          exporters: [debug, spanmetrics, llmmetrics, otlp/tempo]
+        metrics:
+          receivers: [otlp, prometheus, spanmetrics, llmmetrics]
+          processors:
+            - memory_limiter
+            - randoli_otel_enricher
+            - batch
+          exporters: [debug, otlphttp]
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [debug]
+  {{- if .Values.observability.otel.applyTargetAllocator }}
+  targetAllocator:
+    {{- with .Values.tolerations }}
+    tolerations: {{ toYaml . | nindent 6 }}
+    {{- end }}
+    enabled: true
+    prometheusCR:
+      enabled: true
+      serviceMonitorSelector:
+        matchExpressions:
+          - key: app
+            operator: NotIn
+            values:
+              - "flowlogs-pipeline"
+          - key: netobserv-managed
+            operator: NotIn
+            values:
+              - "true"
+          - key: app.kubernetes.io/instance
+            operator: NotIn
+            values:
+              - 'prometheus-operator'
+      podMonitorSelector: {}
+    serviceAccount: opentelemetry-targetallocator
+  {{- end }}
+{{- end }}

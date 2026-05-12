@@ -13,10 +13,10 @@ maintainers:
 name: randoli-agent
 sources:
   - https://github.com/randoli/helm-charts
-version: 1.19.0
+version: 2.0.0-rc.1
 dependencies:
   - name: opentelemetry-operator
-    version: 0.86.4
+    version: 0.111.0
     condition: observability.otel.operator.enabled
     tags:
       - observability
@@ -37,7 +37,7 @@ dependencies:
     tags:
       - security
   - name: logs
-    version: 0.0.40
+    version: 0.8.1
     condition: observability.vector.enabled
     tags:
       - observability
@@ -52,7 +52,7 @@ dependencies:
     tags:
       - observability
   - name: network
-    version: 1.8.2
+    version: 1.11.3
     condition: observability.netobserv.enabled
     tags:
       - observability

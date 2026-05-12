@@ -1,0 +1,231 @@
+{{/*
+Mode B: pre-install Job that generates a self-signed CA and all TLS certificates
+required by the netobserv operator and its sub-components.
+
+Certificate chain created:
+  netobserv-ca  (self-signed CA)
+    ├── webhook/metrics cert  → webhook-server-cert + manager-metrics-tls Secrets
+    └── flowlogs-pipeline cert → flowlogs-pipeline-cert Secret
+
+ConfigMaps created:
+  netobserv-ca  (CA bundle for eBPF agents)
+    in <netobservNamespace> and <netobservNamespace>-privileged
+
+Namespaces created (idempotent, kept on uninstall):
+  <netobservNamespace>
+  <netobservNamespace>-privileged
+
+The Job and its RBAC resources self-delete on success via hook-delete-policy.
+*/}}
+{{- if .Values.tls.generateJob.enabled }}
+{{- $flpNS       := .Values.netobservNamespace }}
+{{- $privNS      := printf "%s-privileged" .Values.netobservNamespace }}
+{{- $releaseNS   := .Release.Namespace }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: netobserv-tls-setup
+  namespace: {{ $releaseNS }}
+  labels:
+    app.kubernetes.io/part-of: netobserv
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: netobserv-tls-setup-{{ $releaseNS }}
+  labels:
+    app.kubernetes.io/part-of: netobserv
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+rules:
+  - apiGroups: [""]
+    resources: ["secrets", "configmaps", "namespaces"]
+    verbs: ["get", "create", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: netobserv-tls-setup-{{ $releaseNS }}
+  labels:
+    app.kubernetes.io/part-of: netobserv
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: netobserv-tls-setup-{{ $releaseNS }}
+subjects:
+  - kind: ServiceAccount
+    name: netobserv-tls-setup
+    namespace: {{ $releaseNS }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: netobserv-tls-setup
+  namespace: {{ $releaseNS }}
+  labels:
+    app.kubernetes.io/part-of: netobserv
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      serviceAccountName: netobserv-tls-setup
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+      volumes:
+        - name: cert-data
+          emptyDir: {}
+      initContainers:
+        - name: generate-certs
+          image: {{ .Values.tls.generateJob.certGeneratorImage }}
+          command:
+            - bash
+            - -c
+            - |
+              set -e
+              NS={{ $releaseNS }}
+              FLP_NS={{ $flpNS }}
+              CLUSTER_DOMAIN={{ .Values.clusterDomain }}
+
+              # --- CA ---
+              cat > /tmp/ca.cnf << EOF
+              [req]
+              distinguished_name = req_distinguished_name
+              x509_extensions    = v3_ca
+              prompt             = no
+
+              [req_distinguished_name]
+              CN = netobserv-ca
+
+              [v3_ca]
+              basicConstraints = critical,CA:TRUE
+              keyUsage         = critical,keyCertSign,cRLSign
+              EOF
+
+              openssl req -x509 -nodes -newkey rsa:2048 -days 3650 \
+                -config /tmp/ca.cnf \
+                -keyout /certs/ca.key -out /certs/ca.crt
+
+              # --- Webhook + Metrics cert (signed by CA) ---
+              cat > /tmp/webhook.cnf << EOF
+              [req]
+              distinguished_name = req_distinguished_name
+              req_extensions     = v3_req
+              prompt             = no
+
+              [req_distinguished_name]
+              CN = netobserv-webhook-service.${NS}.svc
+
+              [v3_req]
+              subjectAltName = DNS:netobserv-webhook-service.${NS}.svc,DNS:netobserv-webhook-service.${NS}.svc.${CLUSTER_DOMAIN},DNS:netobserv-metrics-service.${NS}.svc,DNS:netobserv-metrics-service.${NS}.svc.${CLUSTER_DOMAIN}
+              EOF
+
+              openssl req -newkey rsa:2048 -nodes \
+                -config /tmp/webhook.cnf \
+                -keyout /certs/webhook.key -out /tmp/webhook.csr
+
+              openssl x509 -req -in /tmp/webhook.csr \
+                -CA /certs/ca.crt -CAkey /certs/ca.key -CAcreateserial \
+                -days 3650 -out /certs/webhook.crt \
+                -extfile /tmp/webhook.cnf -extensions v3_req
+
+              # --- FlowLogs-Pipeline cert (signed by CA) ---
+              cat > /tmp/flp.cnf << EOF
+              [req]
+              distinguished_name = req_distinguished_name
+              req_extensions     = v3_req
+              prompt             = no
+
+              [req_distinguished_name]
+              CN = flowlogs-pipeline.${FLP_NS}.svc
+
+              [v3_req]
+              subjectAltName = DNS:flowlogs-pipeline.${FLP_NS}.svc,DNS:flowlogs-pipeline.${FLP_NS}.svc.${CLUSTER_DOMAIN}
+              EOF
+
+              openssl req -newkey rsa:2048 -nodes \
+                -config /tmp/flp.cnf \
+                -keyout /certs/flp.key -out /tmp/flp.csr
+
+              openssl x509 -req -in /tmp/flp.csr \
+                -CA /certs/ca.crt -CAkey /certs/ca.key -CAcreateserial \
+                -days 3650 -out /certs/flp.crt \
+                -extfile /tmp/flp.cnf -extensions v3_req
+
+              chmod 0644 /certs/*.crt /certs/*.key
+              echo "All certificates generated."
+          volumeMounts:
+            - name: cert-data
+              mountPath: /certs
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+      containers:
+        - name: apply-certs
+          image: {{ .Values.tls.generateJob.kubectlImage }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              NS={{ $releaseNS }}
+              FLP_NS={{ $flpNS }}
+              PRIV_NS={{ $privNS }}
+
+              # --- Namespaces ---
+              kubectl create namespace "${FLP_NS}"   --dry-run=client -o yaml | kubectl apply -f -
+              kubectl create namespace "${PRIV_NS}"  --dry-run=client -o yaml | kubectl apply -f -
+
+              # --- Operator Secrets (release namespace) ---
+              kubectl create secret tls webhook-server-cert \
+                --cert=/certs/webhook.crt --key=/certs/webhook.key \
+                -n "${NS}" --dry-run=client -o yaml | kubectl apply -f -
+
+              kubectl create secret tls manager-metrics-tls \
+                --cert=/certs/webhook.crt --key=/certs/webhook.key \
+                -n "${NS}" --dry-run=client -o yaml | kubectl apply -f -
+
+              # --- FLP Secret (netobserv namespace) ---
+              kubectl create secret tls flowlogs-pipeline-cert \
+                --cert=/certs/flp.crt --key=/certs/flp.key \
+                -n "${FLP_NS}" --dry-run=client -o yaml | kubectl apply -f -
+
+              # --- CA ConfigMaps (netobserv + netobserv-privileged) ---
+              kubectl create configmap netobserv-ca \
+                --from-file=service-ca.crt=/certs/ca.crt \
+                -n "${FLP_NS}" --dry-run=client -o yaml | kubectl apply -f -
+
+              kubectl create configmap netobserv-ca \
+                --from-file=service-ca.crt=/certs/ca.crt \
+                -n "${PRIV_NS}" --dry-run=client -o yaml | kubectl apply -f -
+
+              echo "All TLS resources applied successfully."
+          volumeMounts:
+            - name: cert-data
+              mountPath: /certs
+              readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+{{- end }}

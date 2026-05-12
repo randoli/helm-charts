@@ -1,0 +1,8 @@
+{{/*
+Fail early with a clear message when neither TLS mode is configured.
+This prevents the operator from starting and silently failing to mount
+the required webhook-server-cert and manager-metrics-tls secrets.
+*/}}
+{{- if and (not .Values.tls.existingSecret.name) (not .Values.tls.generateJob.enabled) }}
+  {{- fail (printf "\n\ncharts/network: TLS is not configured.\n\nSet one of:\n  tls.existingSecret.name=<secret-name>   (recommended — see README.md)\n  tls.generateJob.enabled=true             (auto-generate self-signed cert)\n") }}
+{{- end }}

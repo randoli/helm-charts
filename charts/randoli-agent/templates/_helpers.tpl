@@ -42,7 +42,7 @@ randoli-agent
 
 {{- define "prometheus-server-endpoint" -}}
   {{- if .Values.global.prometheus.install -}}
-    {{- printf "http://randoli-prometheus.%s.svc:80" .Release.Namespace -}}
+    {{- printf "http://randoli-obs-prometheus.%s.svc:80" .Release.Namespace -}}
   {{- else if .Values.global.prometheus.url -}}
     {{ tpl .Values.global.prometheus.url . }}
   {{- end -}}
@@ -107,15 +107,6 @@ false
 {{- end -}}
 
 
-{{- define "apply-open-telemetry-crs" -}}
-{{- $otel := .Values.observability.otel | default dict }}
-{{- if and (or (not (hasKey $otel "explodeCRs")) (not $otel.explodeCRs)) (or (not (hasKey $otel "applyCRs")) $otel.applyCRs ) (or .Values.tags.observability .Values.tags.costManagement) -}}
-true
-{{- else -}}
-false
-{{- end -}}
-{{- end -}}
-
 {{- define "apply-network-crs" -}}
 {{- $netobserv := .Values.observability.netobserv | default dict }}
 {{- if and (or (not (hasKey $netobserv "explodeCRs")) (not $netobserv.explodeCRs)) (or (not (hasKey $netobserv "applyCRs")) $netobserv.applyCRs ) (or .Values.tags.observability .Values.tags.costManagement) -}}
@@ -129,7 +120,7 @@ false
 {{- if not (empty .Values.observability.traceConfig.storage.url)  -}}
 {{ .Values.observability.traceConfig.storage.url }}
 {{- else -}}
-{{- printf "http://randoli-rok-tempo.%s.svc:3200" .Release.Namespace -}}
+{{- printf "http://randoli-obs-tempo.%s.svc:3200" .Release.Namespace -}}
 {{- end -}}
 {{- end -}}
 
@@ -137,7 +128,7 @@ false
 {{- if not (empty .Values.observability.traceConfig.storage.urlOtlp)  -}}
 {{ .Values.observability.traceConfig.storage.urlOtlp }}
 {{- else -}}
-{{- printf "randoli-rok-tempo.%s.svc:4317" .Release.Namespace -}}
+{{- printf "randoli-obs-tempo.%s.svc:4317" .Release.Namespace -}}
 {{- end -}}
 {{- end -}}
 
@@ -153,7 +144,7 @@ https://telemetry-app.randoli.io,https://console.insights.randoli.io
 {{- if not (empty .Values.observability.logs.lokiUrl)  -}}
 {{ .Values.observability.logs.lokiUrl }}
 {{- else -}}
-{{- printf "http://randoli-rok-loki.%s.svc:3100" .Release.Namespace -}}
+{{- printf "http://randoli-obs-loki.%s.svc:3100" .Release.Namespace -}}
 {{- end -}}
 {{- end -}}
 
@@ -162,6 +153,15 @@ https://telemetry-app.randoli.io,https://console.insights.randoli.io
 {{ .Values.observability.logs.proxyKeycloakIssuer }}
 {{- else -}}
 https://sso.randoli.io/auth/realms/sso
+{{- end -}}
+{{- end -}}
+
+{{- define "enable.otel-host-metrics" -}}
+{{- $hm := .Values.observability.hostMetrics | default dict }}
+{{- if and .Values.tags.observability (eq ($hm.provider | default "node-exporter") "otel-host-metrics") -}}
+true
+{{- else -}}
+false
 {{- end -}}
 {{- end -}}
 
