@@ -52,7 +52,7 @@ data:
   TEKTON_PIPELINE_ENABLED: '{{ .Values.tektonPipeline.enabled }}'
   JAEGER_QUERY_SVC_GRPC: randoli-rok-jaeger-query.{{ .Release.Namespace }}:16685
   JAEGER_QUERY_SVC_HTTP: http://randoli-rok-jaeger-query.{{ .Release.Namespace }}:16686
-  PROMETHEUS_ALERTMANAGER_URL: http://randoli-alerts.{{ .Release.Namespace }}:9093
+  PROMETHEUS_ALERTMANAGER_URL: http://randoli-obs-alerts.{{ .Release.Namespace }}:9093
   TRACE_STORAGE_BACKEND_TYPE: '{{ .Values.observability.traceConfig.storage.type }}'
   TRACE_STORAGE_BACKEND_URL: {{ include "trace-storage-url" . }}
   SUPERVISOR_AGENT_HTTP_URL: 'http://sre-agent/chat'
