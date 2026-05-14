@@ -1,0 +1,12 @@
+{{- /*
+Pre-render validation. Emits no manifests on success — only halts the install
+with a useful error when the configuration is inconsistent.
+*/ -}}
+
+{{- if eq (include "enable.security" .) "true" -}}
+{{- $ksOp := index .Values.securityScans "kubescape-operator" | default dict -}}
+{{- $ksNs := $ksOp.ksNamespace | default "" -}}
+{{- if ne $ksNs .Release.Namespace -}}
+{{- fail (printf "\n\nsecurityScans.kubescape-operator.ksNamespace (%q) must match the Helm install namespace (%q).\nThe kubescape subchart hardcodes resource namespaces from this value, so they must match the -n flag.\n\nFix: add to your install command:\n  --set securityScans.kubescape-operator.ksNamespace=%s\n\nOr disable security scanning: --set tags.security=false\n" $ksNs .Release.Namespace .Release.Namespace) -}}
+{{- end -}}
+{{- end -}}

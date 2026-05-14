@@ -340,6 +340,11 @@ loki:
       persistence:
         size: 100Gi
 
+      # Helm automatically propagates global.** values to the subchart. But in this case loki does not consume those values.
+      # so we need these values to be set in this section
+      tolerations: []
+      nodeSelector: {}
+
     tableManager:
       retention_deletes_enabled: true
       retention_period: 30d
