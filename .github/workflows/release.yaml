@@ -2,7 +2,7 @@ name: Release Charts
 
 on:
   push:
-    branches: [main]
+    branches: [main, pre-release]
     paths:
       - "charts/randoli-agent/**"
   workflow_dispatch:
@@ -27,6 +27,12 @@ jobs:
 
       - name: Install Helm
         uses: azure/setup-helm@v4
+
+      # charts/**/charts/*.tgz is gitignored, so the wrapper tarballs that
+      # randoli-agent depends on are not in the checkout. Rebuild them
+      # before packaging the umbrella chart.
+      - name: Build subchart dependencies
+        run: ./scripts/build-subcharts.sh
 
       # Package only randoli-agent — chart-releaser-action would otherwise
       # scan charts/* and release every wrapper chart too.
