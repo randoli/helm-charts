@@ -78,12 +78,10 @@ spec:
       inputs:
         - drop_fields
       source: >
-        parsed = parse_json!(.message)
-
-        .message = parsed
-
-        # Now .message contains the parsed object, and kubernetes.* fields still
-        exist
+        parsed = parse_json(.message) ?? null
+        if !is_null(parsed) {
+          .message = parsed
+        }
       type: remap
     extract_severity:
       inputs:
@@ -93,9 +91,11 @@ spec:
 
         severity = "unknown"
 
-
-        message_str = string!(.message)
-
+        message_str = if is_string(.message) {
+          string!(.message)
+        } else {
+          encode_json(.message)
+        }
 
         if contains(message_str, "CRITICAL") || contains(message_str,
         "critical") {
@@ -158,18 +158,31 @@ spec:
             }
           }
       type: remap
-    {{- if and .Values.observability.logs.watchNamespaces (gt (len .Values.observability.logs.watchNamespaces) 0) }}
+    {{- if or (gt (len .Values.observability.logs.namespaces.include) 0) (gt (len .Values.observability.logs.namespaces.exclude) 0)}}
     filter_namespace:
       type: filter
       inputs:
         - k8s_log_source
       condition: |
+        {{- if gt (len .Values.observability.logs.namespaces.include) 0 }}
         includes([
-          {{- range $index, $ns := .Values.observability.logs.watchNamespaces }}
+          {{- range $index, $ns := .Values.observability.logs.namespaces.include }}
           {{- if $index }},{{ end }}
           "{{ $ns }}"
           {{- end }}
         ], to_string(.kubernetes.pod_namespace) ?? "")
+        {{- end }}
+        {{- if and (gt (len .Values.observability.logs.namespaces.include) 0) (gt (len .Values.observability.logs.namespaces.exclude) 0) }}
+        &&
+        {{- end }}
+        {{- if gt (len .Values.observability.logs.namespaces.exclude) 0 }}
+        !includes([
+          {{- range $index, $ns := .Values.observability.logs.namespaces.exclude }}
+          {{- if $index }},{{ end }}
+          "{{ $ns }}"
+          {{- end }}
+        ], to_string(.kubernetes.pod_namespace) ?? "")
+        {{- end }}
     {{- end }}        
     merge_multiline_logs:
       expire_after_ms: 2000
@@ -178,7 +191,7 @@ spec:
         - kubernetes.container_name
         - stream
       inputs:
-        {{- if and .Values.observability.logs.watchNamespaces (gt (len .Values.observability.logs.watchNamespaces) 0) }}
+        {{- if or (gt (len .Values.observability.logs.namespaces.include) 0) (gt (len .Values.observability.logs.namespaces.exclude) 0)}}
         - filter_namespace
         {{- else }}
         - k8s_log_source
