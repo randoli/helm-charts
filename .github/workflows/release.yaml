@@ -28,21 +28,20 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v4
 
-      # charts/**/charts/*.tgz is gitignored, so the wrapper tarballs that
-      # randoli-agent depends on are not in the checkout. Rebuild them
-      # before packaging the umbrella chart.
+      # Package all sub sharts
       - name: Build subchart dependencies
         run: ./scripts/build-subcharts.sh
 
-      # Package only randoli-agent — chart-releaser-action would otherwise
-      # scan charts/* and release every wrapper chart too.
+      # Package randoli-agent
       - name: Package randoli-agent
         run: |
           mkdir -p .cr-release-packages
           helm package charts/randoli-agent --destination .cr-release-packages
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f # v1.7.0
+        # One commit past v1.7.0, pending a v1.7.1 tag. Contains the fix for
+        # https://github.com/helm/chart-releaser-action/issues/171
+        uses: helm/chart-releaser-action@3e001cb8c68933439c7e721650f20a07a1a5c61e # v1.7.0+1
         with:
           skip_packaging: true
         env:
