@@ -3,7 +3,7 @@ name: Release Charts
 on:
   push:
     tags:
-      - 'v*'
+      - '[0-9]*'
 
 permissions:
   contents: write   # GitHub Releases + gh-pages push

@@ -2,8 +2,10 @@
 set -euo pipefail
 
 # Validates a tag-triggered chart release:
-#   1. Tag must be vX.Y.Z (stable) or vX.Y.Z-(rc|alpha|beta).N (pre-release).
-#   2. charts/randoli-agent/Chart.yaml version must match the tag.
+#   1. Tag must be X.Y.Z (stable) or X.Y.Z-(rc|alpha|beta).N (pre-release).
+#      No 'v' prefix — semver doesn't require one, and dropping it makes the
+#      git tag identical to the Helm chart version.
+#   2. charts/randoli-agent/Chart.yaml version must match the tag exactly.
 #   3. Tagged commit must be reachable from the right branch:
 #        stable      -> main only
 #        pre-release -> main or pre-release
@@ -15,29 +17,28 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CHART_FILE="$REPO_ROOT/charts/randoli-agent/Chart.yaml"
 
-tag="${GITHUB_REF_NAME:-$(git -C "$REPO_ROOT" tag --points-at HEAD | head -n1)}"
-if [[ -z "$tag" ]]; then
-  echo "::error::No tag found. This workflow expects to run on a 'v*' tag push."
+version="${GITHUB_REF_NAME:-$(git -C "$REPO_ROOT" tag --points-at HEAD | head -n1)}"
+if [[ -z "$version" ]]; then
+  echo "::error::No tag found. This workflow expects to run on a semver tag push (e.g. 1.0.0, 1.0.0-rc.1)."
   exit 1
 fi
-echo "Tag: $tag"
+echo "Tag: $version"
 
-stable_re='^v[0-9]+\.[0-9]+\.[0-9]+$'
-prerelease_re='^v[0-9]+\.[0-9]+\.[0-9]+-(rc|alpha|beta)\.[0-9]+$'
+stable_re='^[0-9]+\.[0-9]+\.[0-9]+$'
+prerelease_re='^[0-9]+\.[0-9]+\.[0-9]+-(rc|alpha|beta)\.[0-9]+$'
 
-if [[ "$tag" =~ $stable_re ]]; then
+if [[ "$version" =~ $stable_re ]]; then
   is_stable=true
-elif [[ "$tag" =~ $prerelease_re ]]; then
+elif [[ "$version" =~ $prerelease_re ]]; then
   is_stable=false
 else
-  echo "::error::Tag must be vX.Y.Z or vX.Y.Z-(rc|alpha|beta).N (e.g. v1.0.0, v1.0.0-rc.1); got '$tag'."
+  echo "::error::Tag must be X.Y.Z or X.Y.Z-(rc|alpha|beta).N (e.g. 1.0.0, 1.0.0-rc.1); got '$version'."
   exit 1
 fi
 
-version="${tag#v}"
 chart_version=$(awk '/^version:/ {print $2; exit}' "$CHART_FILE" | tr -d '"')
 if [[ "$chart_version" != "$version" ]]; then
-  echo "::error::Tag '$tag' implies chart version '$version' but ${CHART_FILE#"$REPO_ROOT/"} says '$chart_version'. Bump Chart.yaml to '$version' (or re-tag) and re-push."
+  echo "::error::Tag '$version' does not match ${CHART_FILE#"$REPO_ROOT/"} version '$chart_version'. Bump Chart.yaml to '$version' (or re-tag) and re-push."
   exit 1
 fi
 
