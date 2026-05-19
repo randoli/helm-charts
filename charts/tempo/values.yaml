@@ -6,6 +6,9 @@ tempo:
 
   persistence:
     enabled: true
+    # Pinned (matches upstream default) so a future upstream flip can't cause
+    # PVCs to be auto-deleted with the StatefulSet.
+    enableStatefulSetAutoDeletePVC: false
 
   # Scheduling — global.* values are NOT automatically propagated here.
   # Set these explicitly to match global.tolerations / global.nodeSelector / global.affinity.

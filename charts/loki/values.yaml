@@ -26,6 +26,13 @@ loki:
 
   singleBinary:
     replicas: 1
+    # Preserve PVCs (and the data they hold) across StatefulSet scale-down or
+    # deletion. Upstream defaults wipe them on uninstall; we want users to
+    # delete the PVC manually if they no longer need the data.
+    persistence:
+      enableStatefulSetAutoDeletePVC: false
+      whenScaled: Retain
+      whenDeleted: Retain
 
   # Zero out SimpleScalable components — upstream defaults these to 3
   backend:
