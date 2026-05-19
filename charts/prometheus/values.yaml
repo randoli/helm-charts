@@ -14,6 +14,10 @@ prometheus:
 
     persistentVolume:
       size: 15Gi
+      # Keep the PVC (and the data it holds) on helm uninstall; users delete
+      # it manually if no longer needed.
+      annotations:
+        helm.sh/resource-policy: keep
 
     retention: "3d"
     retentionSize: "12GB"
