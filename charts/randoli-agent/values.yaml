@@ -13,8 +13,13 @@ global:
     url:
   openshift:
     enabled: false
+
+  # global Prometheus config
   prometheus:
+    # Prometheus will not be automatically installed when this flag is false.
     install: true
+
+    # Configure a custom/managed Prometheus instance
     url: ""
     secretName: ""
     usernameKey: ""
@@ -23,10 +28,14 @@ global:
     tlsInsecureSkipVerify: true
     tlsCertConfigmapName: ""
     tlsCertConfigmapKey: ""
+
+  # Alert manager config
   alerts:
     slack:
       channel:
       api_url:
+
+  # Agent secrets. These can be downloaded from the Randoli App Insights platform
   secrets:
     cert: randoli-agent-cert
     config: randoli-agent-secret
@@ -41,7 +50,7 @@ global:
 observability:
   otel:
     operator:
-      #enabled: false
+      enabled: true
     applyTargetAllocator: true
   logs:
     applyVectorPipeline: true
@@ -61,10 +70,10 @@ observability:
     cronSpec: "0 10,20 * * *"
     imagePullSecrets: ""
   tracing:
-    #enabled: false
+    enabled: true
   netobserv:
-    #enabled: false
-    #applyCRs: false
+    enabled: true
+    applyCRs: true
     #explodeCRs: false
   traceConfig:
     storage:
@@ -84,16 +93,12 @@ observability:
     enabled: true
     otlpEndpoint:
   hostMetrics:
+    # provider list
     # "node-exporter" (default) keeps the prometheus-community node-exporter DaemonSet.
     # "otel-host-metrics" disables it and deploys an OTel Collector DaemonSet instead.
     #
     # IMPORTANT: when switching to "otel-host-metrics" you must also set:
     #   prometheus.prometheus-node-exporter.enabled: false
-    #
-    # Metric name differences to be aware of when changing this:
-    #   node-exporter  → node_cpu_seconds_total, node_memory_MemAvailable_bytes, node_load1, …
-    #   otel-host-metrics → system_cpu_time_total, system_memory_usage, system_cpu_load_average_1m, …
-    # Any dashboards or alert rules that reference node_* metrics will need updating.
     provider: "node-exporter"
     # Image for the OTel host-metrics collector DaemonSet.
     # Must include the hostmetricsreceiver (opentelemetry-collector-contrib or equivalent).
@@ -103,9 +108,11 @@ observability:
 
 costManagement:
   vpaOperator:
-    #enabled: false
-  opencost:             # values for the upstream opencost dependency (wrapper key)
-    opencost:           # upstream's "opencost:" config block
+    enabled: true
+  # OpenCost config.
+  # The documentation can be seen in the upstream Helm repository
+  opencost:
+    opencost:
       metrics:
         kubeStateMetrics:
           emitKsmV1Metrics: "false"
@@ -114,7 +121,7 @@ costManagement:
         extraVolumeMounts:
           - name: metrics-config-volume
             mountPath: /var/configs
-    extraVolumes:       # upstream's top-level extraVolumes
+    extraVolumes:
       - name: metrics-config-volume
         configMap:
           name: randoli-cost-metrics-config
@@ -139,7 +146,7 @@ logs:
           tolerations: []
 
 tags:
-  observability: false
+  observability: true
   costManagement: false
   security: false
 
@@ -167,6 +174,7 @@ resources:
     cpu: 150m
     memory: 1.5Gi
 
+# Agent DB Config
 db:
   storage:
     pvSize: 10Gi
@@ -267,10 +275,16 @@ prometheus:
     prometheus-node-exporter:
       enabled: true
     server:
-      retention: "30d"
+      # Storage & retention config (see README "Storage and retention")
+      # retention      — time-based metric retention window
+      # retentionSize  — disk-size safety cap (should be < persistentVolume.size)
+      # persistentVolume.size          — PVC size for Prometheus TSDB
+      # persistentVolume.storageClass  — "" = cluster default
+      retention: "7d"
       retentionSize: "45GB"
       persistentVolume:
         size: 50Gi
+        storageClass: ""
     serverFiles:
       prometheus.yml:
         otlp:
@@ -324,6 +338,17 @@ loki:
               prefix: index_
               period: 24h
 
+      # Storage & retention config (see README "Storage and retention")
+      # Retention is enforced by the compactor on the TSDB store.
+      # limits_config.retention_period is the time-based cutoff; the compactor
+      # actually deletes chunks older than that.
+      limits_config:
+        retention_period: 168h   # 7d
+      compactor:
+        working_directory: /var/loki/compactor
+        retention_enabled: true
+        delete_request_store: filesystem
+
     singleBinary:
       replicas: 1
       resources:
@@ -338,16 +363,15 @@ loki:
         - name: GOMEMLIMIT
           value: 1750MiB
       persistence:
+        # size         — PVC size for Loki chunks/index
+        # storageClass — "" = cluster default; set to target a specific SC
         size: 100Gi
+        storageClass: ""
 
       # Helm automatically propagates global.** values to the subchart. But in this case loki does not consume those values.
       # so we need these values to be set in this section
       tolerations: []
       nodeSelector: {}
-
-    tableManager:
-      retention_deletes_enabled: true
-      retention_period: 30d
 
     test:
       enabled: false
@@ -380,12 +404,17 @@ opentelemetry-operator:
               - kube-public
 tempo:
   tempo:
-    retention: 730h
+    # Storage & retention config (see README "Storage and retention")
+    # tempo.retention                 — block retention window (Tempo compactor)
+    # persistence.size                — PVC size for trace data
+    # persistence.storageClassName    — "" = cluster default; set to target a specific SC
+    tempo:
+      retention: "168h"   # 7d
     persistence:
       size: 50Gi
+      storageClassName: ""
 
 vpa:
-  # Agent-level config — read by randoli-agent templates (not passed to VPA)
   recommender:
     minCpuMillicores: 25
     minMemoryMb: 25
@@ -404,4 +433,3 @@ vpa:
       extraArgs:
         - "--pod-recommendation-min-cpu-millicores=25"
         - "--pod-recommendation-min-memory-mb=25"
-
