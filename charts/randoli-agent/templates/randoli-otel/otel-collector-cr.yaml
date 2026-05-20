@@ -75,6 +75,41 @@ spec:
             - action: labelmap
               regex: label_(.+)
               replacement: $$1
+
+          # Tempo /metrics (port 3200 on the tempo Service)
+          - job_name: tempo
+            scrape_interval: 30s
+            static_configs:
+            - targets:
+              - randoli-obs-tempo.{{ .Release.Namespace }}.svc:3200
+
+          # Loki /metrics (port 3100 on the loki Service)
+          - job_name: loki
+            scrape_interval: 30s
+            static_configs:
+            - targets:
+              - randoli-obs-loki.{{ .Release.Namespace }}.svc:3100
+
+          # Vector agent /metrics — internal_metrics source + prometheus_exporter
+          # sink on port 9598 (configured in the ClusterVectorPipeline).
+          # Pods are discovered by label; kaasops vector-operator labels agents
+          # with app.kubernetes.io/name=vector.
+          - job_name: vector
+            scrape_interval: 30s
+            kubernetes_sd_configs:
+            - role: pod
+              namespaces:
+                names:
+                - {{ .Release.Namespace }}
+            relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+              regex: vector
+              action: keep
+            - source_labels: [__meta_kubernetes_pod_ip]
+              target_label: __address__
+              replacement: $${1}:9598
+            - source_labels: [__meta_kubernetes_pod_name]
+              target_label: instance
     exporters:
       otlp/tempo:
         endpoint: '{{ include "trace-storage-url-otlp" . }}'
