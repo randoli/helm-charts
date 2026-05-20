@@ -1,0 +1,21 @@
+{{- if eq (include "enable.vector" .) "true" -}}
+# Vector internal metrics pipeline — exposes Vector's own runtime metrics
+# as a Prometheus scrape endpoint on every agent pod at :9598. 
+# Scraped by the OTel collector via the Target Allocator
+#
+apiVersion: observability.kaasops.io/v1alpha1
+kind: ClusterVectorPipeline
+metadata:
+  name: randoli-obs-vector-metrics
+spec:
+  sources:
+    internal_metrics_source:
+      type: internal_metrics
+      scrape_interval_secs: 30
+  sinks:
+    metrics_prometheus_exporter:
+      type: prometheus_exporter
+      inputs:
+        - internal_metrics_source
+      address: 0.0.0.0:9598
+{{- end }}

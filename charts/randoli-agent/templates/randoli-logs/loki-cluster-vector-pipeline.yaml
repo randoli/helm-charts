@@ -37,22 +37,11 @@ spec:
         retry_initial_backoff_secs: 1
         retry_max_duration_secs: 300
         timeout_secs: 60
-    # Exposes Vector's own internal metrics for the OTel collector to scrape.
-    # Listener is opened on every agent pod at :9598; the OTel TA discovers
-    # pods by label app.kubernetes.io/name=vector.
-    metrics_prometheus_exporter:
-      type: prometheus_exporter
-      inputs:
-        - internal_metrics_source
-      address: 0.0.0.0:9598
   sources:
     k8s_log_source:
       extra_label_selector: app.kubernetes.io/name!=vector
       read_from: end
       type: kubernetes_logs
-    internal_metrics_source:
-      type: internal_metrics
-      scrape_interval_secs: 30
   transforms:
     dedot_transform:
       inputs:
