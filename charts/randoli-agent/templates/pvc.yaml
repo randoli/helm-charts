@@ -2,6 +2,10 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {{ include "randoli-agent.fullname" . }}
+  annotations:
+    # Keep the PVC (and the data it holds) on helm uninstall; users delete
+    # it manually if no longer needed.
+    helm.sh/resource-policy: keep
   labels:
     {{- include "labels" . | nindent 4 }}
 spec:
