@@ -3,7 +3,7 @@ name: logs
 description: Randoli wrapper chart for the Vector Operator (v0.8.1)
 type: application
 version: 0.8.1
-appVersion: "v0.4.1"
+appVersion: "v0.54.0"
 dependencies:
   - name: vector-operator
     version: 0.8.1
