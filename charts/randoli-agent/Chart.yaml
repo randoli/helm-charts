@@ -13,7 +13,7 @@ maintainers:
 name: randoli-agent
 sources:
   - https://github.com/randoli/helm-charts
-version: 2.0.0-rc.8
+version: 2.0.0-rc.9
 dependencies:
   - name: opentelemetry-operator
     version: 0.111.0
@@ -48,7 +48,13 @@ dependencies:
       - costManagement
   - name: tempo
     version: 1.24.1
-    condition: observability.tempo.enabled
+    condition: observability.tempo.singleBinary.enabled
+    tags:
+      - observability
+  - name: tempo-distributed
+    alias: tempoDistributed
+    version: 1.61.3
+    condition: observability.tempo.distributed.enabled
     tags:
       - observability
   - name: network

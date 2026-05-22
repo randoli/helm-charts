@@ -116,9 +116,20 @@ false
 {{- end -}}
 {{- end -}}
 
+{{/*
+Tempo deployment mode: singleBinary (charts/tempo) or distributed (charts/tempo-distributed).
+The two booleans below are mutually exclusive; the distributed branch wins when both are on.
+*/}}
+{{- define "tempo.distributed.enabled" -}}
+{{- $distributed := (((.Values.observability).tempo).distributed) | default dict -}}
+{{- if eq (default false $distributed.enabled) true -}}true{{- else -}}false{{- end -}}
+{{- end -}}
+
 {{- define "trace-storage-url" -}}
 {{- if not (empty .Values.observability.traceConfig.storage.url)  -}}
 {{ .Values.observability.traceConfig.storage.url }}
+{{- else if eq (include "tempo.distributed.enabled" .) "true" -}}
+{{- printf "http://randoli-obs-tempo-dist-query-frontend.%s.svc:3200" .Release.Namespace -}}
 {{- else -}}
 {{- printf "http://randoli-obs-tempo.%s.svc:3200" .Release.Namespace -}}
 {{- end -}}
@@ -127,6 +138,8 @@ false
 {{- define "trace-storage-url-otlp" -}}
 {{- if not (empty .Values.observability.traceConfig.storage.urlOtlp)  -}}
 {{ .Values.observability.traceConfig.storage.urlOtlp }}
+{{- else if eq (include "tempo.distributed.enabled" .) "true" -}}
+{{- printf "randoli-obs-tempo-dist-distributor.%s.svc:4317" .Release.Namespace -}}
 {{- else -}}
 {{- printf "randoli-obs-tempo.%s.svc:4317" .Release.Namespace -}}
 {{- end -}}
@@ -164,7 +177,3 @@ true
 false
 {{- end -}}
 {{- end -}}
-
-
-
-

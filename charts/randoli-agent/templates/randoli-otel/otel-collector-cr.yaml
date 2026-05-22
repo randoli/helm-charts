@@ -76,12 +76,38 @@ spec:
               regex: label_(.+)
               replacement: $$1
 
-          # Tempo /metrics (port 3200 on the tempo Service)
+          # Use Kubernetes service discovery to find scrape targets in Tempo distributed mode.
+          {{- if eq (include "tempo.distributed.enabled" .) "true" }}
+          - job_name: tempo
+            scrape_interval: 30s
+            kubernetes_sd_configs:
+            - role: pod
+              namespaces:
+                names:
+                - {{ .Release.Namespace }}
+            relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_instance]
+              regex: randoli-obs-tempo-dist
+              action: keep
+            # Avoid non-tempo pods from being scraped
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+              regex: distributor|ingester|querier|query-frontend|compactor
+              action: keep
+            - source_labels: [__meta_kubernetes_pod_ip]
+              target_label: __address__
+              replacement: $${1}:3200
+            - source_labels: [__meta_kubernetes_pod_name]
+              target_label: instance
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+              target_label: component
+          {{- else }}
+          # Use the Tempo service to scrape metrics in the single binary mode
           - job_name: tempo
             scrape_interval: 30s
             static_configs:
             - targets:
               - randoli-obs-tempo.{{ .Release.Namespace }}.svc:3200
+          {{- end }}
 
           # Loki /metrics (port 3100 on the loki Service)
           - job_name: loki
