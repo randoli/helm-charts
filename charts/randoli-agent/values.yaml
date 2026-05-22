@@ -71,6 +71,16 @@ observability:
     imagePullSecrets: ""
   tracing:
     enabled: true
+  # Tempo deployment mode. The two flags are mutually exclusive — exactly one
+  # should be true. The default ships single-binary Tempo (charts/tempo); flip
+  # both to switch to the distributed microservices Tempo (charts/tempo-distributed):
+  #   --set observability.tempo.singleBinary.enabled=false \
+  #   --set observability.tempo.distributed.enabled=true
+  tempo:
+    singleBinary:
+      enabled: false
+    distributed:
+      enabled: true
   netobserv:
     enabled: true
     applyCRs: true
@@ -413,6 +423,25 @@ tempo:
     persistence:
       size: 50Gi
       storageClassName: ""
+
+# Overrides for distributed Tempo (charts/tempo-distributed). Only takes effect
+# when observability.tempo.distributed.enabled=true. For production, switch
+# storage.trace.backend to object storage (s3 / gcs / azure) — see the README
+# "Tempo deployment mode" section.
+tempoDistributed:
+  tempo-distributed:
+    # Storage & retention config (see README "Storage and retention")
+    # compactor.config.compaction.block_retention — block retention window
+    # ingester.persistence.size                   — PVC size per ingester replica
+    # ingester.persistence.storageClass           — "" = cluster default
+    compactor:
+      config:
+        compaction:
+          block_retention: "730h"   # a month
+    ingester:
+      persistence:
+        size: 100Gi
+        storageClass: ""
 
 vpa:
   recommender:
