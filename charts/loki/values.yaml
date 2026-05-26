@@ -60,3 +60,9 @@ loki:
       enabled: false
       grafanaAgent:
         installOperator: false
+
+  # Grafana rollout-operator disabled. Only useful when zoneAwareReplication
+  # is enabled on the ingester ring (we run single-binary Loki by default).
+  # Pinned off so it doesn't get pulled in by a future upstream default flip.
+  rollout_operator:
+    enabled: false
