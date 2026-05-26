@@ -88,6 +88,13 @@ tempo-distributed:
       enabled: false
       installOperator: false
 
+  # Grafana rollout-operator disabled. Only useful when zoneAwareReplication
+  # is enabled on the ingester ring (we run a single ingester replica by
+  # default). Pinned off so it doesn't get pulled in by a future upstream
+  # default flip.
+  rollout_operator:
+    enabled: false
+
   # Scheduling — global.* values are NOT automatically propagated here.
   # Set these explicitly to match global.tolerations / global.nodeSelector / global.affinity.
   tolerations: []
