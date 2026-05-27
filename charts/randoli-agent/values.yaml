@@ -54,7 +54,15 @@ observability:
     applyTargetAllocator: true
   logs:
     applyVectorPipeline: true
-    watchNamespaces: []
+    # Namespace allow/deny lists for the Vector kubernetes_logs source. Both
+    # are applied at the source via the Kubernetes API field selector, so
+    # Vector never opens log files for namespaces it shouldn't tail.
+    # - includeNamespaces: if non-empty, ONLY these namespaces are tailed
+    #   (one source per namespace, since field selectors can't OR).
+    # - excludeNamespaces: tail everything except these namespaces. Ignored
+    #   when includeNamespaces is set.
+    includeNamespaces: []
+    excludeNamespaces: []
     proxyCORS: "*"
     proxyImage: docker.io/randoli/telemetry-proxy:0.1.2
     #proxyKeycloakIssuer:
