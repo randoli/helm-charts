@@ -55,12 +55,24 @@ observability:
   logs:
     applyVectorPipeline: true
     watchNamespaces: []
-    proxyCORS: "*"
-    proxyImage: docker.io/randoli/telemetry-proxy:0.1.2
-    #proxyKeycloakIssuer:
     #lokiUrl:
     analyzers:
       enabled: true
+  # Telemetry signals (logs / traces / metrics) flow from the Randoli
+  # console to the in-cluster stacks via the telemetry proxy (randoli-tproxy).
+  telemetry:
+    proxy:
+      image: docker.io/randoli/telemetry-proxy:0.1.2
+      # CORS_ALLOW_ORIGIN. "*" or comma-separated origin list. Empty falls
+      # back to the default Randoli console origins.
+      cors: "*"
+      # KEYCLOAK_ISSUER_URL. Empty falls back to
+      # https://sso.randoli.io/auth/realms/sso
+      #keycloakIssuer:
+      # Optional env vars. Leave empty to use the proxy image's built-in
+      # defaults — they're only injected into the proxy ConfigMap when set.
+      tunnelServerUrl: ""
+      mode: ""
   vector:
     enabled: true
   security:

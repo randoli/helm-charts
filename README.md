@@ -87,6 +87,33 @@ helm install randoli randoli/randoli-agent -n randoli-agents \
 See the [upstream tempo-distributed values reference](https://github.com/grafana/helm-charts/blob/main/charts/tempo-distributed/values.yaml)
 for the full set of object-storage and per-component scaling knobs.
 
+## Telemetry proxy
+
+All telemetry signals (logs, traces, metrics) flow from the Randoli console
+to the in-cluster Loki / Tempo / Prometheus stacks via the telemetry proxy
+(`randoli-tproxy`), which also enforces auth via Keycloak. Its config lives
+under `observability.telemetry.proxy.*`:
+
+| Value | Purpose | Default |
+|-------|---------|---------|
+| `observability.telemetry.proxy.image` | Container image for the proxy Deployment | `docker.io/randoli/telemetry-proxy:0.1.2` |
+| `observability.telemetry.proxy.cors` | `CORS_ALLOW_ORIGIN` — `*` or comma-separated origin list. Empty falls back to the default Randoli console origins. | `"*"` |
+| `observability.telemetry.proxy.keycloakIssuer` | `KEYCLOAK_ISSUER_URL` — Keycloak realm issuer URL. Empty falls back to `https://sso.randoli.io/auth/realms/sso`. | unset |
+| `observability.telemetry.proxy.tunnelServerUrl` | `TUNNEL_SERVER_URL` — only injected into the proxy ConfigMap when non-empty. | `""` |
+| `observability.telemetry.proxy.mode` | `MODE` — only injected into the proxy ConfigMap when non-empty. | `""` |
+
+`tunnelServerUrl` and `mode` are additive: leaving them empty omits the
+corresponding env vars from the proxy's ConfigMap entirely, so the proxy
+image's built-in defaults apply. Example:
+
+```
+helm install randoli randoli/randoli-agent -n randoli-agents \
+  --set tags.observability=true \
+  --set observability.telemetry.proxy.keycloakIssuer=https://sso.example.com/auth/realms/randoli \
+  --set observability.telemetry.proxy.tunnelServerUrl=https://tunnel.example.com \
+  --set observability.telemetry.proxy.mode=tunnel
+```
+
 ## Storage and retention
 
 Each observability backend (Prometheus, Loki, Tempo) exposes three knobs at

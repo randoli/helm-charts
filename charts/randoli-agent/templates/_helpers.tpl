@@ -146,8 +146,8 @@ The two booleans below are mutually exclusive; the distributed branch wins when 
 {{- end -}}
 
 {{- define "telemetry-proxy-cors" -}}
-{{- if not (empty .Values.observability.logs.proxyCORS)  -}}
-{{ .Values.observability.logs.proxyCORS | quote}}
+{{- if not (empty .Values.observability.telemetry.proxy.cors)  -}}
+{{ .Values.observability.telemetry.proxy.cors | quote}}
 {{- else -}}
 https://telemetry-app.randoli.io,https://console.insights.randoli.io
 {{- end -}}
@@ -162,8 +162,8 @@ https://telemetry-app.randoli.io,https://console.insights.randoli.io
 {{- end -}}
 
 {{- define "telemetry-proxy-keycloak-issuer" -}}
-{{- if not (empty .Values.observability.logs.proxyKeycloakIssuer)  -}}
-{{ .Values.observability.logs.proxyKeycloakIssuer }}
+{{- if not (empty .Values.observability.telemetry.proxy.keycloakIssuer)  -}}
+{{ .Values.observability.telemetry.proxy.keycloakIssuer }}
 {{- else -}}
 https://sso.randoli.io/auth/realms/sso
 {{- end -}}
