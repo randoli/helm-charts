@@ -26,7 +26,7 @@ spec:
     {{- toYaml . | nindent 4 }}
     {{- end }}
   {{- end }}
-  image: {{ .Values.observability.hostMetrics.collectorImage | default "otel/opentelemetry-collector-contrib:0.123.0" }}
+  image: {{ .Values.observability.hostMetrics.otelCollector.image | default "otel/opentelemetry-collector-contrib:0.123.0" }}
   upgradeStrategy: automatic
   mode: daemonset
   serviceAccount: randoli-otel-collector
@@ -48,7 +48,7 @@ spec:
     receivers:
       hostmetrics:
         root_path: /hostfs
-        collection_interval: {{ .Values.observability.hostMetrics.collectionInterval | default "60s" }}
+        collection_interval: {{ .Values.observability.hostMetrics.otelCollector.collectionInterval | default "60s" }}
         scrapers:
           cpu:
             metrics:

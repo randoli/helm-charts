@@ -37,6 +37,7 @@ dependencies:
     tags:
       - security
   - name: logs
+    alias: vectorOperator
     version: 0.8.1
     condition: observability.vector.enabled
     tags:
