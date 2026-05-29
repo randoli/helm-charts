@@ -113,15 +113,6 @@ observability:
   traceConfig:
     storage:
       type: TEMPO
-      url:
-      urlOtlp:
-    opensearch:
-      spanIndexPattern:
-      rootSpanIndexPattern:
-      skipTlsVerify: false
-      secretName:
-      usernameKeyRef:
-      passwordKeyRef:
 
   netobserv:
     enabled: true
@@ -166,6 +157,7 @@ costManagement:
     enabled: true
   # OpenCost config.
   # The documentation can be seen in the upstream Helm repository
+  # https://github.com/opencost/opencost-helm-chart
   opencost:
     opencost:
       metrics:
@@ -182,8 +174,8 @@ costManagement:
           name: randoli-cost-metrics-config
 
 # ============================================================================
-# Agent Pod config — applied to the randoli-agent Deployment/StatefulSet,
-# its PVC, ServiceAccount, etc.
+# Agent Pod config — applied to the randoli-agent StatefulSet, its PVC, 
+# ServiceAccount, etc.
 # ============================================================================
 image:
   registry: docker.io
