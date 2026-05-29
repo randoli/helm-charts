@@ -126,7 +126,6 @@ observability:
   netobserv:
     enabled: true
     applyCRs: true
-    #explodeCRs: false
 
   security:
     #enabled: false
