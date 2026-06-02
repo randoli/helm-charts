@@ -153,9 +153,39 @@ https://telemetry-app.randoli.io,https://console.insights.randoli.io
 {{- end -}}
 {{- end -}}
 
+{{/*
+Loki deployment mode: singleBinary (charts/loki) or distributed (charts/loki-distributed).
+The two booleans below are mutually exclusive; the distributed branch wins when both are on.
+*/}}
+{{- define "loki.distributed.enabled" -}}
+{{- $distributed := (((.Values.observability).loki).distributed) | default dict -}}
+{{- if eq (default false $distributed.enabled) true -}}true{{- else -}}false{{- end -}}
+{{- end -}}
+
+{{/*
+Write/push endpoint (Vector → Loki). In distributed mode this is the
+distributor Service; in single-binary mode all roles share one Service.
+*/}}
 {{- define "logs-loki-url" -}}
 {{- if not (empty .Values.observability.logs.lokiUrl)  -}}
 {{ .Values.observability.logs.lokiUrl }}
+{{- else if eq (include "loki.distributed.enabled" .) "true" -}}
+{{- printf "http://randoli-obs-loki-dist-distributor.%s.svc:3100" .Release.Namespace -}}
+{{- else -}}
+{{- printf "http://randoli-obs-loki.%s.svc:3100" .Release.Namespace -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Read/query endpoint (telemetry-proxy → Loki). In distributed mode this is
+the query-frontend Service; in single-binary mode it shares the single
+Loki Service with the write path.
+*/}}
+{{- define "logs-loki-read-url" -}}
+{{- if not (empty .Values.observability.logs.lokiUrl)  -}}
+{{ .Values.observability.logs.lokiUrl }}
+{{- else if eq (include "loki.distributed.enabled" .) "true" -}}
+{{- printf "http://randoli-obs-loki-dist-query-frontend.%s.svc:3100" .Release.Namespace -}}
 {{- else -}}
 {{- printf "http://randoli-obs-loki.%s.svc:3100" .Release.Namespace -}}
 {{- end -}}

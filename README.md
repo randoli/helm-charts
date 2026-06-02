@@ -80,6 +80,61 @@ helm install randoli randoli/randoli-agent -n randoli-agents \
 
 See the [upstream tempo-distributed values reference](https://github.com/grafana/helm-charts/blob/main/charts/tempo-distributed/values.yaml) for the full set of object-storage and per-component scaling knobs.
 
+## Loki deployment mode
+
+The chart ships two Loki deployments and lets you pick exactly one at
+install time:
+
+| Mode           | Backing chart                       | Use it when                                                                                                                                  |
+|----------------|-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| `singleBinary` | `grafana/loki` (default)            | Small or single-tenant clusters. All Loki components run in one pod backed by a single PVC; quick to install with no external dependencies. This mode should not be used in production. |
+| `distributed`  | `grafana/loki` (microservices mode) | Production / higher log volume. Distributor, ingester, querier, query-frontend, query-scheduler, compactor, and index-gateway each run as separate workloads so they can be scaled independently and (with object storage) made HA. |
+
+Selection is controlled by two booleans under `observability.loki`. They are mutually exclusive — set exactly one to `true`
+
+```yaml
+observability:
+  loki:
+    singleBinary:
+      enabled: true   # default
+    distributed:
+      enabled: false
+```
+
+Switching to distributed mode:
+
+```
+helm install randoli randoli/randoli-agent -n randoli-agents \
+  --set tags.observability=true \
+  --set observability.loki.singleBinary.enabled=false \
+  --set observability.loki.distributed.enabled=true
+```
+
+The agent's log push (Vector → Loki) and query (telemetry-proxy → Loki) endpoints follow the mode automatically:
+
+| Mode           | Push endpoint                                                  | Query endpoint                                                          |
+|----------------|----------------------------------------------------------------|-------------------------------------------------------------------------|
+| `singleBinary` | `randoli-obs-loki.<namespace>.svc:3100`                        | `randoli-obs-loki.<namespace>.svc:3100`                                 |
+| `distributed`  | `randoli-obs-loki-dist-distributor.<namespace>.svc:3100`       | `randoli-obs-loki-dist-query-frontend.<namespace>.svc:3100`             |
+
+To point both at an external Loki instead of either deployment, set `observability.logs.lokiUrl`. This override takes precedence over both modes.
+
+Distributed mode defaults to the bundled MinIO subchart (S3-compatible, PV-backed) so the chart installs out of the box without external object storage. Production deployments should disable MinIO and point Loki at a real cloud object store (S3 / GCS / Azure):
+
+```
+helm install randoli randoli/randoli-agent -n randoli-agents \
+  --set observability.loki.singleBinary.enabled=false \
+  --set observability.loki.distributed.enabled=true \
+  --set lokiDistributed.loki.minio.enabled=false \
+  --set lokiDistributed.loki.loki.storage.type=s3 \
+  --set lokiDistributed.loki.loki.storage.s3.region=us-east-1 \
+  --set lokiDistributed.loki.loki.storage.bucketNames.chunks=my-loki-chunks \
+  --set lokiDistributed.loki.loki.storage.bucketNames.ruler=my-loki-ruler \
+  --set lokiDistributed.loki.loki.storage.bucketNames.admin=my-loki-admin
+```
+
+GCS and Azure examples (with their auth knobs) live in the [wrapper values file](charts/loki-distributed/values.yaml). See the [upstream loki values reference](https://github.com/grafana/loki/blob/main/production/helm/loki/values.yaml) for the full set of object-storage and per-component scaling knobs.
+
 ## Telemetry proxy
 
 The Telemetry Proxy (`randoli-tproxy`) acts as the bridge in between Cluster and the Randoli Platform and faciliates querying logs, traces and metrics on demand.
@@ -111,7 +166,8 @@ class. The defaults set 30 days of retention across all three.
 | Backend                | Retention                                                                          | PVC size                                                                            | StorageClass                                                                          |
 |------------------------|------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|
 | Prometheus             | `prometheus.prometheus.server.retention` (default `7d`)                            | `prometheus.prometheus.server.persistentVolume.size` (`50Gi`)                       | `prometheus.prometheus.server.persistentVolume.storageClass`                          |
-| Loki                   | `loki.loki.loki.limits_config.retention_period` (default `168h`)                   | `loki.loki.singleBinary.persistence.size` (`100Gi`)                                 | `loki.loki.singleBinary.persistence.storageClass`                                     |
+| Loki (single-binary)   | `loki.loki.loki.limits_config.retention_period` (default `168h`)                   | `loki.loki.singleBinary.persistence.size` (`100Gi`)                                 | `loki.loki.singleBinary.persistence.storageClass`                                     |
+| Loki (distributed)     | `lokiDistributed.loki.loki.limits_config.retention_period` (default `720h`)        | `lokiDistributed.loki.ingester.persistence.claims[0].size` (`50Gi`, per ingester replica) | `lokiDistributed.loki.ingester.persistence.claims[0].storageClass`              |
 | Tempo (single-binary)  | `tempo.tempo.tempo.retention` (default `168h`)                                     | `tempo.tempo.persistence.size` (`50Gi`)                                             | `tempo.tempo.persistence.storageClassName`                                            |
 | Tempo (distributed)    | `tempoDistributed.tempo-distributed.compactor.config.compaction.block_retention` (default `168h`) | `tempoDistributed.tempo-distributed.ingester.persistence.size` (`50Gi`, per ingester replica) | `tempoDistributed.tempo-distributed.ingester.persistence.storageClass`                |
 
@@ -152,3 +208,25 @@ kubectl -n randoli-agents delete pvc <name>
 Whether the underlying PV is then deleted or retained depends on the `reclaimPolicy` of the StorageClass that provisioned it (`Delete` is the default for most cloud StorageClasses). Use a StorageClass with `reclaimPolicy: Retain` if you want PVs to survive PVC deletion as well.
 
 Note: because the PVCs are kept (`helm.sh/resource-policy: keep` / `persistentVolumeClaimRetentionPolicy: Retain`), reinstalling into the same namespace will fail with "object already exists" unless you adopt the existing PVCs — use `helm install --take-ownership` (Helm 3.10+) or delete the orphaned PVCs first.
+
+## Upgrading
+
+`helm upgrade` may fail with a server-side-apply field-ownership conflict on the netobserv `FlowCollector`:
+
+```
+Error: UPGRADE FAILED: conflict occurred while applying object /cluster flows.netobserv.io/v1beta2,
+Kind=FlowCollector: Apply failed with 1 conflict:
+conflict with "manager" using flows.netobserv.io/v1beta2: .spec.exporters
+```
+
+The `FlowCollector` named `cluster` is templated by this chart, but the netobserv-operator reconciles the same CR and writes back to `.spec.exporters` under its own field-manager (`"manager"`). Once that happens, Kubernetes records the operator as the field owner and rejects a subsequent Helm apply that tries to overwrite it.
+
+Pass `--force-conflicts` on upgrade (Helm 3.14+) to take ownership back and overwrite the operator's value:
+
+```
+helm upgrade randoli randoli/randoli-agent -n randoli-agents \
+  --force-conflicts \
+  --set tags.observability=true --set tags.costManagement=true --set tags.security=true
+```
+
+This is safe: the chart template is the intended source of truth for `.spec.exporters`; the netobserv-operator only writes defaults / normalization back into the field.

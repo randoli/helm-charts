@@ -106,12 +106,38 @@ spec:
               - randoli-obs-tempo.{{ .Release.Namespace }}.svc:3200
           {{- end }}
 
+          # Use Kubernetes service discovery to find scrape targets in Loki distributed mode.
+          {{- if eq (include "loki.distributed.enabled" .) "true" }}
+          - job_name: loki
+            scrape_interval: 30s
+            kubernetes_sd_configs:
+            - role: pod
+              namespaces:
+                names:
+                - {{ .Release.Namespace }}
+            relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_instance]
+              regex: randoli-obs-loki-dist
+              action: keep
+            # Avoid non-loki pods from being scraped
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+              regex: distributor|ingester|querier|query-frontend|query-scheduler|compactor|index-gateway|ruler
+              action: keep
+            - source_labels: [__meta_kubernetes_pod_ip]
+              target_label: __address__
+              replacement: $${1}:3100
+            - source_labels: [__meta_kubernetes_pod_name]
+              target_label: instance
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+              target_label: component
+          {{- else }}
           # Loki /metrics (port 3100 on the loki Service)
           - job_name: loki
             scrape_interval: 30s
             static_configs:
             - targets:
               - randoli-obs-loki.{{ .Release.Namespace }}.svc:3100
+          {{- end }}
 
           # Vector agent /metrics — internal_metrics source + prometheus_exporter
           # sink on port 9598 (configured in the ClusterVectorPipeline).

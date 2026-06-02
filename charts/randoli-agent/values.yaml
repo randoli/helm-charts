@@ -257,6 +257,14 @@ observability:
     distributed:
       enabled: false
 
+  # Loki deployment mode. The two flags are mutually exclusive — exactly one should be true.
+  # The default configures single-binary Loki.
+  loki:
+    singleBinary:
+      enabled: true
+    distributed:
+      enabled: false
+
   traceConfig:
     storage:
       type: TEMPO
@@ -399,6 +407,31 @@ loki:
 
     resultsCache:
       enabled: false
+
+# Overrides for distributed Loki (charts/loki-distributed). Only takes effect
+# when observability.loki.distributed.enabled=true. For production, disable
+# the bundled MinIO and override loki.loki.storage with real cloud object
+# storage — see the README "Loki deployment mode" section.
+lokiDistributed:
+  loki:
+    # Storage & retention config (see README "Storage and retention")
+    # loki.limits_config.retention_period — time-based retention enforced by the compactor
+    # ingester.persistence.claims[0].size  — PVC size per ingester replica
+    # ingester.persistence.claims[0].storageClass — null = cluster default
+    loki:
+      limits_config:
+        retention_period: "720h"   # 30d
+    ingester:
+      persistence:
+        # `claims` is a list — overriding it replaces the wrapper's entry
+        # wholesale (helm does not deep-merge list items), so accessModes must
+        # be repeated here.
+        claims:
+          - name: data
+            accessModes:
+              - ReadWriteOnce
+            size: 50Gi
+            storageClass: null
 
 network:
   # TLS configuration — one of the two modes must be set when netobserv is enabled.
