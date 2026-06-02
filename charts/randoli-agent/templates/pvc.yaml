@@ -9,12 +9,12 @@ metadata:
   labels:
     {{- include "labels" . | nindent 4 }}
 spec:
-  {{- if .Values.storageClassName }}
-  storageClassName: {{ .Values.storageClassName | quote }}
+  {{- if .Values.agent.storageClassName }}
+  storageClassName: {{ .Values.agent.storageClassName | quote }}
   {{- end}}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.db.storage.pvSize }}
+      storage: {{ .Values.agent.db.storage.pvSize }}
   volumeMode: Filesystem

@@ -1,9 +1,11 @@
+{{- if eq (include "apply-network-crs" . | trim) "true" -}}
 # This metric provides egress cluster-external byte-rate per host and workload. It also provides dashboard charts.
 # More examples in https://github.com/netobserv/network-observability-operator/tree/main/config/samples/flowmetrics
 apiVersion: flows.netobserv.io/v1alpha1
 kind: FlowMetric
 metadata:
   name: flowmetric-cluster-external-egress-traffic
+  namespace: netobserv
 spec:
   metricName: cluster_external_egress_bytes_total
   type: Counter
@@ -31,3 +33,4 @@ spec:
       queries:
         - promQL: 'sum(rate($METRIC{SrcK8S_Namespace!=""}[2m])) by (SrcK8S_Namespace, SrcK8S_OwnerName)'
           legend: "{{`{{SrcK8S_Namespace}} / {{SrcK8S_OwnerName}}`}}"
+{{- end }}

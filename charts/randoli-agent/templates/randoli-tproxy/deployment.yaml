@@ -7,8 +7,20 @@ metadata:
     app.kubernetes.io/name: randoli-tproxy
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: randoli-tproxy
+    {{- with .Values.global.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.tproxy.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   annotations:
-    resource.opentelemetry.io/service.name: randoli-tproxy  
+    resource.opentelemetry.io/service.name: randoli-tproxy
+    {{- with .Values.global.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.tproxy.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   replicas: 1
   selector:
@@ -23,11 +35,28 @@ spec:
         app.kubernetes.io/name: randoli-tproxy
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: randoli-tproxy
+        {{- with .Values.global.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.tproxy.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- if or .Values.global.annotations .Values.tproxy.annotations }}
+      annotations:
+        {{- with .Values.global.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.tproxy.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
     spec:
       containers:
         - name: randoli-tproxy
-          image: {{ .Values.observability.logs.proxyImage }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.tproxy.image }}
+          image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}:{{ .tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.tproxy.image.pullPolicy }}
           ports:
             - containerPort: 8080
               protocol: TCP
@@ -47,39 +76,19 @@ spec:
             requests:
               cpu: 30m
               memory: "128Mi"
-      {{- if or .Values.imagePullSecrets .Values.global.imagePullSecrets }}
+      {{- with .Values.global.imagePullSecrets }}
       imagePullSecrets:
-        {{- with .Values.imagePullSecrets }}
         {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.imagePullSecrets }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
       {{- end }}
-      {{- if or .Values.tolerations .Values.global.tolerations }}
+      {{- with coalesce .Values.tproxy.tolerations .Values.global.tolerations }}
       tolerations:
-        {{- with .Values.tolerations }}
         {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
       {{- end }}
-      {{- if or .Values.nodeSelector .Values.global.nodeSelector }}
+      {{- with coalesce .Values.tproxy.nodeSelector .Values.global.nodeSelector }}
       nodeSelector:
-        {{- with .Values.nodeSelector }}
         {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.nodeSelector }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
       {{- end }}
-      {{- if or .Values.affinity .Values.global.affinity }}
+      {{- with coalesce .Values.tproxy.affinity .Values.global.affinity }}
       affinity:
-        {{- with .Values.affinity }}
         {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.affinity }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
-      {{- end }} 
+      {{- end }}

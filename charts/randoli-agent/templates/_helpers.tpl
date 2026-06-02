@@ -109,7 +109,7 @@ false
 
 {{- define "apply-network-crs" -}}
 {{- $netobserv := .Values.observability.netobserv | default dict }}
-{{- if and (or (not (hasKey $netobserv "explodeCRs")) (not $netobserv.explodeCRs)) (or (not (hasKey $netobserv "applyCRs")) $netobserv.applyCRs ) (or .Values.tags.observability .Values.tags.costManagement) -}}
+{{- if and (or (not (hasKey $netobserv "applyCRs")) $netobserv.applyCRs) (or .Values.tags.observability .Values.tags.costManagement) -}}
 true
 {{- else -}}
 false
@@ -146,8 +146,8 @@ The two booleans below are mutually exclusive; the distributed branch wins when 
 {{- end -}}
 
 {{- define "telemetry-proxy-cors" -}}
-{{- if not (empty .Values.observability.logs.proxyCORS)  -}}
-{{ .Values.observability.logs.proxyCORS | quote}}
+{{- if not (empty .Values.tproxy.cors)  -}}
+{{ .Values.tproxy.cors | quote}}
 {{- else -}}
 https://telemetry-app.randoli.io,https://console.insights.randoli.io
 {{- end -}}
@@ -162,8 +162,8 @@ https://telemetry-app.randoli.io,https://console.insights.randoli.io
 {{- end -}}
 
 {{- define "telemetry-proxy-keycloak-issuer" -}}
-{{- if not (empty .Values.observability.logs.proxyKeycloakIssuer)  -}}
-{{ .Values.observability.logs.proxyKeycloakIssuer }}
+{{- if not (empty .Values.tproxy.keycloakIssuer)  -}}
+{{ .Values.tproxy.keycloakIssuer }}
 {{- else -}}
 https://sso.randoli.io/auth/realms/sso
 {{- end -}}

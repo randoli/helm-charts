@@ -1,1 +1,4 @@
 charts/**/charts/*.tgz
+./*.tgz
+
+temp

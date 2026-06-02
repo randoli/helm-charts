@@ -5,37 +5,34 @@ metadata:
   name: randoli-otel
   labels:
     randoli/app-type: otel-pipeline
+    {{- with .Values.global.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.otelCollector.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   annotations:
     # ArgoCD sync wave: applied after the operator Deployment (wave 0) is healthy.
     # Ignored by plain helm install — failurePolicy: Ignore on the webhook handles ordering there.
     argocd.argoproj.io/sync-wave: "2"
+    {{- with .Values.global.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.otelCollector.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
-  {{- if or .Values.tolerations .Values.global.tolerations }}
+  {{- with coalesce .Values.otelCollector.tolerations .Values.global.tolerations }}
   tolerations:
-    {{- with .Values.tolerations }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
-    {{- with .Values.global.tolerations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
   {{- end }}
-  {{- if or .Values.nodeSelector .Values.global.nodeSelector }}
+  {{- with coalesce .Values.otelCollector.nodeSelector .Values.global.nodeSelector }}
   nodeSelector:
-    {{- with .Values.nodeSelector }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
-    {{- with .Values.global.nodeSelector }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
   {{- end }}
-  {{- if or .Values.affinity .Values.global.affinity }}
+  {{- with coalesce .Values.otelCollector.affinity .Values.global.affinity }}
   affinity:
-    {{- with .Values.affinity }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
-    {{- with .Values.global.affinity }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
   {{- end }}
   image: docker.io/randoli/otelcol:v1.0.3
   upgradeStrategy: automatic
@@ -214,8 +211,9 @@ spec:
           exporters: [debug]
   {{- if .Values.observability.otel.applyTargetAllocator }}
   targetAllocator:
-    {{- with .Values.tolerations }}
-    tolerations: {{ toYaml . | nindent 6 }}
+    {{- with coalesce .Values.otelCollector.tolerations .Values.global.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
     {{- end }}
     enabled: true
     prometheusCR:
