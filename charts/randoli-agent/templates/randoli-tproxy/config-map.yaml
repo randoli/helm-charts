@@ -4,7 +4,7 @@ metadata:
   name: randoli-tproxy
   namespace: {{ include "randoli-agent.namespace" . }}
 data:
-  LOKI_BASE_URL: {{ include "logs-loki-url" . }}
+  LOKI_BASE_URL: {{ include "logs-loki-read-url" . }}
   LISTEN_ADDR: ':8080'
   ROUTE_PREFIX: /api/loki
   ENABLE_CORS: 'true'

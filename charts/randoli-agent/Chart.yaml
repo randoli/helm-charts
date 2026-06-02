@@ -66,6 +66,12 @@ dependencies:
       - costManagement
   - name: loki
     version: 6.49.9
-    condition: observability.loki.enabled
+    condition: observability.loki.singleBinary.enabled
+    tags:
+      - observability
+  - name: loki-distributed
+    alias: lokiDistributed
+    version: 6.49.0
+    condition: observability.loki.distributed.enabled
     tags:
       - observability
