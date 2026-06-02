@@ -1,5 +1,7 @@
 # ============================================================================
-# Umbrella-shared config — read by helpers and propagated to subcharts
+# Randoli App Insights Platform
+# This file contains the default configuration values used during installation.
+# For details about the available configuration options, see docs.randoli.io.
 # ============================================================================
 global:
   imagePullSecrets: []
@@ -42,17 +44,24 @@ global:
   secrets:
     cert: randoli-agent-cert
     config: randoli-agent-secret
+
+  # Default scheduling for randoli-managed pods (agent, tproxy, otel collector,
+  # host-metrics collector). Each component may override these by setting its
+  # own tolerations / nodeSelector / affinity. When the component-level value
+  # is empty, the global value is used as a fallback.
   nodeSelector: {}
   affinity: {}
   tolerations: []
-  daemonsets:
-    nodeSelector: {}
-    affinity: {}
-    tolerations: []
+
+  # Default labels and annotations applied to randoli-managed workloads
+  # (agent / tproxy / otelCollector) and their pod templates. These are MERGED
+  # with the matching component-level labels / annotations — both contribute,
+  # and on duplicate keys the component-level value wins (rendered last).
+  labels: {}
+  annotations: {}
 
 # ============================================================================
-# Feature-set toggles. Enable a tag to install the subcharts associated with
-# it (see Chart.yaml dependencies → tags).
+# Feature toggles. Enable a tag to install the subcharts associated
 # ============================================================================
 tags:
   observability: true
@@ -60,27 +69,168 @@ tags:
   security: false
 
 # ============================================================================
+# Randoli Agent Pod config
+# ============================================================================
+agent:
+  image:
+    registry: docker.io
+    repository: randoli/insights-agent
+    tag: "1.18"
+    digest: ""
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: Always
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 1.5Gi
+    requests:
+      cpu: 150m
+      memory: 1.5Gi
+
+  # Agent DB Config
+  db:
+    storage:
+      pvSize: 10Gi
+    resources:
+      limits:
+        cpu: 1
+        memory: 3Gi
+      requests:
+        cpu: 150m
+        memory: 2Gi
+    flightEngine:
+      memoryLimit: 1GB
+      threads: 2
+      tempDirectorySize: 5GB
+
+  anomalyDetection:
+    # Defaults anomaly detection list contains detections for:
+    # - memory usage spikes
+    # - postgres transactions latency spikes
+    # - postgres active connections spike
+    # - JVM heap memory spike
+    # - Golang heap memory usage spike
+    defaultsQueries:
+      enabled: true
+    customQueries:
+      # Path for user defined queries, queries should be in YAML format
+      path: /prometheus
+
+  tektonPipeline:
+    # Identifying tekton pipeline resource
+    enabled: false
+
+  serviceAccount:
+    create: true
+    # If not set and create is true, a name is generated using the fullname template
+    # name: ""
+    automountServiceAccountToken: true
+    annotations: {}
+    labels: {}
+
+  securityContext:
+    fsGroup: 1001
+
+  # StorageClass for the randoli-agent's PVC (templates/pvc.yaml). Leave empty
+  # to use the cluster's default StorageClass.
+  storageClassName:
+
+  # -- Toleration labels for pod assignment (falls back to global.tolerations when empty)
+  tolerations: []
+  # -- Node labels for pod assignment (falls back to global.nodeSelector wnen empty)
+  nodeSelector: {}
+  # -- Affinity settings for pod assignment (falls back to global.affinity when empty)
+  affinity: {}
+  # -- Assign custom TopologySpreadConstraints rules
+  topologySpreadConstraints: []
+
+  # -- Extra labels on the StatefulSet and its pod template (merged with global.labels)
+  labels: {}
+  # -- Extra annotations on the StatefulSet and its pod template (merged with global.annotations)
+  annotations: {}
+
+  extraEnv: []
+  extraEnvFrom: []
+
+  extraVolumes: []
+    # - name: extra-queries
+    #   configMap:
+    #     name: extra-queries
+  extraVolumeMounts: []
+    # - name: extra-queries
+    #   mountPath: /prometheus
+
+# ============================================================================
+# Telemetry proxy — component that facilitates querying temeletry data
+# ============================================================================
+tproxy:
+  image:
+    registry: docker.io
+    repository: randoli/telemetry-proxy
+    tag: "0.1.2"
+    pullPolicy: Always
+
+  # CORS_ALLOW_ORIGIN. Empty falls back to the default Randoli console origins
+  # (https://telemetry-app.randoli.io,https://console.insights.randoli.io).
+  # Set to "*" to allow any origin, or to a comma-separated list to allow
+  # specific origins.
+  cors: ""
+
+  # KEYCLOAK_ISSUER_URL. Empty falls back to
+  # https://sso.randoli.io/auth/realms/sso
+  keycloakIssuer: ""
+
+  # Proxy mode
+  # The tunnel server can run in two modes:
+  #
+  # INGRESS - Default mode. The server is exposed through an Ingress resource.
+  #           The Ingress resource is managed by the customer.
+  #
+  # TUNNEL  - Allows the proxy to be used without configuring an Ingress resource.
+  #           The proxy connects to a Randoli-managed backend service.
+  mode: ""
+
+  # The server URL must be provided in the TUNNEL mode.
+  # Please contact Randoli team to get the address
+  tunnelServerUrl: ""
+
+  # -- Toleration labels (falls back to global.tolerations)
+  tolerations: []
+  # -- Node labels (falls back to global.nodeSelector)
+  nodeSelector: {}
+  # -- Affinity settings (falls back to global.affinity)
+  affinity: {}
+
+  # -- Extra labels on the Deployment and its pod template (merged with global.labels)
+  labels: {}
+  # -- Extra annotations on the Deployment and its pod template (merged with global.annotations)
+  annotations: {}
+
+# ============================================================================
+# OTel Collector config
+# Operator and target-allocator feature toggles live under observability.otel.
+# ============================================================================
+otelCollector:
+  # -- Toleration labels (falls back to global.tolerations)
+  tolerations: []
+  # -- Node labels (falls back to global.nodeSelector)
+  nodeSelector: {}
+  # -- Affinity settings (falls back to global.affinity)
+  affinity: {}
+
+  # -- Extra labels on the OpenTelemetryCollector CR (merged with global.labels)
+  labels: {}
+  # -- Extra annotations on the OpenTelemetryCollector CR (merged with global.annotations)
+  annotations: {}
+
+# ============================================================================
 # Observability stack (logs / traces / metrics + supporting infra).
 # ============================================================================
 observability:
-  # Telemetry signals (logs / traces / metrics) flow from the Randoli console
-  # to the in-cluster stacks via the telemetry proxy (randoli-tproxy).
-  telemetry:
-    proxy:
-      image: docker.io/randoli/telemetry-proxy:0.1.2
-      # CORS_ALLOW_ORIGIN. Empty falls back to the default Randoli console
-      # origins (https://telemetry-app.randoli.io,https://console.insights.randoli.io).
-      # Set to "*" to allow any origin, or to a comma-separated list to allow
-      # specific origins.
-      cors: ""
-      # KEYCLOAK_ISSUER_URL. Empty falls back to
-      # https://sso.randoli.io/auth/realms/sso
-      #keycloakIssuer:
-      # Optional env vars. Leave empty to use the proxy image's built-in
-      # defaults — they're only injected into the proxy ConfigMap when set.
-      tunnelServerUrl: ""
-      mode: ""
-
   otel:
     operator:
       enabled: true
@@ -99,11 +249,8 @@ observability:
   tracing:
     enabled: true
 
-  # Tempo deployment mode. The two flags are mutually exclusive — exactly one
-  # should be true. The default ships single-binary Tempo (charts/tempo); flip
-  # both to switch to the distributed microservices Tempo (charts/tempo-distributed):
-  #   --set observability.tempo.singleBinary.enabled=false \
-  #   --set observability.tempo.distributed.enabled=true
+  # Tempo deployment mode. The two flags are mutually exclusive — exactly one should be true.
+  # The default configures single-binary Tempo
   tempo:
     singleBinary:
       enabled: true
@@ -140,14 +287,19 @@ observability:
     #   prometheus.prometheus-node-exporter.enabled: false
     provider: "node-exporter"
 
-    # OTel host-metrics collector knobs — only consumed when
-    # provider == "otel-host-metrics".
+    # OTel host-metrics collector config. Only used when the provider is "otel-host-metrics".
     otelCollector:
       # Image for the OTel host-metrics collector DaemonSet. Must include the
       # hostmetricsreceiver (opentelemetry-collector-contrib or equivalent).
       image: "otel/opentelemetry-collector-contrib:0.123.0"
       # How often to collect host metrics.
       collectionInterval: "60s"
+      # -- Toleration labels (falls back to global.tolerations when empty)
+      tolerations: []
+      # -- Node labels (falls back to global.nodeSelector when empty)
+      nodeSelector: {}
+      # -- Affinity settings (falls back to global.affinity when empty)
+      affinity: {}
 
 # ============================================================================
 # Cost management stack.
@@ -174,104 +326,7 @@ costManagement:
           name: randoli-cost-metrics-config
 
 # ============================================================================
-# Agent Pod config — applied to the randoli-agent StatefulSet, its PVC, 
-# ServiceAccount, etc.
-# ============================================================================
-image:
-  registry: docker.io
-  repository: randoli/insights-agent
-  tag: "1.18"
-  digest: ""
-  ## Specify a imagePullPolicy
-  ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
-  ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
-  ##
-  pullPolicy: Always
-
-labels:
-  app: randoli-agent
-
-deploymentAnnotations: {}
-
-resources:
-  limits:
-    cpu: 1
-    memory: 1.5Gi
-  requests:
-    cpu: 150m
-    memory: 1.5Gi
-
-# Agent DB Config
-db:
-  storage:
-    pvSize: 10Gi
-  resources:
-    limits:
-      cpu: 1
-      memory: 3Gi
-    requests:
-      cpu: 150m
-      memory: 2Gi
-  flightEngine:
-    memoryLimit: 1GB
-    threads: 2
-    tempDirectorySize: 5GB
-
-anomalyDetection:
-  # Defaults anomaly detection list contains detections for:
-  # - memory usage spikes
-  # - postgres transactions latency spikes
-  # - postgres active connections spike
-  # - JVM heap memory spike
-  # - Golang heap memory usage spike
-  defaultsQueries:
-    enabled: true
-  customQueries:
-    # Path for user defined queries, queries should be in YAML format
-    path: /prometheus
-
-tektonPipeline:
-  # Identifying tekton pipeline resource
-  enabled: false
-
-# -- Toleration labels for pod assignment
-tolerations: []
-# -- Node labels for pod assignment
-nodeSelector: {}
-# -- Affinity settings for pod assignment
-affinity: {}
-# -- Assign custom TopologySpreadConstraints rules
-topologySpreadConstraints: []
-
-extraEnv: []
-extraEnvFrom: []
-
-extraVolumes: []
-  # - name: extra-queries
-  #   configMap:
-  #     name: extra-queries
-extraVolumeMounts: []
-  # - name: extra-queries
-  #   mountPath: /prometheus
-
-securityContext:
-  fsGroup: 1001
-
-# StorageClass for the randoli-agent's PVC (templates/pvc.yaml). Leave empty
-# to use the cluster's default StorageClass.
-storageClassName:
-
-serviceAccount:
-  create: true
-  # If not set and create is true, a name is generated using the fullname template
-  # name: ""
-  automountServiceAccountToken: true
-  annotations: {}
-  labels: {}
-
-# ============================================================================
-# Subchart pass-through — values handed verbatim to each subchart's wrapper.
-# Ordered alphabetically by the subchart key.
+# Subchart config — values are propagated to each subchart's wrapper.
 # ============================================================================
 loki:
   loki:
@@ -478,8 +533,10 @@ vectorOperator:
     imagePullSecrets: []
     vector:
       agent:
-        # Vector agent daemonset scheduling.
-        # tolerations     → set same as global.daemonsets.tolerations
+        # Vector agent daemonset scheduling. global.* values are NOT propagated
+        # into this subchart — set these explicitly. Daemonset tolerations
+        # typically need to be more permissive than pod tolerations so the agent
+        # can run on every node.
         # imagePullSecrets → set same as global.imagePullSecrets
         # configCheck.tolerations → set same as global.tolerations
         tolerations: []

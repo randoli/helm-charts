@@ -8,23 +8,17 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
-  {{- if or .Values.global.daemonsets.tolerations .Values.global.tolerations }}
+  {{- with coalesce .Values.observability.hostMetrics.otelCollector.tolerations .Values.global.tolerations }}
   tolerations:
-    {{- with .Values.global.daemonsets.tolerations }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
-    {{- with .Values.global.tolerations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
   {{- end }}
-  {{- if or .Values.global.daemonsets.nodeSelector .Values.global.nodeSelector }}
+  {{- with coalesce .Values.observability.hostMetrics.otelCollector.nodeSelector .Values.global.nodeSelector }}
   nodeSelector:
-    {{- with .Values.global.daemonsets.nodeSelector }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
-    {{- with .Values.global.nodeSelector }}
+  {{- end }}
+  {{- with coalesce .Values.observability.hostMetrics.otelCollector.affinity .Values.global.affinity }}
+  affinity:
     {{- toYaml . | nindent 4 }}
-    {{- end }}
   {{- end }}
   image: {{ .Values.observability.hostMetrics.otelCollector.image | default "otel/opentelemetry-collector-contrib:0.123.0" }}
   upgradeStrategy: automatic

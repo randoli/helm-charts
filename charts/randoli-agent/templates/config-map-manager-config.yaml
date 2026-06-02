@@ -32,24 +32,24 @@ data:
   SECURITY_SCANS_MODE: '{{ include "observability.security.mode" . }}'
   SECURITY_SCANS_CRON_SPEC: '{{ .Values.observability.security.cronSpec }}'
   SECURITY_SCANS_INSTALL_KUBESCAPE: '{{ include "enable.security" . }}'
-  ENABLE_DEFAULT_TIMELINE_PROMETHEUS_QUERIES: '{{ .Values.anomalyDetection.defaultsQueries.enabled }}'
-  PROMETHEUS_CUSTOM_QUERIES_PATH: '{{ .Values.anomalyDetection.customQueries.path }}'
+  ENABLE_DEFAULT_TIMELINE_PROMETHEUS_QUERIES: '{{ .Values.agent.anomalyDetection.defaultsQueries.enabled }}'
+  PROMETHEUS_CUSTOM_QUERIES_PATH: '{{ .Values.agent.anomalyDetection.customQueries.path }}'
   OPENCOST_INSTALL: '{{ .Values.tags.costManagement }}'
-  IMAGE_REGISTRY: '{{ .Values.image.registry }}'
-  IMAGE_REPOSITORY: '{{ .Values.image.repository }}'
-  IMAGE_TAG: '{{ .Values.image.tag }}'
-  IMAGE_DIGEST: '{{ .Values.image.digest }}'
-  IMAGE_PULL_POLICY: '{{ .Values.image.pullPolicy }}'
-  RESOURCES_LIMITS_CPU: '{{ .Values.resources.limits.cpu }}'
-  RESOURCES_LIMITS_MEMORY: '{{ .Values.resources.limits.memory }}'
-  RESOURCES_REQUESTS_CPU: '{{ .Values.resources.requests.cpu }}'
-  RESOURCES_REQUESTS_MEMORY: '{{ .Values.resources.requests.memory }}'
+  IMAGE_REGISTRY: '{{ .Values.agent.image.registry }}'
+  IMAGE_REPOSITORY: '{{ .Values.agent.image.repository }}'
+  IMAGE_TAG: '{{ .Values.agent.image.tag }}'
+  IMAGE_DIGEST: '{{ .Values.agent.image.digest }}'
+  IMAGE_PULL_POLICY: '{{ .Values.agent.image.pullPolicy }}'
+  RESOURCES_LIMITS_CPU: '{{ .Values.agent.resources.limits.cpu }}'
+  RESOURCES_LIMITS_MEMORY: '{{ .Values.agent.resources.limits.memory }}'
+  RESOURCES_REQUESTS_CPU: '{{ .Values.agent.resources.requests.cpu }}'
+  RESOURCES_REQUESTS_MEMORY: '{{ .Values.agent.resources.requests.memory }}'
   PIXIE_INSTALL: '{{ include "enable.pixie.operator" .}}'
   LOG_ANALYZERS_ENABLED: '{{ and .Values.tags.observability .Values.observability.logs.analyzers.enabled }}'
   VECTOR_INSTALL: '{{ include "enable.vector" . }}'
   VECTOR_HTTP_SINKER_URL: 'http://randoli-agent.{{ include "randoli-agent.namespace" . }}:8080/log-sink/'
   PROMETHEUS_INSTALL: '{{ .Values.global.prometheus.install }}'
-  TEKTON_PIPELINE_ENABLED: '{{ .Values.tektonPipeline.enabled }}'
+  TEKTON_PIPELINE_ENABLED: '{{ .Values.agent.tektonPipeline.enabled }}'
   JAEGER_QUERY_SVC_GRPC: randoli-rok-jaeger-query.{{ .Release.Namespace }}:16685
   JAEGER_QUERY_SVC_HTTP: http://randoli-rok-jaeger-query.{{ .Release.Namespace }}:16686
   PROMETHEUS_ALERTMANAGER_URL: http://randoli-obs-alerts.{{ .Release.Namespace }}:9093
@@ -58,13 +58,6 @@ data:
   SUPERVISOR_AGENT_HTTP_URL: 'http://sre-agent/chat'
   POPULATE_RES_INDEX_FROM_DB: ''
   FLIGHT_SQL_HOST: localhost:31337
-  {{- if .Values.observability.traceConfig.opensearch.spanIndexPattern }}
-  OPENSEARCH_SPANS_INDEX_PATTERN: {{ .Values.observability.traceConfig.opensearch.spanIndexPattern }}
-  {{- end }}
-  {{- if .Values.observability.traceConfig.opensearch.rootSpanIndexPattern }}
-  OPENSEARCH_ROOT_SPAN_INDEX_PATTERN: {{ .Values.observability.traceConfig.opensearch.rootSpanIndexPattern }}
-  {{- end }}
-  OPENSEARCH_SKIP_TLS_VERIFY: '{{ .Values.observability.traceConfig.opensearch.skipTlsVerify }}'
   RANDOLI_AGENT_HTTP_ENDPOINT: 'http://randoli-agent.{{ include "randoli-agent.namespace" . }}:8080'
   ENABLE_SUPERVISOR_AGENT_REPORTS: '{{ .Values.observability.sreAgent.enableReports }}'
 
