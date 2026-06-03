@@ -1,0 +1,10 @@
+apiVersion: v2
+name: tempo-distributed
+description: Randoli wrapper chart for Grafana Tempo in distributed (microservices) mode (v1.61.3)
+type: application
+version: 1.61.3
+appVersion: "2.9.0"
+dependencies:
+  - name: tempo-distributed
+    version: 1.61.3
+    repository: https://grafana.github.io/helm-charts

@@ -49,3 +49,20 @@ loki:
   # global.imagePullSecrets → loki.loki.imagePullSecrets
   # global.affinity        → loki.loki.singleBinary.affinity
   imagePullSecrets: []
+
+  # Embedded Grafana Agent (self-monitoring) disabled. Loki's monitoring block
+  # can install the grafana-agent-operator subchart to scrape its own
+  # metrics/logs. We ship our own OTel-based observability pipeline, so we
+  # don't want a second agent stack. Pinned to false defensively so a future
+  # upstream default flip can't sneak it in.
+  monitoring:
+    selfMonitoring:
+      enabled: false
+      grafanaAgent:
+        installOperator: false
+
+  # Grafana rollout-operator disabled. Only useful when zoneAwareReplication
+  # is enabled on the ingester ring (we run single-binary Loki by default).
+  # Pinned off so it doesn't get pulled in by a future upstream default flip.
+  rollout_operator:
+    enabled: false

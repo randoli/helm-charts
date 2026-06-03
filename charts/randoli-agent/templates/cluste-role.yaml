@@ -129,7 +129,7 @@ rules:
       - vectorpipelines
       - clustervectorpipelines
 {{- end }}
-{{- if .Values.tektonPipeline.enabled }}
+{{- if .Values.agent.tektonPipeline.enabled }}
   - verbs:
       - list
       - watch

@@ -1,3 +1,8 @@
+# ============================================================================
+# Randoli App Insights Platform
+# This file contains the default configuration values used during installation.
+# For details about the available configuration options, see docs.randoli.io.
+# ============================================================================
 global:
   imagePullSecrets: []
   networkCostMetrics:
@@ -39,78 +44,280 @@ global:
   secrets:
     cert: randoli-agent-cert
     config: randoli-agent-secret
+
+  # Default scheduling for randoli-managed pods (agent, tproxy, otel collector,
+  # host-metrics collector). Each component may override these by setting its
+  # own tolerations / nodeSelector / affinity. When the component-level value
+  # is empty, the global value is used as a fallback.
   nodeSelector: {}
   affinity: {}
   tolerations: []
-  daemonsets:
-    nodeSelector: {}
-    affinity: {}
-    tolerations: []
 
+  # Default labels and annotations applied to randoli-managed workloads
+  # (agent / tproxy / otelCollector) and their pod templates. These are MERGED
+  # with the matching component-level labels / annotations — both contribute,
+  # and on duplicate keys the component-level value wins (rendered last).
+  labels: {}
+  annotations: {}
+
+# ============================================================================
+# Feature toggles. Enable a tag to install the subcharts associated
+# ============================================================================
+tags:
+  observability: true
+  costManagement: false
+  security: false
+
+# ============================================================================
+# Randoli Agent Pod config
+# ============================================================================
+agent:
+  image:
+    registry: docker.io
+    repository: randoli/insights-agent
+    tag: "1.20.0"
+    digest: ""
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: Always
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 1.5Gi
+    requests:
+      cpu: 150m
+      memory: 1.5Gi
+
+  # Agent DB Config
+  db:
+    storage:
+      pvSize: 10Gi
+    resources:
+      limits:
+        cpu: 1
+        memory: 3Gi
+      requests:
+        cpu: 150m
+        memory: 2Gi
+    flightEngine:
+      memoryLimit: 1GB
+      threads: 2
+      tempDirectorySize: 5GB
+
+  anomalyDetection:
+    # Defaults anomaly detection list contains detections for:
+    # - memory usage spikes
+    # - postgres transactions latency spikes
+    # - postgres active connections spike
+    # - JVM heap memory spike
+    # - Golang heap memory usage spike
+    defaultsQueries:
+      enabled: true
+    customQueries:
+      # Path for user defined queries, queries should be in YAML format
+      path: /prometheus
+
+  tektonPipeline:
+    # Identifying tekton pipeline resource
+    enabled: false
+
+  serviceAccount:
+    create: true
+    # If not set and create is true, a name is generated using the fullname template
+    # name: ""
+    automountServiceAccountToken: true
+    annotations: {}
+    labels: {}
+
+  securityContext:
+    fsGroup: 1001
+
+  # StorageClass for the randoli-agent's PVC (templates/pvc.yaml). Leave empty
+  # to use the cluster's default StorageClass.
+  storageClassName:
+
+  # -- Toleration labels for pod assignment (falls back to global.tolerations when empty)
+  tolerations: []
+  # -- Node labels for pod assignment (falls back to global.nodeSelector wnen empty)
+  nodeSelector: {}
+  # -- Affinity settings for pod assignment (falls back to global.affinity when empty)
+  affinity: {}
+  # -- Assign custom TopologySpreadConstraints rules
+  topologySpreadConstraints: []
+
+  # -- Extra labels on the StatefulSet and its pod template (merged with global.labels)
+  labels: {}
+  # -- Extra annotations on the StatefulSet and its pod template (merged with global.annotations)
+  annotations: {}
+
+  extraEnv: []
+  extraEnvFrom: []
+
+  extraVolumes: []
+    # - name: extra-queries
+    #   configMap:
+    #     name: extra-queries
+  extraVolumeMounts: []
+    # - name: extra-queries
+    #   mountPath: /prometheus
+
+# ============================================================================
+# Telemetry proxy — component that facilitates querying temeletry data
+# ============================================================================
+tproxy:
+  image:
+    registry: docker.io
+    repository: randoli/telemetry-proxy
+    tag: "0.1.2"
+    pullPolicy: Always
+
+  # CORS_ALLOW_ORIGIN. Empty falls back to the default Randoli console origins
+  # (https://telemetry-app.randoli.io,https://console.insights.randoli.io).
+  # Set to "*" to allow any origin, or to a comma-separated list to allow
+  # specific origins.
+  cors: ""
+
+  # KEYCLOAK_ISSUER_URL. Empty falls back to
+  # https://sso.randoli.io/auth/realms/sso
+  keycloakIssuer: ""
+
+  # Proxy mode
+  # The tunnel server can run in two modes:
+  #
+  # INGRESS - Default mode. The server is exposed through an Ingress resource.
+  #           The Ingress resource is managed by the customer.
+  #
+  # TUNNEL  - Allows the proxy to be used without configuring an Ingress resource.
+  #           The proxy connects to a Randoli-managed backend service.
+  mode: ""
+
+  # The server URL must be provided in the TUNNEL mode.
+  # Please contact Randoli team to get the address
+  tunnelServerUrl: ""
+
+  # -- Toleration labels (falls back to global.tolerations)
+  tolerations: []
+  # -- Node labels (falls back to global.nodeSelector)
+  nodeSelector: {}
+  # -- Affinity settings (falls back to global.affinity)
+  affinity: {}
+
+  # -- Extra labels on the Deployment and its pod template (merged with global.labels)
+  labels: {}
+  # -- Extra annotations on the Deployment and its pod template (merged with global.annotations)
+  annotations: {}
+
+# ============================================================================
+# OTel Collector config
+# Operator and target-allocator feature toggles live under observability.otel.
+# ============================================================================
+otelCollector:
+  # -- Toleration labels (falls back to global.tolerations)
+  tolerations: []
+  # -- Node labels (falls back to global.nodeSelector)
+  nodeSelector: {}
+  # -- Affinity settings (falls back to global.affinity)
+  affinity: {}
+
+  # -- Extra labels on the OpenTelemetryCollector CR (merged with global.labels)
+  labels: {}
+  # -- Extra annotations on the OpenTelemetryCollector CR (merged with global.annotations)
+  annotations: {}
+
+# ============================================================================
+# Observability stack (logs / traces / metrics + supporting infra).
+# ============================================================================
 observability:
   otel:
     operator:
       enabled: true
     applyTargetAllocator: true
+
   logs:
     applyVectorPipeline: true
     watchNamespaces: []
-    proxyCORS: "*"
-    proxyImage: docker.io/randoli/telemetry-proxy:0.1.2
-    #proxyKeycloakIssuer:
     #lokiUrl:
     analyzers:
       enabled: true
+
   vector:
     enabled: true
+
+  tracing:
+    enabled: true
+
+  # Tempo deployment mode. The two flags are mutually exclusive — exactly one should be true.
+  # The default configures single-binary Tempo
+  tempo:
+    singleBinary:
+      enabled: true
+    distributed:
+      enabled: false
+
+  # Loki deployment mode. The two flags are mutually exclusive — exactly one should be true.
+  # The default configures single-binary Loki.
+  loki:
+    singleBinary:
+      enabled: true
+    distributed:
+      enabled: false
+
+  traceConfig:
+    storage:
+      type: TEMPO
+
+  netobserv:
+    enabled: true
+    applyCRs: true
+
   security:
     #enabled: false
     #OFF|INTERVAL_SCANNING
     mode: "INTERVAL_SCANNING"
     cronSpec: "0 10,20 * * *"
     imagePullSecrets: ""
-  tracing:
-    enabled: true
-  netobserv:
-    enabled: true
-    applyCRs: true
-    #explodeCRs: false
-  traceConfig:
-    storage:
-      type: TEMPO
-      url:
-      urlOtlp:
-    opensearch:
-      spanIndexPattern:
-      rootSpanIndexPattern:
-      skipTlsVerify: false
-      secretName:
-      usernameKeyRef:
-      passwordKeyRef:
+
   sreAgent:
     enableReports: false
+
   agentInstrumentation:
     enabled: true
     otlpEndpoint:
+
   hostMetrics:
-    # provider list
-    # "node-exporter" (default) keeps the prometheus-community node-exporter DaemonSet.
-    # "otel-host-metrics" disables it and deploys an OTel Collector DaemonSet instead.
-    #
+    # provider options:
+    #   "node-exporter"     (default) keeps the prometheus-community node-exporter DaemonSet.
+    #   "otel-host-metrics" disables it and deploys an OTel Collector DaemonSet instead.
     # IMPORTANT: when switching to "otel-host-metrics" you must also set:
     #   prometheus.prometheus-node-exporter.enabled: false
     provider: "node-exporter"
-    # Image for the OTel host-metrics collector DaemonSet.
-    # Must include the hostmetricsreceiver (opentelemetry-collector-contrib or equivalent).
-    collectorImage: "otel/opentelemetry-collector-contrib:0.123.0"
-    # How often to collect host metrics.
-    collectionInterval: "60s"
 
+    # OTel host-metrics collector config. Only used when the provider is "otel-host-metrics".
+    otelCollector:
+      # Image for the OTel host-metrics collector DaemonSet. Must include the
+      # hostmetricsreceiver (opentelemetry-collector-contrib or equivalent).
+      image: "otel/opentelemetry-collector-contrib:0.123.0"
+      # How often to collect host metrics.
+      collectionInterval: "60s"
+      # -- Toleration labels (falls back to global.tolerations when empty)
+      tolerations: []
+      # -- Node labels (falls back to global.nodeSelector when empty)
+      nodeSelector: {}
+      # -- Affinity settings (falls back to global.affinity when empty)
+      affinity: {}
+
+# ============================================================================
+# Cost management stack.
+# ============================================================================
 costManagement:
   vpaOperator:
     enabled: true
   # OpenCost config.
   # The documentation can be seen in the upstream Helm repository
+  # https://github.com/opencost/opencost-helm-chart
   opencost:
     opencost:
       metrics:
@@ -125,200 +332,10 @@ costManagement:
       - name: metrics-config-volume
         configMap:
           name: randoli-cost-metrics-config
-logs:
-  vector-operator:
-    # Operator Deployment scheduling.
-    # global.* values are NOT automatically propagated here — set these explicitly
-    # to match global.tolerations / global.nodeSelector / global.affinity / global.imagePullSecrets.
-    tolerations: []
-    nodeSelector: {}
-    affinity: {}
-    imagePullSecrets: []
-    vector:
-      agent:
-        # Vector agent daemonset scheduling.
-        # tolerations     → set same as global.daemonsets.tolerations
-        # imagePullSecrets → set same as global.imagePullSecrets
-        # configCheck.tolerations → set same as global.tolerations
-        tolerations: []
-        imagePullSecrets: []
-        configCheck:
-          tolerations: []
 
-tags:
-  observability: true
-  costManagement: false
-  security: false
-
-image:
-  registry: docker.io
-  repository: randoli/insights-agent
-  tag: "1.18"
-  digest: ""
-  ## Specify a imagePullPolicy
-  ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
-  ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
-  ##
-  pullPolicy: Always
-
-labels:
-  app: randoli-agent
-
-deploymentAnnotations: {}
-
-resources:
-  limits:
-    cpu: 1
-    memory: 1.5Gi
-  requests:
-    cpu: 150m
-    memory: 1.5Gi
-
-# Agent DB Config
-db:
-  storage:
-    pvSize: 10Gi
-  resources:
-    limits:
-      cpu: 1
-      memory: 3Gi
-    requests:
-      cpu: 150m
-      memory: 2Gi
-  flightEngine:
-    memoryLimit: 1GB
-    threads: 2
-    tempDirectorySize: 5GB
-
-anomalyDetection:
-  # Defaults anomaly detection list contains detections for:
-  # - memory usage spikes
-  # - postgres transactions latency spikes
-  # - postgres active connections spike
-  # - JVM heap memory spike
-  # - Golang heap memory usage spike
-  defaultsQueries:
-    enabled: true
-  customQueries:
-    # Path for user defined queries, queries should be in YAML format
-    path: /prometheus
-
-tektonPipeline:
-  # Identifying tekton pipeline resource
-  enabled: false
-
-# -- Toleration labels for pod assignment
-tolerations: []
-# -- Node labels for pod assignment
-nodeSelector: {}
-# -- Affinity settings for pod assignment
-affinity: {}
-# -- Assign custom TopologySpreadConstraints rules
-topologySpreadConstraints: []
-
-extraEnv: []
-extraEnvFrom: []
-
-extraVolumes: []
-  # - name: extra-queries
-  #   configMap:
-  #     name: extra-queries
-extraVolumeMounts: []
-  # - name: extra-queries
-  #   mountPath: /prometheus
-
-securityContext:
-  fsGroup: 1001
-
-storageClassName:
-
-serviceAccount:
-  create: true
-  # If not set and create is true, a name is generated using the fullname template
-  # name: ""
-  automountServiceAccountToken: true
-  annotations: {}
-  labels: {}
-
-securityScans:
-  kubescape-operator:
-    # Must match the Helm install namespace (-n flag).
-    # Override at install time if using a different namespace:
-    #   --set "securityScans.kubescape-operator.ksNamespace=<your-namespace>"
-    ksNamespace: "randoli-agents"
-    capabilities:
-      admissionController: disable
-      prometheusExporter: enable
-    storage:
-      mtls:
-        enabled: false
-
-network:
-  # TLS configuration — one of the two modes must be set when netobserv is enabled.
-  # See charts/network/README.md for full instructions.
-  tls:
-    # Mode A (recommended): reference a pre-existing TLS Secret.
-    # Create the secret before helm install:
-    #   kubectl create secret tls <name> --cert=tls.crt --key=tls.key -n <namespace>
-    existingSecret:
-      name: ""          # set to the secret name to use Mode A
-      certKey: tls.crt
-      keyKey: tls.key
-
-    # Mode B (fallback): auto-generate a self-signed cert via a pre-install Job.
-    generateJob:
-      enabled: true    # set to true to use Mode B
-
-prometheus:
-  prometheus:
-    # Set to false when using observability.hostMetrics.provider: otel-host-metrics
-    prometheus-node-exporter:
-      enabled: true
-    server:
-      # Storage & retention config (see README "Storage and retention")
-      # retention      — time-based metric retention window
-      # retentionSize  — disk-size safety cap (should be < persistentVolume.size)
-      # persistentVolume.size          — PVC size for Prometheus TSDB
-      # persistentVolume.storageClass  — "" = cluster default
-      retention: "7d"
-      retentionSize: "45GB"
-      persistentVolume:
-        size: 50Gi
-        storageClass: ""
-    serverFiles:
-      prometheus.yml:
-        otlp:
-          promote_resource_attributes:
-            - service.instance.id
-            - service.name
-            - service.namespace
-            - cloud.availability_zone
-            - cloud.region
-            - container.name
-            - deployment.environment.name
-            - k8s.cluster.name
-            - k8s.container.name
-            - k8s.cronjob.name
-            - k8s.daemonset.name
-            - k8s.deployment.name
-            - k8s.job.name
-            - k8s.namespace.name
-            - k8s.pod.name
-            - k8s.replicaset.name
-            - k8s.statefulset.name
-            # custom attributes
-            - host.id
-            - host.name
-            - host.type
-            - cloud.platform
-            - cloud.provider
-            - match.label
-            - postgresql.table.name
-            - postgresql.schema.name
-            - postgresql.index.name
-            - postgresql.database.name
-            - k8s.node.name
-
+# ============================================================================
+# Subchart config — values are propagated to each subchart's wrapper.
+# ============================================================================
 loki:
   loki:
     deploymentMode: SingleBinary
@@ -391,6 +408,47 @@ loki:
     resultsCache:
       enabled: false
 
+# Overrides for distributed Loki (charts/loki-distributed). Only takes effect
+# when observability.loki.distributed.enabled=true. For production, disable
+# the bundled MinIO and override loki.loki.storage with real cloud object
+# storage — see the README "Loki deployment mode" section.
+lokiDistributed:
+  loki:
+    # Storage & retention config (see README "Storage and retention")
+    # loki.limits_config.retention_period — time-based retention enforced by the compactor
+    # ingester.persistence.claims[0].size  — PVC size per ingester replica
+    # ingester.persistence.claims[0].storageClass — null = cluster default
+    loki:
+      limits_config:
+        retention_period: "720h"   # 30d
+    ingester:
+      persistence:
+        # `claims` is a list — overriding it replaces the wrapper's entry
+        # wholesale (helm does not deep-merge list items), so accessModes must
+        # be repeated here.
+        claims:
+          - name: data
+            accessModes:
+              - ReadWriteOnce
+            size: 50Gi
+            storageClass: null
+
+network:
+  # TLS configuration — one of the two modes must be set when netobserv is enabled.
+  # See charts/network/README.md for full instructions.
+  tls:
+    # Mode A (recommended): reference a pre-existing TLS Secret.
+    # Create the secret before helm install:
+    #   kubectl create secret tls <name> --cert=tls.crt --key=tls.key -n <namespace>
+    existingSecret:
+      name: ""          # set to the secret name to use Mode A
+      certKey: tls.crt
+      keyKey: tls.key
+
+    # Mode B (fallback): auto-generate a self-signed cert via a pre-install Job.
+    generateJob:
+      enabled: true    # set to true to use Mode B
+
 opentelemetry-operator:
   opentelemetry-operator:
     admissionWebhooks:
@@ -402,6 +460,70 @@ opentelemetry-operator:
               - kube-system
               - kube-node-lease
               - kube-public
+
+prometheus:
+  prometheus:
+    # Set to false when using observability.hostMetrics.provider: otel-host-metrics
+    prometheus-node-exporter:
+      enabled: true
+    server:
+      # Storage & retention config (see README "Storage and retention")
+      # retention      — time-based metric retention window
+      # retentionSize  — disk-size safety cap (should be < persistentVolume.size)
+      # persistentVolume.size          — PVC size for Prometheus TSDB
+      # persistentVolume.storageClass  — "" = cluster default
+      retention: "7d"
+      retentionSize: "45GB"
+      persistentVolume:
+        size: 50Gi
+        storageClass: ""
+    serverFiles:
+      prometheus.yml:
+        otlp:
+          promote_resource_attributes:
+            - service.instance.id
+            - service.name
+            - service.namespace
+            - cloud.availability_zone
+            - cloud.region
+            - container.name
+            - deployment.environment.name
+            - k8s.cluster.name
+            - k8s.container.name
+            - k8s.cronjob.name
+            - k8s.daemonset.name
+            - k8s.deployment.name
+            - k8s.job.name
+            - k8s.namespace.name
+            - k8s.pod.name
+            - k8s.replicaset.name
+            - k8s.statefulset.name
+            # custom attributes
+            - host.id
+            - host.name
+            - host.type
+            - cloud.platform
+            - cloud.provider
+            - match.label
+            - postgresql.table.name
+            - postgresql.schema.name
+            - postgresql.index.name
+            - postgresql.database.name
+            - k8s.node.name
+
+securityScans:
+  kubescape-operator:
+    # Must match the Helm install namespace (-n flag).
+    # Override at install time if using a different namespace:
+    #   --set "securityScans.kubescape-operator.ksNamespace=<your-namespace>"
+    ksNamespace: "randoli-agents"
+    capabilities:
+      admissionController: disable
+      prometheusExporter: enable
+    storage:
+      mtls:
+        enabled: false
+
 tempo:
   tempo:
     # Storage & retention config (see README "Storage and retention")
@@ -413,6 +535,47 @@ tempo:
     persistence:
       size: 50Gi
       storageClassName: ""
+
+# Overrides for distributed Tempo (charts/tempo-distributed). Only takes effect
+# when observability.tempo.distributed.enabled=true. For production, switch
+# storage.trace.backend to object storage (s3 / gcs / azure) — see the README
+# "Tempo deployment mode" section.
+tempoDistributed:
+  tempo-distributed:
+    # Storage & retention config (see README "Storage and retention")
+    # compactor.config.compaction.block_retention — block retention window
+    # ingester.persistence.size                   — PVC size per ingester replica
+    # ingester.persistence.storageClass           — "" = cluster default
+    compactor:
+      config:
+        compaction:
+          block_retention: "730h"   # a month
+    ingester:
+      persistence:
+        size: 100Gi
+        storageClass: ""
+
+vectorOperator:
+  vector-operator:
+    # Operator Deployment scheduling.
+    # global.* values are NOT automatically propagated here — set these explicitly
+    # to match global.tolerations / global.nodeSelector / global.affinity / global.imagePullSecrets.
+    tolerations: []
+    nodeSelector: {}
+    affinity: {}
+    imagePullSecrets: []
+    vector:
+      agent:
+        # Vector agent daemonset scheduling. global.* values are NOT propagated
+        # into this subchart — set these explicitly. Daemonset tolerations
+        # typically need to be more permissive than pod tolerations so the agent
+        # can run on every node.
+        # imagePullSecrets → set same as global.imagePullSecrets
+        # configCheck.tolerations → set same as global.tolerations
+        tolerations: []
+        imagePullSecrets: []
+        configCheck:
+          tolerations: []
 
 vpa:
   recommender:

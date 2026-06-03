@@ -34,7 +34,7 @@ vector-operator:
     name: "randoli-obs-vector"
     useApiServerCache: false
     agent:
-      image: timberio/vector:0.41.X-distroless-libc
+      image: timberio/vector:0.55.0-distroless-libc
       resources:
         limits:
           memory: 2Gi
