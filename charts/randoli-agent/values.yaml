@@ -239,7 +239,25 @@ observability:
   logs:
     applyVectorPipeline: true
     watchNamespaces: []
-    #lokiUrl:
+    # Loki endpoints configuration.
+    #
+    # writeUrl is the push endpoint (Vector → Loki). readUrl is the query
+    # endpoint (telemetry-proxy → Loki). When readUrl is empty it falls back
+    # to writeUrl. When both are empty the chart derives the in-cluster URLs
+    # from the deployment mode selected under observability.loki
+    # (singleBinary vs distributed).
+    #
+    # Four supported scenarios:
+    #
+    #   Scenario                  | writeUrl | readUrl | Resulting push URL                     | Resulting query URL
+    #   --------------------------|----------|---------|----------------------------------------|------------------------------------------
+    #   Bundled single-binary     | empty    | empty   | randoli-obs-loki.<ns>.svc:3100         | randoli-obs-loki.<ns>.svc:3100
+    #   Bundled distributed       | empty    | empty   | randoli-obs-loki-dist-distributor:3100 | randoli-obs-loki-dist-query-frontend:3100
+    #   External single-binary    | set      | empty   | writeUrl                               | writeUrl (fallback)
+    #   External distributed      | set      | set     | writeUrl (distributor)                 | readUrl (query-frontend)
+    loki:
+      writeUrl: ""
+      readUrl: ""
     analyzers:
       enabled: true
 
@@ -268,6 +286,27 @@ observability:
   traceConfig:
     storage:
       type: TEMPO
+      # Tempo endpoint configuration.
+      #
+      # writeUrl is the OTLP gRPC push endpoint (OTel Collector → Tempo, no
+      # scheme, port 4317). readUrl is the HTTP query endpoint (telemetry-proxy
+      # & agent → Tempo, http://host:3200). When both are empty the chart
+      # derives the in-cluster URLs from the deployment mode selected under
+      # observability.tempo (singleBinary vs distributed).
+      #
+      # Tempo's push and query use different protocols and ports, so an
+      # external Tempo always needs BOTH URLs set — no fallback like Loki.
+      #
+      # Supported scenarios:
+      #
+      #   Scenario                  | writeUrl | readUrl | Resulting push URL                       | Resulting query URL
+      #   --------------------------|----------|---------|------------------------------------------|--------------------------------------------------
+      #   Bundled single-binary     | empty    | empty   | randoli-obs-tempo.<ns>.svc:4317          | http://randoli-obs-tempo.<ns>.svc:3200
+      #   Bundled distributed       | empty    | empty   | randoli-obs-tempo-dist-distributor:4317  | http://randoli-obs-tempo-dist-query-frontend:3200
+      #   External (any mode)       | set      | set     | writeUrl                                 | readUrl
+      tempo:
+        writeUrl: ""
+        readUrl: ""
 
   netobserv:
     enabled: true

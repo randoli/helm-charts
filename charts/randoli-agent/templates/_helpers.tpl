@@ -125,9 +125,16 @@ The two booleans below are mutually exclusive; the distributed branch wins when 
 {{- if eq (default false $distributed.enabled) true -}}true{{- else -}}false{{- end -}}
 {{- end -}}
 
+{{/*
+Read/query endpoint (telemetry-proxy & agent → Tempo). In distributed mode
+this is the query-frontend Service; in single-binary mode all roles share
+one Service. Honors observability.traceConfig.storage.tempo.readUrl when
+set (external Tempo).
+*/}}
 {{- define "trace-storage-url" -}}
-{{- if not (empty .Values.observability.traceConfig.storage.url)  -}}
-{{ .Values.observability.traceConfig.storage.url }}
+{{- $tempo := ((((.Values.observability).traceConfig).storage).tempo) | default dict -}}
+{{- if not (empty $tempo.readUrl) -}}
+{{ $tempo.readUrl }}
 {{- else if eq (include "tempo.distributed.enabled" .) "true" -}}
 {{- printf "http://randoli-obs-tempo-dist-query-frontend.%s.svc:3200" .Release.Namespace -}}
 {{- else -}}
@@ -135,9 +142,16 @@ The two booleans below are mutually exclusive; the distributed branch wins when 
 {{- end -}}
 {{- end -}}
 
+{{/*
+Write/push endpoint (OTel Collector → Tempo, OTLP gRPC, no scheme). In
+distributed mode this is the distributor Service; in single-binary mode
+all roles share one Service. Honors
+observability.traceConfig.storage.tempo.writeUrl when set (external Tempo).
+*/}}
 {{- define "trace-storage-url-otlp" -}}
-{{- if not (empty .Values.observability.traceConfig.storage.urlOtlp)  -}}
-{{ .Values.observability.traceConfig.storage.urlOtlp }}
+{{- $tempo := ((((.Values.observability).traceConfig).storage).tempo) | default dict -}}
+{{- if not (empty $tempo.writeUrl) -}}
+{{ $tempo.writeUrl }}
 {{- else if eq (include "tempo.distributed.enabled" .) "true" -}}
 {{- printf "randoli-obs-tempo-dist-distributor.%s.svc:4317" .Release.Namespace -}}
 {{- else -}}
@@ -165,10 +179,12 @@ The two booleans below are mutually exclusive; the distributed branch wins when 
 {{/*
 Write/push endpoint (Vector → Loki). In distributed mode this is the
 distributor Service; in single-binary mode all roles share one Service.
+Honors observability.logs.loki.writeUrl when set (external Loki).
 */}}
 {{- define "logs-loki-url" -}}
-{{- if not (empty .Values.observability.logs.lokiUrl)  -}}
-{{ .Values.observability.logs.lokiUrl }}
+{{- $loki := (((.Values.observability).logs).loki) | default dict -}}
+{{- if not (empty $loki.writeUrl) -}}
+{{ $loki.writeUrl }}
 {{- else if eq (include "loki.distributed.enabled" .) "true" -}}
 {{- printf "http://randoli-obs-loki-dist-distributor.%s.svc:3100" .Release.Namespace -}}
 {{- else -}}
@@ -179,11 +195,15 @@ distributor Service; in single-binary mode all roles share one Service.
 {{/*
 Read/query endpoint (telemetry-proxy → Loki). In distributed mode this is
 the query-frontend Service; in single-binary mode it shares the single
-Loki Service with the write path.
+Loki Service with the write path. Honors observability.logs.loki.readUrl
+when set, falling back to writeUrl for the single-binary external case.
 */}}
 {{- define "logs-loki-read-url" -}}
-{{- if not (empty .Values.observability.logs.lokiUrl)  -}}
-{{ .Values.observability.logs.lokiUrl }}
+{{- $loki := (((.Values.observability).logs).loki) | default dict -}}
+{{- if not (empty $loki.readUrl) -}}
+{{ $loki.readUrl }}
+{{- else if not (empty $loki.writeUrl) -}}
+{{ $loki.writeUrl }}
 {{- else if eq (include "loki.distributed.enabled" .) "true" -}}
 {{- printf "http://randoli-obs-loki-dist-query-frontend.%s.svc:3100" .Release.Namespace -}}
 {{- else -}}

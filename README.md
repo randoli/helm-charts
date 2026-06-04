@@ -65,7 +65,16 @@ The agent's trace read/write endpoints follow the mode automatically:
 | `singleBinary` | `randoli-obs-tempo.<namespace>.svc:4317`                            | `http://randoli-obs-tempo.<namespace>.svc:3200`                         |
 | `distributed`  | `randoli-obs-tempo-dist-distributor.<namespace>.svc:4317`           | `http://randoli-obs-tempo-dist-query-frontend.<namespace>.svc:3200`     |
 
-To point the agent at a managed/external Tempo instead of either deployment, set `observability.traceConfig.storage.url` (read API) and `observability.traceConfig.storage.urlOtlp` (OTLP ingest). These overrides take precedence over both modes.
+To point the agent at a managed/external Tempo instead of either bundled deployment, set both URLs under `observability.traceConfig.storage.tempo`. These overrides take precedence over the mode-derived defaults.
+
+Tempo's push and query use different protocols and ports (OTLP gRPC on `:4317` vs HTTP on `:3200`), so external Tempo always requires **both** URLs:
+
+```
+--set observability.traceConfig.storage.tempo.writeUrl=my-tempo-distributor.example.svc:4317 \
+--set observability.traceConfig.storage.tempo.readUrl=http://my-tempo-query-frontend.example.svc:3200
+```
+
+When both fields are left empty (the default), the chart uses the in-cluster Tempo it ships and routes the push/query endpoints from the table above automatically.
 
 Distributed mode defaults to local-filesystem storage on the ingester so the chart installs out of the box, but production deployments should point it at object storage (S3 / GCS / Azure):
 
@@ -117,7 +126,19 @@ The agent's log push (Vector → Loki) and query (telemetry-proxy → Loki) endp
 | `singleBinary` | `randoli-obs-loki.<namespace>.svc:3100`                        | `randoli-obs-loki.<namespace>.svc:3100`                                 |
 | `distributed`  | `randoli-obs-loki-dist-distributor.<namespace>.svc:3100`       | `randoli-obs-loki-dist-query-frontend.<namespace>.svc:3100`             |
 
-To point both at an external Loki instead of either deployment, set `observability.logs.lokiUrl`. This override takes precedence over both modes.
+To point the agent at an external Loki instead of either bundled deployment, set the URLs under `observability.logs.loki`. These overrides take precedence over the mode-derived defaults.
+
+- **External distributed Loki** — set both endpoints (Vector pushes to the distributor, telemetry-proxy reads from the query-frontend):
+  ```
+  --set observability.logs.loki.writeUrl=http://my-loki-distributor.example.svc:3100 \
+  --set observability.logs.loki.readUrl=http://my-loki-query-frontend.example.svc:3100
+  ```
+- **External single-binary Loki** — set only `writeUrl`; `readUrl` falls back to it:
+  ```
+  --set observability.logs.loki.writeUrl=http://my-loki.example.svc:3100
+  ```
+
+When both fields are left empty (the default), the chart uses the in-cluster Loki it ships and routes the push/query endpoints from the table above automatically.
 
 Distributed mode defaults to the bundled MinIO subchart (S3-compatible, PV-backed) so the chart installs out of the box without external object storage. Production deployments should disable MinIO and point Loki at a real cloud object store (S3 / GCS / Azure):
 
