@@ -61,9 +61,9 @@ loki:
   # on a small cluster out of the box. Scale these up for HA / higher ingest.
   # ---------------------------------------------------------------------------
   distributor:
-    replicas: 1
+    replicas: 2
   ingester:
-    replicas: 1
+    replicas: 3
     # Zone-aware replication spreads ingesters across 3 zonal StatefulSets and
     # requires replicas >= 3. Disable it for the single-replica default; flip
     # back on (and scale replicas) for multi-AZ HA setups.
@@ -81,7 +81,7 @@ loki:
           accessModes:
             - ReadWriteOnce
           # size — PVC size for ingester chunks/wal
-          size: 50Gi
+          size: 10Gi
           # storageClass — null = cluster default; set to target a specific SC
           storageClass: null
       # Preserve PVCs (and the data they hold) across StatefulSet scale-down or
