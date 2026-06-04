@@ -140,13 +140,12 @@ To point the agent at an external Loki instead of either bundled deployment, set
 
 When both fields are left empty (the default), the chart uses the in-cluster Loki it ships and routes the push/query endpoints from the table above automatically.
 
-Distributed mode defaults to the bundled MinIO subchart (S3-compatible, PV-backed) so the chart installs out of the box without external object storage. Production deployments should disable MinIO and point Loki at a real cloud object store (S3 / GCS / Azure):
+Distributed mode requires real object storage — distributed Loki cannot use the local filesystem, and the bundled MinIO subchart is **off by default** so production installs aren't silently backed by an in-cluster PVC. You must point Loki at a cloud object store (S3 / GCS / Azure) at install time:
 
 ```
 helm install randoli randoli/randoli-agent -n randoli-agents \
   --set observability.loki.singleBinary.enabled=false \
   --set observability.loki.distributed.enabled=true \
-  --set lokiDistributed.loki.minio.enabled=false \
   --set lokiDistributed.loki.loki.storage.type=s3 \
   --set lokiDistributed.loki.loki.storage.s3.region=us-east-1 \
   --set lokiDistributed.loki.loki.storage.bucketNames.chunks=my-loki-chunks \

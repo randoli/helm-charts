@@ -448,9 +448,11 @@ loki:
       enabled: false
 
 # Overrides for distributed Loki (charts/loki-distributed). Only takes effect
-# when observability.loki.distributed.enabled=true. For production, disable
-# the bundled MinIO and override loki.loki.storage with real cloud object
-# storage — see the README "Loki deployment mode" section.
+# when observability.loki.distributed.enabled=true. Distributed Loki has no
+# bundled storage by default — override loki.loki.storage with real cloud
+# object storage (S3 / GCS / Azure), or set lokiDistributed.loki.minio.enabled=true
+# to bring back the bundled MinIO for a self-contained demo install.
+# See the README "Loki deployment mode" section.
 lokiDistributed:
   loki:
     # Storage & retention config (see README "Storage and retention")

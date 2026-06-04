@@ -15,10 +15,12 @@ loki:
   loki:
     auth_enabled: false
 
-    # Storage uses the S3 API. By default this targets the bundled MinIO
-    # subchart below (minio.enabled=true). For a real cloud backend, override
-    # this block at install time — see the "Cloud object storage examples"
-    # section at the bottom of this file.
+    # Storage uses the S3 API. The bundled MinIO subchart is OFF by default
+    # (see minio.enabled below), so distributed Loki has no working object
+    # store until you override this block at install time. See the
+    # "Cloud object storage examples" section at the bottom of this file
+    # for AWS S3 / GCS / Azure overrides, or set minio.enabled=true to
+    # bring the bundled MinIO back for a quick demo install.
     storage:
       type: s3
       bucketNames:
@@ -140,15 +142,18 @@ loki:
     replicas: 0
 
   # ---------------------------------------------------------------------------
-  # Storage backend: bundled MinIO (default).
-  # The upstream Loki chart ships a MinIO subchart used as the S3-compatible
-  # object store for chunks/index/ruler/admin. It runs as a StatefulSet backed
-  # by a PVC, so the cluster needs a default StorageClass.
-  # Disable this and override loki.storage.s3 to point at real cloud storage
-  # for production (see examples at the bottom of this file).
+  # Storage backend: bundled MinIO (OFF by default).
+  # The upstream Loki chart ships a MinIO subchart that can act as the
+  # S3-compatible object store for chunks/index/ruler/admin. We keep it
+  # disabled so production installs aren't accidentally backed by an
+  # in-cluster PVC-backed MinIO — users are expected to bring real cloud
+  # object storage (see the examples at the bottom of this file).
+  #
+  # Set minio.enabled=true for a self-contained demo install on a cluster
+  # with a default StorageClass.
   # ---------------------------------------------------------------------------
   minio:
-    enabled: true
+    enabled: false
 
   # Gateway disabled — Vector / OTel push directly to the distributor Service
   # (randoli-obs-loki-dist-distributor:3100). Enable if you need a single
