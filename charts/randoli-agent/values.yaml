@@ -239,7 +239,45 @@ observability:
   logs:
     applyVectorPipeline: true
     watchNamespaces: []
-    #lokiUrl:
+    # On-disk buffer for the Vector → Loki sink. When enabled, Vector spools
+    # outgoing log batches to disk before pushing to Loki, providing
+    # back-pressure tolerance during Loki outages or slowdowns.
+    #
+    # bufferSize and the underlying PV size are independent — set each to
+    # the value you need; bufferSize just has to fit inside the PV. PV size
+    # and StorageClass live with the Vector agent config under
+    # vectorOperator.vector-operator.vector.agent.volumes (co-located with
+    # the rest of the agent's volume/runtime config).
+    diskBuffer:
+      enabled: true
+      # Vector buffer.max_size — integer byte count, passed through to Vector
+      # see https://vector.dev/docs/reference/configuration/sinks/loki/#buffer
+      # Default: 4 GiB.
+      bufferSize: 4294967296
+      # Behaviour when the buffer fills: "drop_newest" (drop incoming events
+      # to keep the pipeline flowing) or "block" (apply back-pressure upstream
+      # — no log loss but stalls log collection).
+      whenFull: drop_newest
+
+    # Loki endpoints configuration.
+    #
+    # writeUrl is the push endpoint (Vector → Loki). readUrl is the query
+    # endpoint (telemetry-proxy → Loki). When readUrl is empty it falls back
+    # to writeUrl. When both are empty the chart derives the in-cluster URLs
+    # from the deployment mode selected under observability.loki
+    # (singleBinary vs distributed).
+    #
+    # Four supported scenarios:
+    #
+    #   Scenario                  | writeUrl | readUrl | Resulting push URL                     | Resulting query URL
+    #   --------------------------|----------|---------|----------------------------------------|------------------------------------------
+    #   Bundled single-binary     | empty    | empty   | randoli-obs-loki.<ns>.svc:3100         | randoli-obs-loki.<ns>.svc:3100
+    #   Bundled distributed       | empty    | empty   | randoli-obs-loki-dist-distributor:3100 | randoli-obs-loki-dist-query-frontend:3100
+    #   External single-binary    | set      | empty   | writeUrl                               | writeUrl (fallback)
+    #   External distributed      | set      | set     | writeUrl (distributor)                 | readUrl (query-frontend)
+    loki:
+      writeUrl: ""
+      readUrl: ""
     analyzers:
       enabled: true
 
@@ -268,6 +306,27 @@ observability:
   traceConfig:
     storage:
       type: TEMPO
+      # Tempo endpoint configuration.
+      #
+      # writeUrl is the OTLP gRPC push endpoint (OTel Collector → Tempo, no
+      # scheme, port 4317). readUrl is the HTTP query endpoint (telemetry-proxy
+      # & agent → Tempo, http://host:3200). When both are empty the chart
+      # derives the in-cluster URLs from the deployment mode selected under
+      # observability.tempo (singleBinary vs distributed).
+      #
+      # Tempo's push and query use different protocols and ports, so an
+      # external Tempo always needs BOTH URLs set — no fallback like Loki.
+      #
+      # Supported scenarios:
+      #
+      #   Scenario                  | writeUrl | readUrl | Resulting push URL                       | Resulting query URL
+      #   --------------------------|----------|---------|------------------------------------------|--------------------------------------------------
+      #   Bundled single-binary     | empty    | empty   | randoli-obs-tempo.<ns>.svc:4317          | http://randoli-obs-tempo.<ns>.svc:3200
+      #   Bundled distributed       | empty    | empty   | randoli-obs-tempo-dist-distributor:4317  | http://randoli-obs-tempo-dist-query-frontend:3200
+      #   External (any mode)       | set      | set     | writeUrl                                 | readUrl
+      tempo:
+        writeUrl: ""
+        readUrl: ""
 
   netobserv:
     enabled: true
@@ -409,9 +468,11 @@ loki:
       enabled: false
 
 # Overrides for distributed Loki (charts/loki-distributed). Only takes effect
-# when observability.loki.distributed.enabled=true. For production, disable
-# the bundled MinIO and override loki.loki.storage with real cloud object
-# storage — see the README "Loki deployment mode" section.
+# when observability.loki.distributed.enabled=true. Distributed Loki has no
+# bundled storage by default — override loki.loki.storage with real cloud
+# object storage (S3 / GCS / Azure), or set lokiDistributed.loki.minio.enabled=true
+# to bring back the bundled MinIO for a self-contained demo install.
+# See the README "Loki deployment mode" section.
 lokiDistributed:
   loki:
     # Storage & retention config (see README "Storage and retention")
