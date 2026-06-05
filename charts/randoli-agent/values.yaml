@@ -260,7 +260,7 @@ observability:
     # vectorOperator.vector-operator.vector.agent.volumes (co-located with
     # the rest of the agent's volume/runtime config).
     diskBuffer:
-      enabled: true
+      enabled: false
       # Vector buffer.max_size — integer byte count, passed through to Vector
       # see https://vector.dev/docs/reference/configuration/sinks/loki/#buffer
       # Default: 4 GiB.
@@ -654,20 +654,21 @@ vectorOperator:
         # To tune PV size or storage class for the buffer,
         # override the storage / storageClassName fields below.
         # The buffer itself is enabled per-sink via observability.logs.diskBuffer
-        dataDir: /vector-buffers
-        volumeMounts:
-          - name: vector-buffer
-            mountPath: /vector-buffers
-        volumes:
-          - name: vector-buffer
-            ephemeral:
-              volumeClaimTemplate:
-                spec:
-                  accessModes:
-                    - ReadWriteOnce
-                  resources:
-                    requests:
-                      storage: 5Gi
+        #
+        # dataDir: /vector-buffers
+        # volumeMounts:
+        #   - name: vector-buffer
+        #     mountPath: /vector-buffers
+        # volumes:
+        #   - name: vector-buffer
+        #     ephemeral:
+        #       volumeClaimTemplate:
+        #         spec:
+        #           accessModes:
+        #             - ReadWriteOnce
+        #           resources:
+        #             requests:
+        #               storage: 5Gi
 
 vpa:
   recommender:
