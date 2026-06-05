@@ -178,6 +178,44 @@ helm install randoli randoli/randoli-agent -n randoli-agents \
   --set observability.telemetry.proxy.mode=tunnel
 ```
 
+## Log collection namespace filtering
+
+Vector's `kubernetes_logs` source tails container logs from every namespace by
+default. Two list knobs let you scope what it watches; filtering is applied at
+the Kubernetes API server via field selectors, so Vector never opens log
+files for namespaces outside the allowed set.
+
+```yaml
+observability:
+  logs:
+    includeNamespaces: []   # allow-list — if non-empty, ONLY these are tailed
+    excludeNamespaces: []   # deny-list  — tail everything except these
+```
+
+- `includeNamespaces` renders one `kubernetes_logs` source per namespace, each
+  pinned with `extra_field_selector: metadata.namespace=<ns>` (field selectors
+  can't OR, so we run one watch per included namespace — cheap up to a few
+  dozen).
+- `excludeNamespaces` renders a single source with AND-ed `metadata.namespace!=...`
+  clauses on `extra_field_selector`.
+- If both lists are set, `includeNamespaces` wins and `excludeNamespaces` is
+  ignored — the allow-list is already a strict scope.
+- Leave both empty (the default) to tail every namespace in the cluster.
+
+Examples:
+
+```
+# Only collect logs from the application namespaces
+helm install randoli randoli/randoli-agent -n randoli-agents \
+  --set tags.observability=true \
+  --set 'observability.logs.includeNamespaces={app-prod,app-stage}'
+
+# Collect everything except system namespaces
+helm install randoli randoli/randoli-agent -n randoli-agents \
+  --set tags.observability=true \
+  --set 'observability.logs.excludeNamespaces={kube-system,kube-public,kube-node-lease}'
+```
+
 ## Storage and retention
 
 Each observability backend (Prometheus, Loki, Tempo) exposes three config options at the umbrella chart level: data retention period, PVC size, and storage

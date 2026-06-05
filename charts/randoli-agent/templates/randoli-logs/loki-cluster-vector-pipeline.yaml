@@ -46,26 +46,35 @@ spec:
       {{- end }}
 
   sources:
-    k8s_log_source:
+    # prepare include and exclude list
+    {{- $include := .Values.observability.logs.includeNamespaces | default list }}
+    {{- $exclude := .Values.observability.logs.excludeNamespaces | default list }}
+    {{- if gt (len $include) 0 }}
+    # Include list: one kubernetes_logs source per namespace. Each source ins pinned to a specific Kubernetes namespace.
+    # It won't scrape logs from any other namespace which is not listed here
+    {{- range $ns := $include }}
+    k8s_log_source_{{ $ns | replace "-" "_" }}:
       extra_label_selector: app.kubernetes.io/name!=vector
+      extra_field_selector: metadata.namespace={{ $ns }}
       read_from: end
       type: kubernetes_logs
+    {{- end }}
+    {{- else }}
+    k8s_log_source:
+      extra_label_selector: app.kubernetes.io/name!=vector
+      {{- if gt (len $exclude) 0 }}
+      # Exclude namespaces via metadata fields
+      # This exclude list will be completely ignored if the include list is not empty
+      # ALternatively, users can use the following annotations to exclude objects
+      # vector.dev/exclude-containers: "container1,container2"
+      # vector.dev/exclude: "true" (ns level or in the pod spec template)
+      extra_field_selector: {{ range $i, $ns := $exclude }}{{ if $i }},{{ end }}metadata.namespace!={{ $ns }}{{- end }}
+      {{- end }}
+      read_from: end
+      type: kubernetes_logs
+    {{- end }}
 
   transforms:
-    {{- if and .Values.observability.logs.watchNamespaces (gt (len .Values.observability.logs.watchNamespaces) 0) }}
-    filter_namespace:
-      type: filter
-      inputs:
-        - k8s_log_source
-      condition: |
-        includes([
-          {{- range $index, $ns := .Values.observability.logs.watchNamespaces }}
-          {{- if $index }},{{ end }}
-          "{{ $ns }}"
-          {{- end }}
-        ], to_string(.kubernetes.pod_namespace) ?? "")
-    {{- end }} 
-
     merge_multiline_logs:
       expire_after_ms: 2000
       group_by:
@@ -73,8 +82,10 @@ spec:
         - kubernetes.container_name
         - stream
       inputs:
-        {{- if and .Values.observability.logs.watchNamespaces (gt (len .Values.observability.logs.watchNamespaces) 0) }}
-        - filter_namespace
+        {{- if gt (len $include) 0 }}
+        {{- range $ns := $include }}
+        - k8s_log_source_{{ $ns | replace "-" "_" }}
+        {{- end }}
         {{- else }}
         - k8s_log_source
         {{- end }}
