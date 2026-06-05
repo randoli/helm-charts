@@ -1,4 +1,5 @@
 {{- if .Values.observability.logs.applyVectorPipeline  -}}
+{{- $diskBuffer := (.Values.observability.logs.diskBuffer | default dict) -}}
 apiVersion: observability.kaasops.io/v1alpha1
 kind: ClusterVectorPipeline
 metadata:
@@ -35,6 +36,14 @@ spec:
         retry_initial_backoff_secs: 1
         retry_max_duration_secs: 300
         timeout_secs: 60
+      {{- if $diskBuffer.enabled }}
+      # On-disk buffer absorbs back-pressure when Loki is slow or unavailable.
+      # Backed by the PVC mounted at the Vector agent's dataDir
+      buffer:
+        type: disk
+        max_size: {{ $diskBuffer.bufferSize }}
+        when_full: {{ $diskBuffer.whenFull | default "drop_newest" }}
+      {{- end }}
 
   sources:
     # prepare include and exclude list

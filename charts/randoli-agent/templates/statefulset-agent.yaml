@@ -8,11 +8,20 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: randoli-agent
     {{- include "labels" . | nindent 4 }}
-  annotations:
-  {{- with .Values.statefulSetAnnotations }}
+    {{- with .Values.global.labels }}
     {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
+    {{- with .Values.agent.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
     resource.opentelemetry.io/service.name: randoli-agent
+    {{- with .Values.global.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.agent.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   replicas: 1
   selector:
@@ -26,6 +35,21 @@ spec:
         app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: randoli-agent
+        {{- with .Values.global.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.agent.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- if or .Values.global.annotations .Values.agent.annotations }}
+      annotations:
+        {{- with .Values.global.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.agent.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
     spec:
       volumes:
         - name: agent-pv
@@ -52,16 +76,16 @@ spec:
               - key: {{ .Values.global.prometheus.tlsCertConfigmapKey }}
                 path: prometheus-service.crt
         {{- end }}
-        {{- if .Values.extraVolumes }}
-          {{- toYaml .Values.extraVolumes | nindent 8}}
+        {{- if .Values.agent.extraVolumes }}
+          {{- toYaml .Values.agent.extraVolumes | nindent 8}}
         {{- end }}
-      
+
       initContainers:
         - name: init
-          {{- with .Values.image }}
+          {{- with .Values.agent.image }}
           image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{ .digest }}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
           {{- end }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.agent.image.pullPolicy }}
           command: ["/bin/sh", "-c"]
           args:
             - |
@@ -107,10 +131,10 @@ spec:
               mountPath: /persistence
       containers:
         - name: randoli-agent
-          {{- with .Values.image }}
+          {{- with .Values.agent.image }}
           image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{ .digest }}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
           {{- end }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.agent.image.pullPolicy }}
           args:
             - |
               echo "Waiting for the FlightSQL server to be ready..."
@@ -127,10 +151,10 @@ spec:
                 name: {{ .Values.global.secrets.config }}
             - configMapRef:
                 name: {{ include "randoli-agent.fullname" . }}-config
-            {{- if .Values.extraEnvFrom }}
-              {{- toYaml .Values.extraEnvFrom | nindent 12 }} 
+            {{- if .Values.agent.extraEnvFrom }}
+              {{- toYaml .Values.agent.extraEnvFrom | nindent 12 }}
             {{- end }}
-          {{- with .Values.resources }}
+          {{- with .Values.agent.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -149,8 +173,8 @@ spec:
               subPath: prometheus-service.crt
               readOnly: false
             {{- end }}
-            {{- if .Values.extraVolumeMounts }}
-              {{- toYaml .Values.extraVolumeMounts | nindent 12 }} 
+            {{- if .Values.agent.extraVolumeMounts }}
+              {{- toYaml .Values.agent.extraVolumeMounts | nindent 12 }}
             {{- end }}
           env:
             - name: FLIGHT_SQL_USER
@@ -162,21 +186,8 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "randoli-agent.fullname" . }}-db
-                  key: password
-          {{- if .Values.observability.traceConfig.opensearch.secretName }}
-            - name: OPENSEARCH_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.observability.traceConfig.opensearch.secretName }}
-                  key: {{ .Values.observability.traceConfig.opensearch.usernameKeyRef }}
-            - name: OPENSEARCH_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.observability.traceConfig.opensearch.secretName }}
-                  key: {{ .Values.observability.traceConfig.opensearch.passwordKeyRef }}      
-         
-          {{- end }}        
-          {{- if or .Values.extraEnv .Values.global.prometheus.secretName }}
+                  key: password      
+          {{- if or .Values.agent.extraEnv .Values.global.prometheus.secretName }}
             {{- if and .Values.global.prometheus.secretName .Values.global.prometheus.usernameKey }}
             - name: PROMETHEUS_USERNAME
               valueFrom:
@@ -197,8 +208,8 @@ spec:
                   name: {{ .Values.global.prometheus.secretName }}
                   key: {{ .Values.global.prometheus.bearerTokenKey }}
             {{- end }}
-            {{- if .Values.extraEnv }}
-              {{- toYaml .Values.extraEnv | nindent 12 }}
+            {{- if .Values.agent.extraEnv }}
+              {{- toYaml .Values.agent.extraEnv | nindent 12 }}
             {{- end }}
           {{- end }}
         - name: gizmosql
@@ -252,47 +263,32 @@ spec:
             value: "randoli_db_test"
           - name: INIT_SQL_COMMANDS
             value: |
-              PRAGMA memory_limit={{ .Values.db.flightEngine.memoryLimit | squote }};
-              PRAGMA threads={{ .Values.db.flightEngine.threads }};
-              PRAGMA max_temp_directory_size={{ .Values.db.flightEngine.tempDirectorySize | squote }};
+              PRAGMA memory_limit={{ .Values.agent.db.flightEngine.memoryLimit | squote }};
+              PRAGMA threads={{ .Values.agent.db.flightEngine.threads }};
+              PRAGMA max_temp_directory_size={{ .Values.agent.db.flightEngine.tempDirectorySize | squote }};
               PRAGMA preserve_insertion_order=false;
               CREATE SCHEMA IF NOT EXISTS insights_agent;
               PRAGMA schema='insights_agent';
               PRAGMA search_path='insights_agent';
           resources:
-            {{- toYaml .Values.db.resources | nindent 12 }}
+            {{- toYaml .Values.agent.db.resources | nindent 12 }}
       serviceAccountName: {{ template "randoli-agent.serviceAccountName" . }}
       serviceAccount: {{ template "randoli-agent.serviceAccountName" . }}
-      {{- if or .Values.tolerations .Values.global.tolerations }}
+      {{- with coalesce .Values.agent.tolerations .Values.global.tolerations }}
       tolerations:
-        {{- with .Values.tolerations }}
         {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.tolerations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
       {{- end }}
-      {{- if or .Values.nodeSelector .Values.global.nodeSelector }}
+      {{- with coalesce .Values.agent.nodeSelector .Values.global.nodeSelector }}
       nodeSelector:
-        {{- with .Values.nodeSelector }}
         {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.nodeSelector }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
       {{- end }}
-      {{- if or .Values.affinity .Values.global.affinity }}
+      {{- with coalesce .Values.agent.affinity .Values.global.affinity }}
       affinity:
-        {{- with .Values.affinity }}
         {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.global.affinity }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }} 
-      {{- end }} 
-      {{- with .Values.topologySpreadConstraints }}
+      {{- end }}
+      {{- with .Values.agent.topologySpreadConstraints }}
       topologySpreadConstraints: {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.securityContext }}
+      {{- with .Values.agent.securityContext }}
       securityContext: {{- toYaml . | nindent 8 }}
       {{- end }}

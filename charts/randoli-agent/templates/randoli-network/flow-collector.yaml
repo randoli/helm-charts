@@ -1,3 +1,4 @@
+{{- if eq (include "apply-network-crs" . | trim) "true" -}}
 apiVersion: flows.netobserv.io/v1beta2
 kind: FlowCollector
 metadata:
@@ -139,3 +140,4 @@ spec:
             output: "timeflowstart"
           - input: "TimeReceived"
             output: "timereceived"
+{{- end }}

@@ -13,7 +13,7 @@ maintainers:
 name: randoli-agent
 sources:
   - https://github.com/randoli/helm-charts
-version: 2.0.0-rc.15
+version: 2.0.0-rc.20
 dependencies:
   - name: opentelemetry-operator
     version: 0.111.0
@@ -37,7 +37,8 @@ dependencies:
     tags:
       - security
   - name: logs
-    version: 0.8.1
+    alias: vectorOperator
+    version: 0.8.2
     condition: observability.vector.enabled
     tags:
       - observability
@@ -65,6 +66,12 @@ dependencies:
       - costManagement
   - name: loki
     version: 6.49.9
-    condition: observability.loki.enabled
+    condition: observability.loki.singleBinary.enabled
+    tags:
+      - observability
+  - name: loki-distributed
+    alias: lokiDistributed
+    version: 6.49.0
+    condition: observability.loki.distributed.enabled
     tags:
       - observability
