@@ -239,6 +239,26 @@ observability:
   logs:
     applyVectorPipeline: true
     watchNamespaces: []
+    # On-disk buffer for the Vector → Loki sink. When enabled, Vector spools
+    # outgoing log batches to disk before pushing to Loki, providing
+    # back-pressure tolerance during Loki outages or slowdowns.
+    #
+    # bufferSize and the underlying PV size are independent — set each to
+    # the value you need; bufferSize just has to fit inside the PV. PV size
+    # and StorageClass live with the Vector agent config under
+    # vectorOperator.vector-operator.vector.agent.volumes (co-located with
+    # the rest of the agent's volume/runtime config).
+    diskBuffer:
+      enabled: true
+      # Vector buffer.max_size — integer byte count, passed through to Vector
+      # see https://vector.dev/docs/reference/configuration/sinks/loki/#buffer
+      # Default: 4 GiB.
+      bufferSize: 4294967296
+      # Behaviour when the buffer fills: "drop_newest" (drop incoming events
+      # to keep the pipeline flowing) or "block" (apply back-pressure upstream
+      # — no log loss but stalls log collection).
+      whenFull: drop_newest
+
     # Loki endpoints configuration.
     #
     # writeUrl is the push endpoint (Vector → Loki). readUrl is the query
