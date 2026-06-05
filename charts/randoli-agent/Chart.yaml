@@ -38,7 +38,7 @@ dependencies:
       - security
   - name: logs
     alias: vectorOperator
-    version: 0.8.2
+    version: 0.8.1
     condition: observability.vector.enabled
     tags:
       - observability
@@ -65,7 +65,7 @@ dependencies:
       - observability
       - costManagement
   - name: loki
-    version: 6.49.9
+    version: 6.49.0
     condition: observability.loki.singleBinary.enabled
     tags:
       - observability

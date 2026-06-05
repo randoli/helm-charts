@@ -51,29 +51,6 @@ vector-operator:
       configCheck:
         tolerations: []
 
-      # On-disk buffer for Vector sinks (e.g. Loki). Each agent pod gets its
-      # own generic ephemeral PVC mounted at dataDir; Vector writes its disk
-      # buffer files there. To tune PV size or storage class for the buffer,
-      # override the storage / storageClassName fields below. The buffer
-      # itself is enabled per-sink via observability.logs.diskBuffer in the
-      # umbrella chart values.
-      dataDir: /vector-data-dir
-      volumeMounts:
-        - name: vector-buffer
-          mountPath: /vector-data-dir
-      volumes:
-        - name: vector-buffer
-          ephemeral:
-            volumeClaimTemplate:
-              spec:
-                accessModes:
-                  - ReadWriteOnce
-                resources:
-                  requests:
-                    storage: 5Gi
-                # Empty string uses the cluster default StorageClass.
-                storageClassName: ""
-
   rbac:
     create: true
 
