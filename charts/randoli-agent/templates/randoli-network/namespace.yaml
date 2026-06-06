@@ -1,6 +1,0 @@
-{{- if eq (include "apply-network-crs" . | trim) "true" -}}
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: netobserv
-{{- end }}
