@@ -58,6 +58,6 @@ tls:
   generateJob:
     enabled: false
     certGeneratorImage: "srimaln91/openssl-bash:latest"  # must have bash + openssl
-    kubectlImage: "bitnami/kubectl:latest"  # must have kubectl
+    kubectlImage: "docker.io/alpine/k8s:1.33.3"  # must have kubectl
 
 clusterDomain: cluster.local

@@ -1,3 +1,7 @@
+{{- /*
+Randoli agent deployment using a statefulset
+*/ -}}
+{{- $dbCredsSecretName := printf "%s-db" (include "randoli-agent.fullname" .) -}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -180,13 +184,13 @@ spec:
             - name: FLIGHT_SQL_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "randoli-agent.fullname" . }}-db
+                  name: {{ $dbCredsSecretName }}
                   key: username
             - name: FLIGHT_SQL_PASS
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "randoli-agent.fullname" . }}-db
-                  key: password      
+                  name: {{ $dbCredsSecretName }}
+                  key: password
           {{- if or .Values.agent.extraEnv .Values.global.prometheus.secretName }}
             {{- if and .Values.global.prometheus.secretName .Values.global.prometheus.usernameKey }}
             - name: PROMETHEUS_USERNAME
@@ -240,12 +244,12 @@ spec:
           - name: GIZMOSQL_USERNAME
             valueFrom:
               secretKeyRef:
-                name: {{ include "randoli-agent.fullname" . }}-db
+                name: {{ $dbCredsSecretName }}
                 key: username
           - name: GIZMOSQL_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: {{ include "randoli-agent.fullname" . }}-db
+                name: {{ $dbCredsSecretName }}
                 key: password
           - name: DATABASE_BACKEND
             value: duckdb
