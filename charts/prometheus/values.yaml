@@ -336,9 +336,18 @@ prometheus:
 
   prometheus-node-exporter:
     fullnameOverride: "randoli-obs-prometheus-node-exporter"
+    # Randoli's scrape configs only keep targets annotated with
+    # randoli.prometheus.io/scrape; overriding service.annotations here
+    # replaces the upstream default (prometheus.io/scrape: "true").
+    service:
+      annotations:
+        randoli.prometheus.io/scrape: "true"
 
   kube-state-metrics:
     fullnameOverride: "randoli-obs-kube-state-metrics"
+    service:
+      annotations:
+        randoli.prometheus.io/scrape: "true"
 
   alertmanager:
     fullnameOverride: "randoli-obs-alerts"

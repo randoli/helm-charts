@@ -13,7 +13,7 @@ maintainers:
 name: randoli-agent
 sources:
   - https://github.com/randoli/helm-charts
-version: 2.0.0-rc.25
+version: 2.0.0-rc.26
 dependencies:
   - name: opentelemetry-operator
     version: 0.111.0
@@ -22,7 +22,7 @@ dependencies:
       - observability
       - costManagement
   - name: prometheus
-    version: 26.0.1
+    version: 26.0.2
     condition: global.prometheus.install
   - name: vertical-pod-autoscaler
     alias: vpa
