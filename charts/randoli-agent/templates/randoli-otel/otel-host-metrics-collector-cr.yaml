@@ -5,8 +5,6 @@ metadata:
   name: randoli-otel-hostmetrics
   labels:
     randoli/app-type: otel
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
 spec:
   {{- with coalesce .Values.observability.hostMetrics.otelCollector.tolerations .Values.global.tolerations }}
   tolerations:

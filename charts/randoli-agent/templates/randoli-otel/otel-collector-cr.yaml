@@ -11,16 +11,15 @@ metadata:
     {{- with .Values.otelCollector.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  {{- if or .Values.global.annotations .Values.otelCollector.annotations }}
   annotations:
-    # ArgoCD sync wave: applied after the operator Deployment (wave 0) is healthy.
-    # Ignored by plain helm install — failurePolicy: Ignore on the webhook handles ordering there.
-    argocd.argoproj.io/sync-wave: "2"
     {{- with .Values.global.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
     {{- with .Values.otelCollector.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  {{- end }}
 spec:
   {{- with coalesce .Values.otelCollector.tolerations .Values.global.tolerations }}
   tolerations:

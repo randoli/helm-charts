@@ -3,8 +3,6 @@ apiVersion: opentelemetry.io/v1alpha1
 kind: Instrumentation
 metadata:
   name: otel-instrumentation
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
 spec:
   exporter:
     endpoint: http://randoli-otel-collector.{{ .Release.Namespace }}.svc:4317
