@@ -5,37 +5,33 @@ metadata:
   name: randoli-otel
   labels:
     randoli/app-type: otel-pipeline
+    {{- with .Values.global.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.otelCollector.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- if or .Values.global.annotations .Values.otelCollector.annotations }}
   annotations:
-    # ArgoCD sync wave: applied after the operator Deployment (wave 0) is healthy.
-    # Ignored by plain helm install — failurePolicy: Ignore on the webhook handles ordering there.
-    argocd.argoproj.io/sync-wave: "2"
+    {{- with .Values.global.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.otelCollector.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
 spec:
-  {{- if or .Values.tolerations .Values.global.tolerations }}
+  {{- with coalesce .Values.otelCollector.tolerations .Values.global.tolerations }}
   tolerations:
-    {{- with .Values.tolerations }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
-    {{- with .Values.global.tolerations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
   {{- end }}
-  {{- if or .Values.nodeSelector .Values.global.nodeSelector }}
+  {{- with coalesce .Values.otelCollector.nodeSelector .Values.global.nodeSelector }}
   nodeSelector:
-    {{- with .Values.nodeSelector }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
-    {{- with .Values.global.nodeSelector }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
   {{- end }}
-  {{- if or .Values.affinity .Values.global.affinity }}
+  {{- with coalesce .Values.otelCollector.affinity .Values.global.affinity }}
   affinity:
-    {{- with .Values.affinity }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
-    {{- with .Values.global.affinity }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
   {{- end }}
   image: docker.io/randoli/otelcol:v1.0.3
   upgradeStrategy: automatic
@@ -75,6 +71,93 @@ spec:
             - action: labelmap
               regex: label_(.+)
               replacement: $$1
+
+          # Use Kubernetes service discovery to find scrape targets in Tempo distributed mode.
+          {{- if eq (include "tempo.distributed.enabled" .) "true" }}
+          - job_name: tempo
+            scrape_interval: 30s
+            kubernetes_sd_configs:
+            - role: pod
+              namespaces:
+                names:
+                - {{ .Release.Namespace }}
+            relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_instance]
+              regex: randoli-obs-tempo-dist
+              action: keep
+            # Avoid non-tempo pods from being scraped
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+              regex: distributor|ingester|querier|query-frontend|compactor
+              action: keep
+            - source_labels: [__meta_kubernetes_pod_ip]
+              target_label: __address__
+              replacement: $${1}:3200
+            - source_labels: [__meta_kubernetes_pod_name]
+              target_label: instance
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+              target_label: component
+          {{- else }}
+          # Use the Tempo service to scrape metrics in the single binary mode
+          - job_name: tempo
+            scrape_interval: 30s
+            static_configs:
+            - targets:
+              - randoli-obs-tempo.{{ .Release.Namespace }}.svc:3200
+          {{- end }}
+
+          # Use Kubernetes service discovery to find scrape targets in Loki distributed mode.
+          {{- if eq (include "loki.distributed.enabled" .) "true" }}
+          - job_name: loki
+            scrape_interval: 30s
+            kubernetes_sd_configs:
+            - role: pod
+              namespaces:
+                names:
+                - {{ .Release.Namespace }}
+            relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_instance]
+              regex: randoli-obs-loki-dist
+              action: keep
+            # Avoid non-loki pods from being scraped
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+              regex: distributor|ingester|querier|query-frontend|query-scheduler|compactor|index-gateway|ruler
+              action: keep
+            - source_labels: [__meta_kubernetes_pod_ip]
+              target_label: __address__
+              replacement: $${1}:3100
+            - source_labels: [__meta_kubernetes_pod_name]
+              target_label: instance
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+              target_label: component
+          {{- else }}
+          # Loki /metrics (port 3100 on the loki Service)
+          - job_name: loki
+            scrape_interval: 30s
+            static_configs:
+            - targets:
+              - randoli-obs-loki.{{ .Release.Namespace }}.svc:3100
+          {{- end }}
+
+          # Vector agent /metrics — internal_metrics source + prometheus_exporter
+          # sink on port 9598 (configured in the ClusterVectorPipeline).
+          # Pods are discovered by label; kaasops vector-operator labels agents
+          # with app.kubernetes.io/name=vector.
+          - job_name: vector
+            scrape_interval: 30s
+            kubernetes_sd_configs:
+            - role: pod
+              namespaces:
+                names:
+                - {{ .Release.Namespace }}
+            relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+              regex: vector
+              action: keep
+            - source_labels: [__meta_kubernetes_pod_ip]
+              target_label: __address__
+              replacement: $${1}:9598
+            - source_labels: [__meta_kubernetes_pod_name]
+              target_label: instance
     exporters:
       otlp/tempo:
         endpoint: '{{ include "trace-storage-url-otlp" . }}'
@@ -153,8 +236,9 @@ spec:
           exporters: [debug]
   {{- if .Values.observability.otel.applyTargetAllocator }}
   targetAllocator:
-    {{- with .Values.tolerations }}
-    tolerations: {{ toYaml . | nindent 6 }}
+    {{- with coalesce .Values.otelCollector.tolerations .Values.global.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
     {{- end }}
     enabled: true
     prometheusCR:

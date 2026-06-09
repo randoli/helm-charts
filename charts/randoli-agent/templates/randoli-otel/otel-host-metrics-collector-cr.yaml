@@ -5,28 +5,20 @@ metadata:
   name: randoli-otel-hostmetrics
   labels:
     randoli/app-type: otel
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
 spec:
-  {{- if or .Values.global.daemonsets.tolerations .Values.global.tolerations }}
+  {{- with coalesce .Values.observability.hostMetrics.otelCollector.tolerations .Values.global.tolerations }}
   tolerations:
-    {{- with .Values.global.daemonsets.tolerations }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
-    {{- with .Values.global.tolerations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
   {{- end }}
-  {{- if or .Values.global.daemonsets.nodeSelector .Values.global.nodeSelector }}
+  {{- with coalesce .Values.observability.hostMetrics.otelCollector.nodeSelector .Values.global.nodeSelector }}
   nodeSelector:
-    {{- with .Values.global.daemonsets.nodeSelector }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
-    {{- with .Values.global.nodeSelector }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
   {{- end }}
-  image: {{ .Values.observability.hostMetrics.collectorImage | default "otel/opentelemetry-collector-contrib:0.123.0" }}
+  {{- with coalesce .Values.observability.hostMetrics.otelCollector.affinity .Values.global.affinity }}
+  affinity:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  image: {{ .Values.observability.hostMetrics.otelCollector.image | default "otel/opentelemetry-collector-contrib:0.123.0" }}
   upgradeStrategy: automatic
   mode: daemonset
   serviceAccount: randoli-otel-collector
@@ -48,7 +40,7 @@ spec:
     receivers:
       hostmetrics:
         root_path: /hostfs
-        collection_interval: {{ .Values.observability.hostMetrics.collectionInterval | default "60s" }}
+        collection_interval: {{ .Values.observability.hostMetrics.otelCollector.collectionInterval | default "60s" }}
         scrapers:
           cpu:
             metrics:

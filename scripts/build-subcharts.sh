@@ -14,7 +14,8 @@ for chart_path in "$CHARTS_DIR"/*/; do
   echo "==> Building $chart_name"
   helm dependency update "$chart_path"
 
-  rm -f "$DEST_DIR/${chart_name}-"*.tgz
+  # remove previous version
+  rm -f "$DEST_DIR/${chart_name}-"[0-9]*.tgz
   helm package "$chart_path" -d "$DEST_DIR"
 done
 

@@ -1,4 +1,5 @@
 {{- if .Values.observability.logs.applyVectorPipeline  -}}
+{{- $diskBuffer := (.Values.observability.logs.diskBuffer | default dict) -}}
 apiVersion: observability.kaasops.io/v1alpha1
 kind: ClusterVectorPipeline
 metadata:
@@ -11,19 +12,17 @@ spec:
         only_fields:
           - message
           - trace_id
+          - randoli_tags
       endpoint: {{ include "logs-loki-url" . }}
       inputs:
-        - extract_trace_from_text
+        - extract_runtime_exceptions
       labels:
         forwarder: vector
         k8s_container_image: {{ `'{{ kubernetes.container_image }}'` }}
         k8s_container_name: {{ `'{{ kubernetes.container_name }}'` }}
-        k8s_pod_ip: {{ `'{{ kubernetes.pod_ip }}'` }}
         k8s_pod_name: {{ `'{{ kubernetes.pod_name }}'` }}
         k8s_pod_namespace: {{ `'{{ kubernetes.pod_namespace }}'` }}
         k8s_pod_node_name: {{ `'{{ kubernetes.pod_node_name }}'` }}
-        k8s_pod_uid: {{ `'{{ kubernetes.pod_uid }}'` }}
-        severity: {{ `'{{ severity }}'` }}
         service_name: {{ `'{{ service_name }}'` }}
         source_type: {{ `'{{ source_type }}'` }}
       tenant_id: self-monitoring
@@ -37,31 +36,86 @@ spec:
         retry_initial_backoff_secs: 1
         retry_max_duration_secs: 300
         timeout_secs: 60
+      {{- if $diskBuffer.enabled }}
+      # On-disk buffer absorbs back-pressure when Loki is slow or unavailable.
+      # Backed by the PVC mounted at the Vector agent's dataDir
+      buffer:
+        type: disk
+        max_size: {{ $diskBuffer.bufferSize }}
+        when_full: {{ $diskBuffer.whenFull | default "drop_newest" }}
+      {{- end }}
+
   sources:
-    k8s_log_source:
+    # prepare include and exclude list
+    {{- $include := .Values.observability.logs.includeNamespaces | default list }}
+    {{- $exclude := .Values.observability.logs.excludeNamespaces | default list }}
+    {{- if gt (len $include) 0 }}
+    # Include list: one kubernetes_logs source per namespace. Each source ins pinned to a specific Kubernetes namespace.
+    # It won't scrape logs from any other namespace which is not listed here
+    {{- range $ns := $include }}
+    k8s_log_source_{{ $ns | replace "-" "_" }}:
       extra_label_selector: app.kubernetes.io/name!=vector
+      extra_field_selector: metadata.namespace={{ $ns }}
       read_from: end
       type: kubernetes_logs
+    {{- end }}
+    {{- else }}
+    k8s_log_source:
+      extra_label_selector: app.kubernetes.io/name!=vector
+      {{- if gt (len $exclude) 0 }}
+      # Exclude namespaces via metadata fields
+      # This exclude list will be completely ignored if the include list is not empty
+      # ALternatively, users can use the following annotations to exclude objects
+      # vector.dev/exclude-containers: "container1,container2"
+      # vector.dev/exclude: "true" (ns level or in the pod spec template)
+      extra_field_selector: {{ range $i, $ns := $exclude }}{{ if $i }},{{ end }}metadata.namespace!={{ $ns }}{{- end }}
+      {{- end }}
+      read_from: end
+      type: kubernetes_logs
+    {{- end }}
+
   transforms:
-    dedot_transform:
+    merge_multiline_logs:
+      expire_after_ms: 2000
+      group_by:
+        - kubernetes.pod_name
+        - kubernetes.container_name
+        - stream
       inputs:
-        - drop_empty_message
-      source: >-
-        . = map_keys(., recursive: true) -> |key| { replace(key, r'[./-]', "_")
-        }
-      type: remap
+        {{- if gt (len $include) 0 }}
+        {{- range $ns := $include }}
+        - k8s_log_source_{{ $ns | replace "-" "_" }}
+        {{- end }}
+        {{- else }}
+        - k8s_log_source
+        {{- end }}
+      merge_strategies:
+        message: concat_newline
+      starts_when: >-
+        match(string!(.message),
+        r'(^\d{4}-\d{2}-\d{2}|^\d{2}:\d{2}:\d{2}|^\{"|^[A-Z]+\s)')
+      type: reduce
+
     drop_empty_containers:
       condition: '!(.kubernetes.container_name == null)'
       inputs:
         - merge_multiline_logs
       type: filter
+
     drop_empty_message:
       condition: >-
-        !(strip_whitespace!(.message) == "") || !(.kubernetes.container_name ==
-        null)
+        !(strip_whitespace!(.message) == "") || !(.kubernetes.container_name == null)
       inputs:
         - drop_empty_containers
       type: filter
+
+    dedot_transform:
+      inputs:
+        - drop_empty_message
+      source: >-
+        . = map_keys(., recursive: true) -> |key| { replace(key, r'[./-]', "_")}
+      type: remap
+
     drop_fields:
       drop_on_abort: true
       inputs:
@@ -74,54 +128,23 @@ spec:
         del(.kubernetes.pod_ips)
         del(.kubernetes.pod_uid)
       type: remap
+
     extract_message:
       inputs:
         - drop_fields
       source: >
-        parsed = parse_json!(.message)
+        parsed = parse_json!(.message);
 
-        .message = parsed
+        .message = parsed; 
+        # now .message contains the parsed object, and kubernetes.* fields still exist
 
-        # Now .message contains the parsed object, and kubernetes.* fields still
-        exist
       type: remap
-    extract_severity:
-      inputs:
-        - extract_message
-      source: >
-        # Extract severity from the message string
-
-        severity = "unknown"
-
-
-        message_str = string!(.message)
-
-
-        if contains(message_str, "CRITICAL") || contains(message_str,
-        "critical") {
-          severity = "CRITICAL"
-        } else if contains(message_str, "ERROR") || contains(message_str,
-        "error") {
-          severity = "ERROR"
-        } else if contains(message_str, "WARN") || contains(message_str,
-        "warning") || contains(message_str, "WARNING") {
-          severity = "WARNING"
-        } else if contains(message_str, "INFO") || contains(message_str, "info")
-        {
-          severity = "INFO"
-        } else if contains(message_str, "DEBUG") || contains(message_str,
-        "debug") {
-          severity = "DEBUG"
-        }
-
-
-        .severity = severity
-      type: remap
+  
     extract_service_name:
       inputs:
-        - extract_severity
+        - extract_message
       source: |
-        service_name = null
+        service_name = null;
 
         if exists(.kubernetes.pod_annotations.resource_opentelemetry_io_service_name) {
           service_name = .kubernetes.pod_annotations.resource_opentelemetry_io_service_name
@@ -129,11 +152,12 @@ spec:
 
         .service_name = service_name
       type: remap 
+
     extract_trace_from_json:
       inputs:
         - extract_service_name
       source: |
-        trace_id = null
+        trace_id = null;
 
         if exists(.message.trace_details.trace_id) {
           trace_id = .message.trace_details.trace_id
@@ -141,11 +165,12 @@ spec:
 
         .trace_id = trace_id
       type: remap  
+
     extract_trace_from_text:
       inputs:
         - extract_trace_from_json
       source: |
-        # If we didn't find trace_id in JSON, try regex on plain text
+         # if we didn't find trace_id in JSON, try regex on plain text
          if is_null(.trace_id) {
             # Convert message back to string for regex matching
             message_str = encode_json(.message)
@@ -157,36 +182,91 @@ spec:
               .trace_id = matches.trace_id
             }
           }
+      type: remap     
+
+    extract_runtime_exceptions:
       type: remap
-    {{- if and .Values.observability.logs.watchNamespaces (gt (len .Values.observability.logs.watchNamespaces) 0) }}
-    filter_namespace:
-      type: filter
       inputs:
-        - k8s_log_source
-      condition: |
-        includes([
-          {{- range $index, $ns := .Values.observability.logs.watchNamespaces }}
-          {{- if $index }},{{ end }}
-          "{{ $ns }}"
-          {{- end }}
-        ], to_string(.kubernetes.pod_namespace) ?? "")
-    {{- end }}        
-    merge_multiline_logs:
-      expire_after_ms: 2000
-      group_by:
-        - kubernetes.pod_name
-        - kubernetes.container_name
-        - stream
-      inputs:
-        {{- if and .Values.observability.logs.watchNamespaces (gt (len .Values.observability.logs.watchNamespaces) 0) }}
-        - filter_namespace
-        {{- else }}
-        - k8s_log_source
-        {{- end }}
-      merge_strategies:
-        message: concat_newline
-      starts_when: >-
-        match(string!(.message),
-        r'(^\d{4}-\d{2}-\d{2}|^\d{2}:\d{2}:\d{2}|^\{"|^[A-Z]+\s)')
-      type: reduce
-{{end}}
+        - extract_trace_from_text
+      source: |
+
+        msg = "";  
+        if is_string(.message) {
+          msg = string!(.message)
+        } else if is_object(.message) && exists(.message.message) &&
+        is_string(.message.message) {
+          msg = string!(.message.message)
+        }
+
+        if msg != "" {
+          .randoli_tags = [];
+          exception_data = null;
+
+          if match(msg, r'^panic:\s') || match(msg, r'^fatal error:') {
+
+            # golang panic
+            is_crashed = false;
+            exit = parse_regex!(msg, r'exit status (?P<code>\d+)');
+            if exit.code != 0 {
+              is_crashed = true
+            }
+            if match(msg, r'^panic:\s') && (contains(msg, "goroutine") || match(msg, r'\.go:\d+')) {
+              panic_msg = parse_regex!(msg, r'^panic:\s*(?P<panic_error>.+)')
+              exception_data = {
+                "error.kind": "panic",
+                "error.type": panic_msg.panic_error,
+                "error.is_crashed": is_crashed,
+                "runtime": "Go"
+              }
+
+            } else if match(msg, r'^fatal error:') {
+              fatal_msg = parse_regex!(msg, r'^fatal error:\s*(?P<fatal_error>.+)')
+              exception_data = {
+                "error.kind": "fatal",
+                "error.type": fatal_msg.fatal_error,
+                "error.is_crashed": is_crashed,
+                "runtime": "Go"
+              }
+            }
+          } else if match(msg, r'^Traceback \(most recent call last\):') {
+
+            # python traceback
+            parsed = parse_regex(
+              msg,
+              r'Traceback .*?\n(?:.*\n)*?(?P<exception_type>[A-Za-z_][A-Za-z0-9_.]*):'
+            ) ?? {}
+
+            if parsed.exception_type != null {
+              exception_data = {
+                "runtime": "Python",
+                "error.kind": "exception",
+                "error.type": parsed.exception_type,
+                "error.has_traceback": true
+              }
+
+            }
+          } else if match(msg, r'Exception in thread') || match(msg, r'(?m)^[a-zA-Z0-9_.]+(Exception|Error):') {
+
+            # java exception
+            parsed = parse_regex(
+              msg,
+              r'(?m)^(?:Exception in thread "[^"]+" )?(?:[a-zA-Z0-9_.]+\.)?(?P<exception_type>[A-Za-z0-9_]+(Exception|Error))'
+            ) ?? {}
+
+            if parsed.exception_type != null {
+              exception_data = {
+                "error.kind": "exception",
+                "error.type": parsed.exception_type,
+                "runtime": "Java"
+              }
+            }
+          }
+
+          if exception_data != null {
+            .randoli_tags = push(.randoli_tags, {
+              "type": "EXCEPTION",
+              "data": exception_data
+            })
+          }
+        }
+{{end}} 

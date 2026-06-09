@@ -14,6 +14,10 @@ prometheus:
 
     persistentVolume:
       size: 15Gi
+      # Keep the PVC (and the data it holds) on helm uninstall; users delete
+      # it manually if no longer needed.
+      annotations:
+        helm.sh/resource-policy: keep
 
     retention: "3d"
     retentionSize: "12GB"
@@ -332,9 +336,18 @@ prometheus:
 
   prometheus-node-exporter:
     fullnameOverride: "randoli-obs-prometheus-node-exporter"
+    # Randoli's scrape configs only keep targets annotated with
+    # randoli.prometheus.io/scrape; overriding service.annotations here
+    # replaces the upstream default (prometheus.io/scrape: "true").
+    service:
+      annotations:
+        randoli.prometheus.io/scrape: "true"
 
   kube-state-metrics:
     fullnameOverride: "randoli-obs-kube-state-metrics"
+    service:
+      annotations:
+        randoli.prometheus.io/scrape: "true"
 
   alertmanager:
     fullnameOverride: "randoli-obs-alerts"

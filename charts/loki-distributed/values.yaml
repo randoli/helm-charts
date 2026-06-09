@@ -1,0 +1,255 @@
+# Values passed through to the upstream grafana/loki chart in Distributed mode.
+# Full upstream value reference:
+# https://github.com/grafana/loki/blob/main/production/helm/loki/values.yaml
+# Reference for the microservices preset:
+# https://github.com/grafana/loki/blob/main/production/helm/loki/distributed-values.yaml
+loki:
+  fullnameOverride: "randoli-obs-loki-dist"
+
+  # Distributed mode: each Loki component (distributor, ingester, querier,
+  # query-frontend, query-scheduler, compactor, index-gateway) runs as its own
+  # workload so they can be scaled independently. Requires object storage —
+  # filesystem is not supported across separate pods.
+  deploymentMode: Distributed
+
+  loki:
+    auth_enabled: false
+
+    # Storage uses the S3 API. The bundled MinIO subchart is OFF by default
+    # (see minio.enabled below), so distributed Loki has no working object
+    # store until you override this block at install time. See the
+    # "Cloud object storage examples" section at the bottom of this file
+    # for AWS S3 / GCS / Azure overrides, or set minio.enabled=true to
+    # bring the bundled MinIO back for a quick demo install.
+    storage:
+      type: s3
+      bucketNames:
+        chunks: chunks
+        ruler: ruler
+        admin: admin
+
+    schemaConfig:
+      configs:
+        - from: 2024-01-01
+          store: tsdb
+          object_store: s3
+          schema: v13
+          index:
+            prefix: loki_index_
+            period: 24h
+
+    ingester:
+      chunk_encoding: snappy
+
+    # Default is 4, increase for more memory/CPU, reduce if OOMing.
+    querier:
+      max_concurrent: 4
+
+    # Storage & retention config (see README "Storage and retention").
+    # Retention is enforced by the compactor on the TSDB store.
+    # limits_config.retention_period is the time-based cutoff; the compactor
+    # deletes chunks older than that.
+    limits_config:
+      retention_period: 720h   # 30d
+
+    compactor:
+      working_directory: /var/loki/compactor
+      retention_enabled: true
+      # delete_request_store mirrors the object_store backend.
+      delete_request_store: s3
+
+  # ---------------------------------------------------------------------------
+  # Component replica counts. Conservative defaults so the chart is installable
+  # on a small cluster out of the box. Scale these up for HA / higher ingest.
+  # ---------------------------------------------------------------------------
+  distributor:
+    replicas: 2
+    maxUnavailable: 1
+  ingester:
+    replicas: 3
+    # Zone-aware replication spreads ingesters across 3 zonal StatefulSets and
+    # requires replicas >= 3. Disable it for the single-replica default; flip
+    # back on (and scale replicas) for multi-AZ HA setups.
+    zoneAwareReplication:
+      enabled: false
+    persistence:
+      # Required for tsdb-shipper / boltdb-shipper. Each claim becomes a PVC
+      # on the ingester StatefulSet.
+      enabled: true
+      # NOTE: `claims` is a list — overriding it replaces the upstream entry
+      # wholesale (helm does not deep-merge list items), so accessModes MUST be
+      # repeated here even though upstream defaults to [ReadWriteOnce].
+      claims:
+        - name: data
+          accessModes:
+            - ReadWriteOnce
+          # size — PVC size for ingester chunks/wal
+          size: 10Gi
+          # storageClass — null = cluster default; set to target a specific SC
+          storageClass: null
+      # Preserve PVCs (and the data they hold) across StatefulSet scale-down or
+      # deletion. Upstream wipes them on uninstall by default; we want users to
+      # delete the PVC manually if they no longer need the data.
+      enableStatefulSetAutoDeletePVC: false
+      whenScaled: Retain
+      whenDeleted: Retain
+  querier:
+    replicas: 1
+    maxUnavailable: 1
+  queryFrontend:
+    replicas: 1
+    maxUnavailable: 1
+  queryScheduler:
+    replicas: 1
+  compactor:
+    replicas: 1
+    # The compactor downloads indexes and writes retention tombstones to its
+    # working directory; a PVC keeps that state across pod restarts so deletes
+    # in-flight aren't repeated.
+    persistence:
+      enabled: true
+      # `claims` is a list — see the note on ingester.persistence.claims above
+      # for why accessModes must be repeated.
+      claims:
+        - name: data
+          accessModes:
+            - ReadWriteOnce
+          size: 10Gi
+          storageClass: null
+      enableStatefulSetAutoDeletePVC: false
+      whenScaled: Retain
+      whenDeleted: Retain
+  indexGateway:
+    replicas: 1
+    maxUnavailable: 1
+
+  # Optional experimental components — off by default.
+  bloomPlanner:
+    replicas: 0
+  bloomBuilder:
+    replicas: 0
+  bloomGateway:
+    replicas: 0
+
+  # Zero out replica counts for other deployment modes (upstream defaults these to
+  # non-zero values for SingleBinary / SimpleScalable).
+  singleBinary:
+    replicas: 0
+  backend:
+    replicas: 0
+  read:
+    replicas: 0
+  write:
+    replicas: 0
+
+  # ---------------------------------------------------------------------------
+  # Storage backend: bundled MinIO (OFF by default).
+  # The upstream Loki chart ships a MinIO subchart that can act as the
+  # S3-compatible object store for chunks/index/ruler/admin. We keep it
+  # disabled so production installs aren't accidentally backed by an
+  # in-cluster PVC-backed MinIO — users are expected to bring real cloud
+  # object storage (see the examples at the bottom of this file).
+  #
+  # Set minio.enabled=true for a self-contained demo install on a cluster
+  # with a default StorageClass.
+  # ---------------------------------------------------------------------------
+  minio:
+    enabled: false
+
+  # Gateway disabled — Vector / OTel push directly to the distributor Service
+  # (randoli-obs-loki-dist-distributor:3100). Enable if you need a single
+  # front-door (e.g. for ingress).
+  gateway:
+    enabled: false
+
+  # Test pod disabled — used by upstream CI, not needed at install time.
+  test:
+    enabled: false
+
+  # Loki canary disabled — synthetic log generator used for end-to-end probe.
+  lokiCanary:
+    enabled: false
+
+  # Caching disabled by default to keep the install lightweight. Enable
+  # chunksCache / resultsCache for production query performance.
+  chunksCache:
+    enabled: false
+  resultsCache:
+    enabled: false
+
+  # Embedded Grafana Agent (self-monitoring) disabled. Loki's monitoring block
+  # can install the grafana-agent-operator subchart to scrape its own
+  # metrics/logs. We ship our own OTel-based observability pipeline, so we
+  # don't want a second agent stack. Pinned to false defensively so a future
+  # upstream default flip can't sneak it in.
+  monitoring:
+    selfMonitoring:
+      enabled: false
+      grafanaAgent:
+        installOperator: false
+
+  # Grafana rollout-operator disabled. Only useful when zoneAwareReplication
+  # is enabled on the ingester ring (we run a single ingester replica by
+  # default). Pinned off so it doesn't get pulled in by a future upstream
+  # default flip.
+  rollout_operator:
+    enabled: false
+
+  # Scheduling — global.* values are NOT automatically propagated here.
+  # Set these explicitly to match global.tolerations / global.nodeSelector /
+  # global.affinity / global.imagePullSecrets.
+  imagePullSecrets: []
+
+# =============================================================================
+# Cloud object storage examples (uncomment and adjust under loki.loki.storage)
+# =============================================================================
+#
+# AWS S3 (IRSA or static creds):
+#   loki:
+#     loki:
+#       storage:
+#         type: s3
+#         s3:
+#           region: us-east-1
+#           # Use IRSA on the service account instead of inline creds when
+#           # possible; leave accessKeyId/secretAccessKey blank in that case.
+#           accessKeyId: ""
+#           secretAccessKey: ""
+#         bucketNames:
+#           chunks: my-loki-chunks
+#           ruler:  my-loki-ruler
+#           admin:  my-loki-admin
+#     minio:
+#       enabled: false
+#
+# Google Cloud Storage (workload-identity recommended):
+#   loki:
+#     loki:
+#       storage:
+#         type: gcs
+#         gcs:
+#           chunkBufferSize: 0
+#           requestTimeout: "0s"
+#           enableHttp2: true
+#         bucketNames:
+#           chunks: my-loki-chunks
+#           ruler:  my-loki-ruler
+#           admin:  my-loki-admin
+#     minio:
+#       enabled: false
+#
+# Azure Blob Storage:
+#   loki:
+#     loki:
+#       storage:
+#         type: azure
+#         azure:
+#           accountName: mystorageaccount
+#           accountKey: ""           # prefer workload-identity over key auth
+#           useFederatedToken: true
+#         bucketNames:
+#           chunks: my-loki-chunks
+#           ruler:  my-loki-ruler
+#           admin:  my-loki-admin
+#     minio:
+#       enabled: false
