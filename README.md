@@ -1,6 +1,6 @@
-# Randoli Helm Chart Public Registry
+# Randoli Data Plane
 
-## How to install the LocalControl Plane & Agent
+## How to install the Randoli Data Plane & Observability Agent
 
 ### Prerequisits.
 You need to setup an Account using the [Signup page](https://signup.randoli.io/?product=observability%2Bcost) 
@@ -18,7 +18,7 @@ kubectl create -f xxxx-credentials.yaml
 
 Add the repository
 ```
-helm repo add randoli https://randoli.github.io/helm-charts
+helm repo add randoli https://helm.randoli.io
 ```
 
 Install the Helm Chart
@@ -27,6 +27,37 @@ helm install randoli randoli/randoli-agent -n randoli-agents --set tags.costMana
 ```
 
 For more details see [Randoli Product Documentation](https://docs.randoli.io/getting-started/step-0).
+
+## Chart Structure
+
+```
+charts/
+├── randoli-agent/           # Umbrella chart (main entry point)
+│   ├── Chart.yaml           # Subchart deps with tags/conditions (no repository: URLs needed)
+│   ├── values.yaml          # Agent-specific config only (global, observability, agent image/db)
+│   ├── charts/              # Pre-packaged wrapper .tgz files — regenerate via workflow above
+│   └── templates/
+│       ├── _helpers.tpl     # Shared helpers (namespace, labels, URL builders, enable flags)
+│       ├── statefulset-agent.yaml
+│       ├── randoli-logs/    # Vector pipeline CRs
+│       ├── randoli-network/ # Network flow collector CRs
+│       ├── randoli-otel/    # OpenTelemetry Collector + Instrumentation CRs
+│       └── randoli-tproxy/  # Telemetry proxy deployment
+│
+├── prometheus/              # Wraps prometheus-community/prometheus@26.0.1
+│   ├── templates/_helpers.tpl  # Only: prometheus.opencost.url + prometheus.networkCostMetrics.url
+│   └── values.yaml          # under prometheus: key — scrape configs, retention, server naming
+├── loki/                    # Wraps grafana/loki@6.49.0
+├── tempo/                   # Wraps grafana/tempo@1.24.1
+├── opentelemetry-operator/  # Wraps open-telemetry/opentelemetry-operator@0.86.4
+├── vertical-pod-autoscaler/ # Wraps kubernetes/vertical-pod-autoscaler@0.8.1
+├── cost-management/         # Wraps opencost/opencost@1.42.0
+│   └── templates/configmap-disabled-metrics.yaml  # Creates randoli-cost-metrics-config ConfigMap
+├── security-scans/          # Wraps kubescape/kubescape-operator@1.29.6
+├── logs/                    # Wraps kaasops/vector-operator@0.0.40
+└── network/                 # Wraps netobserv/netobserv-operator@1.8.2
+```
+
 
 ## Tempo deployment mode
 
