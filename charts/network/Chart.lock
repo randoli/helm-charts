@@ -1,6 +1,6 @@
 dependencies:
 - name: netobserv-operator
   repository: https://netobserv.io/static/helm/
-  version: 1.11.3
-digest: sha256:27f75aed47b48b3a6aee1ed6835ac4cba19fd85316dd9c0580a27b9cec55c156
-generated: "2026-04-28T17:37:52.494469257-04:00"
+  version: 1.8.2
+digest: sha256:98d0f942042ef29c17c7c1c7faf7ed9d881066fde844a2c1d52611b98b87bf82
+generated: "2026-06-23T13:42:06.085253587-04:00"

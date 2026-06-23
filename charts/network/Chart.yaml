@@ -25,5 +25,5 @@ sources:
 
 dependencies:
   - name: netobserv-operator
-    version: 1.11.3
+    version: 1.8.2
     repository: https://netobserv.io/static/helm/
