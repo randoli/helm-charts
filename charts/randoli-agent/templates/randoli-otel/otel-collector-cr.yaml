@@ -82,12 +82,12 @@ spec:
                 names:
                 - {{ .Release.Namespace }}
             relabel_configs:
-            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_instance]
-              regex: randoli-obs-tempo-dist
+            - source_labels: [__meta_kubernetes_pod_name]
+              regex: randoli-obs-tempo-dist-.*
               action: keep
             # Avoid non-tempo pods from being scraped
             - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
-              regex: distributor|ingester|querier|query-frontend|compactor
+              regex: distributor|ingester|querier|query-frontend|compactor|metrics-generator
               action: keep
             - source_labels: [__meta_kubernetes_pod_ip]
               target_label: __address__
@@ -115,8 +115,8 @@ spec:
                 names:
                 - {{ .Release.Namespace }}
             relabel_configs:
-            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_instance]
-              regex: randoli-obs-loki-dist
+            - source_labels: [__meta_kubernetes_pod_name]
+              regex: randoli-obs-loki-dist-.*
               action: keep
             # Avoid non-loki pods from being scraped
             - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]

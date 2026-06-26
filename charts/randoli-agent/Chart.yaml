@@ -1,6 +1,6 @@
 apiVersion: v2
-appVersion: "1.19"
-description: Randoli Agent
+appVersion: "1.20"
+description: Randoli Data Plane & Observability Agent
 home: https://randoli.ca
 icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
 keywords:
@@ -13,7 +13,7 @@ maintainers:
 name: randoli-agent
 sources:
   - https://github.com/randoli/helm-charts
-version: 2.0.0
+version: 2.0.6-rc.1
 dependencies:
   - name: opentelemetry-operator
     version: 0.111.0
@@ -43,7 +43,7 @@ dependencies:
     tags:
       - observability
   - name: cost-management
-    version: 1.42.0
+    version: 2.5.23
     alias: costManagement
     tags:
       - costManagement

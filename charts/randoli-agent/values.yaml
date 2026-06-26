@@ -342,6 +342,12 @@ observability:
   netobserv:
     enabled: true
     applyCRs: true
+    # eBPF agent DaemonSet scheduling. Falls back to global.* when empty.
+    # Plumbed into the FlowCollector CR at spec.agent.ebpf.advanced.scheduling.
+    agent:
+      tolerations: []
+      nodeSelector: {}
+      affinity: {}
 
   security:
     #enabled: false

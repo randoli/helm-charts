@@ -8,6 +8,27 @@ spec:
   networkPolicy:
     enable: false
   namespace: netobserv
+  {{- $netobservAgentTolerations := coalesce .Values.observability.netobserv.agent.tolerations .Values.global.tolerations }}
+  {{- $netobservAgentNodeSelector := coalesce .Values.observability.netobserv.agent.nodeSelector .Values.global.nodeSelector }}
+  {{- $netobservAgentAffinity := coalesce .Values.observability.netobserv.agent.affinity .Values.global.affinity }}
+  {{- if or $netobservAgentTolerations $netobservAgentNodeSelector $netobservAgentAffinity }}
+  agent:
+    ebpf:
+      advanced:
+        scheduling:
+          {{- with $netobservAgentTolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $netobservAgentNodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $netobservAgentAffinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+  {{- end }}
   consolePlugin:
     advanced:
       env:

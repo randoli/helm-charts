@@ -11,8 +11,15 @@ opencost:
       image:
         registry: docker.io
         repository: randoli/opencost
-        tag: "1.115.4"
+        # TODO: confirm the published fork image tag for OpenCost v1.120.3 before release.
+        tag: "v1.120.3-randoli.1"
         pullPolicy: IfNotPresent
+
+      # Prometheus query/subquery resolution -> PROMETHEUS_QUERY_RESOLUTION_SECONDS.
+      # Default 300s (5m) is too coarse for the sparse LLM token metric, so /llm returns empty.
+      # 60s (1m) captures it; dense CPU/RAM metrics are unaffected.
+      prometheusDataSource:
+        queryResolutionSeconds: 60
 
       # CLUSTER_ID is set by the upstream chart via defaultClusterId below.
       # Override at install time: --set costManagement.opencost.opencost.exporter.defaultClusterId=<name>
