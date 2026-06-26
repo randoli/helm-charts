@@ -35,8 +35,9 @@ opencost:
           value: "http://randoli-agent.$(POD_NAMESPACE).svc:8080"
         - name: RANDOLI_AGENT_RETRY_INTERVAL_IN_SECONDS
           value: '5'
-        - name: INSECURE_SKIP_VERIFY
-          value: "true"
+        # INSECURE_SKIP_VERIFY is emitted by the upstream opencost chart from
+        # prometheus.insecureSkipVerify below. Setting it here too produces a
+        # duplicate env key that ArgoCD's server-side-apply diff rejects.
 
       extraVolumeMounts: []
 
@@ -64,6 +65,8 @@ opencost:
             value: "30s"
 
     prometheus:
+      # Drives the upstream-rendered INSECURE_SKIP_VERIFY env var (deployment.yaml).
+      insecureSkipVerify: true
       internal:
         enabled: true
         # Matches fullnameOverride set in charts/prometheus/values.yaml
