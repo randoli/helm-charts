@@ -8,7 +8,7 @@ set -euo pipefail
 #   2. charts/randoli-agent/Chart.yaml version must match the tag exactly.
 #   3. Tagged commit must be reachable from the right branch:
 #        stable      -> main only
-#        pre-release -> main or pre-release
+#        pre-release -> main or a release/X.Y.Z branch
 #
 # Reads the tag from GITHUB_REF_NAME (set by GitHub Actions on tag push) and
 # falls back to the tag pointing at HEAD for local runs. Writes 'version' and
@@ -48,18 +48,18 @@ echo "Tagged commit ${head_sha:0:8} is on remote branches:"
 echo "$contains" | sed 's/^/  /'
 
 on_main=false
-on_prerelease=false
-grep -qxF main         <<<"$contains" && on_main=true
-grep -qxF pre-release  <<<"$contains" && on_prerelease=true
+on_release=false
+grep -qxF main <<<"$contains" && on_main=true
+grep -qxE '^release/[0-9]+\.[0-9]+\.[0-9]+$' <<<"$contains" && on_release=true
 
 if [[ "$is_stable" == "true" ]]; then
   if [[ "$on_main" != "true" ]]; then
-    echo "::error::Stable tag '$tag' must point to a commit reachable from 'main'."
+    echo "::error::Stable tag '$version' must point to a commit reachable from 'main'."
     exit 1
   fi
 else
-  if [[ "$on_main" != "true" && "$on_prerelease" != "true" ]]; then
-    echo "::error::Pre-release tag '$tag' must point to a commit reachable from 'main' or 'pre-release'."
+  if [[ "$on_main" != "true" && "$on_release" != "true" ]]; then
+    echo "::error::Pre-release tag '$version' must point to a commit reachable from 'main' or a 'release/X.Y.Z' branch."
     exit 1
   fi
 fi
