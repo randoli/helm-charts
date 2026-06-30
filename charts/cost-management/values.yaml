@@ -11,8 +11,15 @@ opencost:
       image:
         registry: docker.io
         repository: randoli/opencost
-        tag: "1.115.4"
+        # TODO: confirm the published fork image tag for OpenCost v1.120.3 before release.
+        tag: "v1.120.3"
         pullPolicy: IfNotPresent
+
+      # Prometheus query/subquery resolution -> PROMETHEUS_QUERY_RESOLUTION_SECONDS.
+      # Default 300s (5m) is too coarse for the sparse LLM token metric, so /llm returns empty.
+      # 60s (1m) captures it; dense CPU/RAM metrics are unaffected.
+      prometheusDataSource:
+        queryResolutionSeconds: 60
 
       # CLUSTER_ID is set by the upstream chart via defaultClusterId below.
       # Override at install time: --set costManagement.opencost.opencost.exporter.defaultClusterId=<name>
@@ -28,8 +35,9 @@ opencost:
           value: "http://randoli-agent.$(POD_NAMESPACE).svc:8080"
         - name: RANDOLI_AGENT_RETRY_INTERVAL_IN_SECONDS
           value: '5'
-        - name: INSECURE_SKIP_VERIFY
-          value: "true"
+        # INSECURE_SKIP_VERIFY is emitted by the upstream opencost chart from
+        # prometheus.insecureSkipVerify below. Setting it here too produces a
+        # duplicate env key that ArgoCD's server-side-apply diff rejects.
 
       extraVolumeMounts: []
 
@@ -40,7 +48,7 @@ opencost:
     extraContainers:
       - name: network-cost-metrics
         image: "docker.io/randoli/network-cost-metrics:1.0.1"
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
           - containerPort: 8080
             name: http-metrics
@@ -57,6 +65,8 @@ opencost:
             value: "30s"
 
     prometheus:
+      # Drives the upstream-rendered INSECURE_SKIP_VERIFY env var (deployment.yaml).
+      insecureSkipVerify: true
       internal:
         enabled: true
         # Matches fullnameOverride set in charts/prometheus/values.yaml
