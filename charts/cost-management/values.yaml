@@ -48,7 +48,7 @@ opencost:
     extraContainers:
       - name: network-cost-metrics
         image: "docker.io/randoli/network-cost-metrics:1.0.1"
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
           - containerPort: 8080
             name: http-metrics
