@@ -100,6 +100,15 @@ rules:
       - autoscaling.k8s.io
     resources:
       - verticalpodautoscalercheckpoints
+  - verbs:
+      - list
+      - watch
+      - get
+    apiGroups:
+      - telemetry.randoli.io
+    resources:
+      - telemetrybackends
+
 {{- if ne .Values.observability.security.mode "OFF" }}
   - verbs:
       - get

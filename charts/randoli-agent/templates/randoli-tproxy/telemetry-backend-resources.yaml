@@ -1,0 +1,30 @@
+---
+apiVersion: telemetry.randoli.io/v1
+kind: TelemetryBackend
+metadata:
+  name: randoli-prometheus
+  namespace: {{ include "randoli-agent.namespace" . }}
+spec:
+  data:
+    baseURL: {{ include "prometheus-server-endpoint" . }}
+    type: prometheus
+---
+apiVersion: telemetry.randoli.io/v1
+kind: TelemetryBackend
+metadata:
+  name: randoli-loki
+  namespace: {{ include "randoli-agent.namespace" . }}
+spec:
+  data:
+    baseURL: {{ include "logs-loki-read-url" . }}
+    type: loki
+---
+apiVersion: telemetry.randoli.io/v1
+kind: TelemetryBackend
+metadata:
+  name: randoli-tempo
+  namespace: {{ include "randoli-agent.namespace" . }}
+spec:
+  data:
+    baseURL: {{ include "trace-storage-url" . }}
+    type: tempo

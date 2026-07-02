@@ -1,0 +1,15 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tproxy-role
+  namespace: {{ include "randoli-agent.namespace" . }}
+rules:
+  - apiGroups: ["telemetry.randoli.io"]
+    resources: ["telemetrybackends"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["telemetry.randoli.io"]
+    resources: ["telemetrybackends/status"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch"]
