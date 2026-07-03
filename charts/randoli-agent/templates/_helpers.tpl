@@ -197,7 +197,7 @@ observability.traceConfig.storage.tempo.writeUrl when set (external Tempo).
 {{- if not (empty .Values.tproxy.cors)  -}}
 {{ .Values.tproxy.cors | quote}}
 {{- else -}}
-https://telemetry-app.randoli.io,https://console.insights.randoli.io
+https://console.insights.randoli.io
 {{- end -}}
 {{- end -}}
 
