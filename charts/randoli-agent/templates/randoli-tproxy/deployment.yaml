@@ -92,3 +92,5 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      serviceAccountName: tproxy
+      serviceAccount: tproxy
