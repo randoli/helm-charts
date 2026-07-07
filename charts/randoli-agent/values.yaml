@@ -75,7 +75,7 @@ agent:
   image:
     registry: docker.io
     repository: randoli/insights-agent
-    tag: "1.20.0"
+    tag: "1.21.0-rc-1"
     digest: ""
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -171,7 +171,7 @@ tproxy:
   image:
     registry: docker.io
     repository: randoli/telemetry-proxy
-    tag: "0.1.2"
+    tag: "0.2.0-rc-1"
     pullPolicy: Always
 
   # CORS_ALLOW_ORIGIN. Empty falls back to the default Randoli console origins
