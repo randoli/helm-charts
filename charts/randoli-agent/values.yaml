@@ -187,16 +187,16 @@ tproxy:
   # Proxy mode
   # The tunnel server can run in two modes:
   #
-  # INGRESS - Default mode. The server is exposed through an Ingress resource.
+  # HTTP - Default mode. The server is exposed through an Ingress resource.
   #           The Ingress resource is managed by the customer.
   #
   # TUNNEL  - Allows the proxy to be used without configuring an Ingress resource.
   #           The proxy connects to a Randoli-managed backend service.
-  mode: ""
+  mode: "http"
 
-  # The server URL must be provided in the TUNNEL mode.
+  # The server address must be provided in the TUNNEL mode.
   # Please contact Randoli team to get the address
-  tunnelServerUrl: ""
+  tunnelServerAddr: ""
 
   # -- Toleration labels (falls back to global.tolerations)
   tolerations: []
