@@ -2,9 +2,23 @@ apiVersion: v2
 name: security-scans
 description: Randoli wrapper chart for the Kubescape Operator (v1.29.6)
 type: application
-version: 1.29.6
-appVersion: "1.29.6"
+version: 1.40.2
+appVersion: "1.40.2"
+# maintainers:
+# - name: Ben Hirschberg
+#   email: ben@armosec.io
+#   url: https://www.linkedin.com/in/benyamin-ben-hirschberg-66141890
+# - name: Bezalel Brandwine
+#   email: bez@armosec.io
+#   url: https://www.linkedin.com/in/bezalel-brandwine
+# - name: Matthias Bertschy
+#   email: matthiasb@armosec.io
+#   url: https://www.linkedin.com/in/matthias-bertschy-b427b815/
+# - name: Amir Malka
+#   email: amirm@armosec.io
+#   url: https://www.linkedin.com/in/amirmalka
+# home: https://kubescape.io/
 dependencies:
   - name: kubescape-operator
-    version: 1.29.6
+    version: 1.40.2
     repository: https://kubescape.github.io/helm-charts/

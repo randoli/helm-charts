@@ -5,7 +5,8 @@ kubescape-operator:
   # ksNamespace must match the Helm install namespace.
   # The randoli-agent umbrella chart sets this to "randoli-agents" in its values.yaml.
   # Override if installing to a different namespace.
-  ksNamespace: ""
+  # Temporary adding ns for testing, keep it empty once the testing is finished
+  ksNamespace: "randoli-agents"
 
   clusterName: "cluster"
 
