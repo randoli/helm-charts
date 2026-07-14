@@ -51,18 +51,25 @@ opencost:
                 fieldPath: metadata.namespace
           - name: METRIC_GENERATION_INTERVAL
             value: "2m"
+          # Metrics backend URL. Sourced from a ConfigMap because
+          # opencost renders extraContainers with plain toYaml (no template), so a
+          # Helm expression inline here would not be evaluated. See templates/configmap-network-metrics.yaml.
           - name: PROMETHEUS_URL
-            value: "http://randoli-obs-prometheus.$(POD_NAMESPACE).svc:80"
+            valueFrom:
+              configMapKeyRef:
+                name: randoli-network-cost-metrics-config
+                key: PROMETHEUS_URL
           - name: PROMETHEUS_TIMEOUT
             value: "30s"
 
     prometheus:
-      internal:
+      # Metrics store read endpoint. Uses the shared "prometheus-server-endpoint"
+      # helper so OpenCost follows the same backend selection as every other component.
+      external:
         enabled: true
-        # Matches fullnameOverride set in charts/prometheus/values.yaml
-        serviceName: "randoli-obs-prometheus"
-        namespaceName: "{{ .Release.Namespace }}"
-        port: 80
+        url: '{{ include "prometheus-server-endpoint" . }}'
+      internal:
+        enabled: false
 
     ui:
       enabled: false
