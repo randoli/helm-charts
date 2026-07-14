@@ -2,7 +2,7 @@ apiVersion: v2
 name: security-scans
 description: Randoli wrapper chart for the Kubescape Operator (v1.29.6)
 type: application
-version: 1.29.6
+version: 1.29.7
 appVersion: "1.29.6"
 dependencies:
   - name: kubescape-operator
