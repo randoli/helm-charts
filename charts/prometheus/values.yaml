@@ -361,6 +361,9 @@ prometheus:
         repeat_interval: 3h
       receivers:
         - name: default-receiver
+    configmapReload:
+      ## enable config reload side car
+      enabled: true
     # Mount Randoli alert notification templates (email + slack).
     extraVolumeMounts:
       - name: randoli-alert-templates
