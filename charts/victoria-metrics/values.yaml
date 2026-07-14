@@ -1,0 +1,62 @@
+# Values passed through to the upstream victoria-metrics/victoria-metrics-single chart.
+# Full upstream value reference:
+# https://github.com/VictoriaMetrics/helm-charts/blob/master/charts/victoria-metrics-single/values.yaml
+#
+# This wrapper deploys a single VictoriaMetrics node (vmsingle) as the metrics
+# backend alternative to Prometheus. vmsingle is PromQL-compatible, so the agent,
+# telemetry-proxy and netobserv flow-collector query it unchanged at
+# http://randoli-obs-victoria-metrics.<ns>.svc:8428/api/v1/query_range. It also
+# ingests OTLP metrics at :8428/opentelemetry/v1/metrics (from the OTel Collector)
+# and self-scrapes cluster targets via the randoli-vm-scrape-config ConfigMap
+# (see templates/configmap-scrape-config.yaml).
+victoria-metrics-single:
+  server:
+    # Fixed service/StatefulSet name. The agent's metrics endpoint helper and the
+    # OTLP exporter target this name — keep it in sync with
+    # randoli-agent/templates/_helpers.tpl ("prometheus-server-endpoint").
+    fullnameOverride: "randoli-obs-victoria-metrics"
+
+    # -- Data retention. Default 30 days. Units: h(ours) / d(ays) / w(eeks) /
+    # y(ears); a bare number means months. Minimum 24h.
+    # Extend by overriding this from the umbrella chart, e.g.:
+    #   --set victoria-metrics.victoria-metrics-single.server.retentionPeriod=90d
+    retentionPeriod: "30d"
+
+    # Self-scrape configuration. vmsingle scrapes the targets defined in the
+    # randoli-vm-scrape-config ConfigMap via -promscrape.config. OTLP ingestion
+    # (:8428/opentelemetry/v1/metrics) is always available and needs no flag.
+    scrape:
+      enabled: true
+      configMap: "randoli-vm-scrape-config"
+
+    # Normalize OTLP-ingested metric AND label names to Prometheus conventions
+    # (dots -> underscores, unit/_total suffixes), matching what the Prometheus
+    # OTLP receiver does. Without this, VictoriaMetrics keeps the original dotted
+    # OTLP names (e.g. randoli.metrics.otel.netobserv.cluster_external_egress_bytes_total),
+    # which breaks PromQL queries written against the Prometheus-style names.
+    # Merged with the chart's default extraArgs (envflag.*, loggerFormat).
+    # Requires app >= v1.142.0 for the Unit-suffix fix (this chart ships v1.145.0).
+    extraArgs:
+      opentelemetry.usePrometheusNaming: "true"
+
+    persistentVolume:
+      # size         — PVC size for the VictoriaMetrics data path (/storage)
+      # storageClass — "" = cluster default; set to target a specific SC
+      enabled: true
+      size: 50Gi
+      storageClassName: ""
+      # Keep the data on helm uninstall; delete the PVC manually if no longer needed.
+      annotations:
+        helm.sh/resource-policy: keep
+
+    resources:
+      limits:
+        cpu: 2
+        memory: 2Gi
+      requests:
+        cpu: 250m
+        memory: 1Gi
+
+    # Scheduling — global.* values are NOT automatically propagated here.
+    # Set server.tolerations / server.nodeSelector / server.affinity explicitly.
+    # imagePullSecrets must be set under server.imagePullSecrets.

@@ -24,6 +24,24 @@ dependencies:
   - name: prometheus
     version: 26.0.2
     condition: global.prometheus.install
+  - name: victoria-metrics
+    version: 0.40.1
+    condition: global.victoriaMetrics.install
+  - name: victoria-metrics-alert
+    version: 0.42.1
+    condition: global.victoriaMetrics.install
+  - name: node-exporter
+    version: 4.42.0
+    condition: observability.nodeExporter.enabled
+    tags:
+      - observability
+      - costManagement
+  - name: kube-state-metrics
+    version: 5.27.0
+    condition: observability.kubeStateMetrics.enabled
+    tags:
+      - observability
+      - costManagement
   - name: vertical-pod-autoscaler
     alias: vpa
     version: 0.8.1

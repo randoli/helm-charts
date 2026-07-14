@@ -1,0 +1,20 @@
+# Values passed through to the upstream prometheus-community/kube-state-metrics chart.
+# Full upstream value reference:
+# https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-state-metrics/values.yaml
+#
+# kube-state-metrics exposes Kubernetes object state metrics (pods, deployments,
+# nodes, etc.) used by both observability and cost-management. It is scraped by
+# the bundled metrics store (Prometheus or VictoriaMetrics) via the
+# `randoli.prometheus.io/scrape` annotation on its Service. This chart is shared
+# by both metrics backends — see the umbrella chart's
+# observability.kubeStateMetrics toggle.
+kube-state-metrics:
+  fullnameOverride: "randoli-obs-kube-state-metrics"
+
+  # Drop the upstream prometheus.io/scrape annotation so a non-Randoli
+  # Prometheus does not also scrape this instance; Randoli targets the
+  # randoli.prometheus.io/scrape annotation set below instead.
+  prometheusScrape: false
+  service:
+    annotations:
+      randoli.prometheus.io/scrape: "true"

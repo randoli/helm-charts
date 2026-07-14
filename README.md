@@ -44,9 +44,15 @@ charts/
 │       ├── randoli-otel/    # OpenTelemetry Collector + Instrumentation CRs
 │       └── randoli-tproxy/  # Telemetry proxy deployment
 │
-├── prometheus/              # Wraps prometheus-community/prometheus@26.0.1
+├── prometheus/              # Wraps prometheus-community/prometheus@26.0.2 (default metrics backend)
 │   ├── templates/_helpers.tpl  # Only: prometheus.opencost.url + prometheus.networkCostMetrics.url
 │   └── values.yaml          # under prometheus: key — scrape configs, retention, server naming
+├── victoria-metrics/        # Wraps victoria-metrics/victoria-metrics-single@0.40.1 (alt metrics backend)
+│   ├── templates/_helpers.tpl              # opencost + networkCostMetrics scrape URLs
+│   └── templates/configmap-scrape-config.yaml  # randoli-vm-scrape-config (vmsingle self-scrape)
+├── victoria-metrics-alert/  # Wraps victoria-metrics/victoria-metrics-alert@0.42.1 (vmalert + Alertmanager)
+├── node-exporter/           # Wraps prometheus-community/prometheus-node-exporter@4.42.0 (shared scraper)
+├── kube-state-metrics/      # Wraps prometheus-community/kube-state-metrics@5.27.0 (shared scraper)
 ├── loki/                    # Wraps grafana/loki@6.49.0
 ├── tempo/                   # Wraps grafana/tempo@1.24.1
 ├── opentelemetry-operator/  # Wraps open-telemetry/opentelemetry-operator@0.86.4
@@ -58,6 +64,117 @@ charts/
 └── network/                 # Wraps netobserv/netobserv-operator@1.8.2
 ```
 
+
+## Metrics backend (Prometheus vs VictoriaMetrics)
+
+The agent stores and queries metrics in one of two interchangeable backends.
+Both are PromQL-compatible, so the agent, telemetry-proxy, and netobserv
+flow-collector query them identically — only the bundled store and the OTLP
+ingest path differ.
+
+| Backend           | Backing charts                                                   | Use it when                                                                                       |
+|-------------------|------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| Prometheus        | `prometheus-community/prometheus` (default)                      | Default. Well-understood, fine for most clusters.                                                 |
+| VictoriaMetrics   | `victoria-metrics-single` + `victoria-metrics-alert` (vmalert/Alertmanager) | You need more scalability — far higher cardinality and lower disk/RAM per sample than Prometheus. |
+
+The backend is chosen by two `install` flags — there is no separate "provider"
+setting; the active backend is derived from whichever store is installed. The two
+are **mutually exclusive**: enable exactly one, or neither to use an
+external/managed store. Enabling both is rejected with a clear error.
+
+```yaml
+global:
+  prometheus:
+    install: true          # bundle Prometheus (default)
+  victoriaMetrics:
+    install: false         # bundle VictoriaMetrics instead
+```
+
+| Goal                        | Flags                                                                                  |
+|-----------------------------|----------------------------------------------------------------------------------------|
+| Prometheus (default)        | *(none)*                                                                                |
+| VictoriaMetrics             | `--set global.prometheus.install=false --set global.victoriaMetrics.install=true`       |
+| External / managed store    | `--set global.prometheus.install=false` and set `global.prometheus.url`                  |
+
+Switching to VictoriaMetrics:
+
+```
+helm install randoli randoli/randoli-agent -n randoli-agents \
+  --set global.prometheus.install=false \
+  --set global.victoriaMetrics.install=true
+```
+
+> Why two flags and not one: Prometheus and VictoriaMetrics are separate
+> subcharts gated by independent boolean conditions, and Helm cannot derive one
+> condition from another. Moving between the two backends therefore flips both
+> booleans. (Removing the redundant provider field is why this dropped from three
+> flags to two.)
+
+What VictoriaMetrics mode deploys:
+
+| Component       | Service                          | Role                                                                 |
+|-----------------|----------------------------------|----------------------------------------------------------------------|
+| `vmsingle`      | `randoli-obs-victoria-metrics:8428` | PromQL query (`/api/v1/query_range`), OTLP ingest (`/opentelemetry/v1/metrics`), self-scrape via `-promscrape.config` |
+| `vmalert`       | `randoli-obs-vmalert:8880`       | Evaluates alert rules against vmsingle                               |
+| Alertmanager    | `randoli-obs-alerts:9093`        | Same Service name as the Prometheus backend, so alerting wiring is unchanged |
+
+### Cluster scrapers (shared)
+
+`node-exporter` and `kube-state-metrics` are no longer bundled inside the
+Prometheus chart — they are standalone wrappers (`charts/node-exporter`,
+`charts/kube-state-metrics`) installed independently of the metrics store, so
+**both** backends scrape the same instances:
+
+```yaml
+observability:
+  nodeExporter:
+    enabled: true   # set false when observability.hostMetrics.provider=otel-host-metrics
+  kubeStateMetrics:
+    enabled: true
+```
+
+### Retention and extensibility
+
+VictoriaMetrics defaults to **30-day retention**. Tune it (and storage) through
+the wrapper values:
+
+```
+--set victoria-metrics.victoria-metrics-single.server.retentionPeriod=90d \
+--set victoria-metrics.victoria-metrics-single.server.persistentVolume.size=100Gi
+```
+
+`retentionPeriod` units: `h` / `d` / `w` / `y` (a bare number = months), minimum
+`24h`. Add alert rules under
+`victoria-metrics-alert.victoria-metrics-alert.server.config.alerts.groups`, and
+wire Slack/email by overriding the Alertmanager `route` + `receivers` (the
+Randoli notification templates are mounted at `/randoli/templates`). See
+`charts/victoria-metrics/README.md` and `charts/victoria-metrics-alert/README.md`
+for the full list of exposed values.
+
+### OTLP metric naming compatibility
+
+Prometheus's OTLP receiver rewrites incoming OpenTelemetry metric **and label**
+names to Prometheus conventions — dots become underscores and unit/`_total`
+suffixes are appended (e.g. `randoli.metrics.otel.netobserv.cluster_external_egress`
+→ `randoli_metrics_otel_netobserv_cluster_external_egress_bytes_total`). By
+default VictoriaMetrics keeps the original dotted OTLP names, which would break
+PromQL queries written against the Prometheus-style names.
+
+To keep both backends identical, the VictoriaMetrics wrapper enables
+`-opentelemetry.usePrometheusNaming=true` on `vmsingle`, so OTLP-ingested metrics
+get the same underscore names and suffixes Prometheus produces. Your existing
+queries work unchanged after switching. (This only affects the OTLP write path;
+scraped metrics already use Prometheus naming.)
+
+The flag is set via
+`victoria-metrics.victoria-metrics-single.server.extraArgs."opentelemetry.usePrometheusNaming"`
+and requires VictoriaMetrics ≥ `v1.142.0` (this chart ships `v1.145.0`).
+
+> **Note:** Provider selection is install-time. Migrating existing historical
+> metric data between Prometheus and VictoriaMetrics is out of scope — switching
+> starts a fresh TSDB on the new backend. (Likewise, data already ingested before
+> this flag is enabled keeps its old names; only metrics written afterward are
+> normalized.)
 
 ## Tempo deployment mode
 
@@ -255,6 +372,7 @@ class. The defaults set 30 days of retention across all three.
 | Backend                | Retention                                                                          | PVC size                                                                            | StorageClass                                                                          |
 |------------------------|------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|
 | Prometheus             | `prometheus.prometheus.server.retention` (default `7d`)                            | `prometheus.prometheus.server.persistentVolume.size` (`50Gi`)                       | `prometheus.prometheus.server.persistentVolume.storageClass`                          |
+| VictoriaMetrics        | `victoria-metrics.victoria-metrics-single.server.retentionPeriod` (default `30d`)  | `victoria-metrics.victoria-metrics-single.server.persistentVolume.size` (`50Gi`)    | `victoria-metrics.victoria-metrics-single.server.persistentVolume.storageClassName`   |
 | Loki (single-binary)   | `loki.loki.loki.limits_config.retention_period` (default `168h`)                   | `loki.loki.singleBinary.persistence.size` (`100Gi`)                                 | `loki.loki.singleBinary.persistence.storageClass`                                     |
 | Loki (distributed)     | `lokiDistributed.loki.loki.limits_config.retention_period` (default `720h`)        | `lokiDistributed.loki.ingester.persistence.claims[0].size` (`50Gi`, per ingester replica) | `lokiDistributed.loki.ingester.persistence.claims[0].storageClass`              |
 | Tempo (single-binary)  | `tempo.tempo.tempo.retention` (default `168h`)                                     | `tempo.tempo.persistence.size` (`50Gi`)                                             | `tempo.tempo.persistence.storageClassName`                                            |

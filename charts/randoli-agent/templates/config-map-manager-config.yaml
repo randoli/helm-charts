@@ -48,7 +48,7 @@ data:
   LOG_ANALYZERS_ENABLED: '{{ and .Values.tags.observability .Values.observability.logs.analyzers.enabled }}'
   VECTOR_INSTALL: '{{ include "enable.vector" . }}'
   VECTOR_HTTP_SINKER_URL: 'http://randoli-agent.{{ include "randoli-agent.namespace" . }}:8080/log-sink/'
-  PROMETHEUS_INSTALL: '{{ .Values.global.prometheus.install }}'
+  PROMETHEUS_INSTALL: '{{ include "metrics.install" . }}'
   TEKTON_PIPELINE_ENABLED: '{{ .Values.agent.tektonPipeline.enabled }}'
   JAEGER_QUERY_SVC_GRPC: randoli-rok-jaeger-query.{{ .Release.Namespace }}:16685
   JAEGER_QUERY_SVC_HTTP: http://randoli-rok-jaeger-query.{{ .Release.Namespace }}:16686

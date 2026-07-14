@@ -164,7 +164,7 @@ spec:
         tls:
           insecure: true
       otlphttp:
-        endpoint: "{{ include "prometheus-server-endpoint" . }}/api/v1/otlp"
+        endpoint: "{{ include "metrics-otlp-endpoint" . }}"
       debug:
         verbosity: basic
         sampling_initial: 5

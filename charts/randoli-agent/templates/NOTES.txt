@@ -7,7 +7,16 @@ To learn more about the release, try:
   $ helm status {{ .Release.Name }}
   $ helm get all {{ .Release.Name }}
 
-{{- if  not .Values.global.prometheus.install }}
+{{- if (.Values.global.victoriaMetrics).install }}
+
+Metrics backend: VictoriaMetrics (vmsingle) at
+  http://randoli-obs-victoria-metrics.{{ .Release.Namespace }}.svc:8428
+  - PromQL query:  /api/v1/query_range
+  - OTLP ingest:   /opentelemetry/v1/metrics
+  - Retention:     {{ ((index .Values "victoria-metrics" "victoria-metrics-single").server).retentionPeriod | default "30d" }}
+Alerting: vmalert + Alertmanager (randoli-obs-alerts:9093).
+{{- end }}
+{{- if and (not .Values.global.prometheus.install) (not (.Values.global.victoriaMetrics).install) }}
 
                                 ██                                          
                               ██░░██                                        
