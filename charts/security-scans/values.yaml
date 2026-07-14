@@ -48,3 +48,22 @@ kubescape-operator:
     affinity: {}
 
   imagePullSecrets: ""
+
+  capabilities:
+    # Configuration scanning related capabilities
+    # Continuous Scanning continuously evaluates the security posture of your cluster.
+    continuousScan: enable
+    nodeScan: disable
+
+    # Image vulnerabilities scanning related capabilities
+    relevancy: disable 
+
+    # Runtime related capabilities
+    runtimeObservability: disable
+    networkPolicyService: disable
+    networkEventsStreaming: disable
+    runtimeDetection: disable
+    malwareDetection: disable
+    nodeProfileService: disable
+    admissionController: disable
+    httpDetection: disable
