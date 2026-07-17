@@ -35,7 +35,7 @@ spec:
   {{- end }}
   # TODO: bump once otelcol is rebuilt against the new opentelemetry/llmmetrics
   # tag (cache-token metrics) and pushed under this tag — not published yet.
-  image: docker.io/randoli/otelcol:v1.0.4
+  image: docker.io/randoli/otelcol:v1.2.0
   upgradeStrategy: automatic
   mode: statefulset
   serviceAccount: randoli-otel-collector
