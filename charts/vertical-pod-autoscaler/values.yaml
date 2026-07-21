@@ -4,15 +4,34 @@
 vertical-pod-autoscaler:
   fullnameOverride: "randoli-cmk-vpa"
 
-  # Reduced to 1 replica each (upstream defaults to 2)
+  # Reduced to 1 replica each (upstream defaults to 2).
+  #
+  # PodDisruptionBudget: the upstream chart defaults each component's PDB to
+  # minAvailable: 1. Combined with a single replica that makes the pod
+  # permanently unevictable, so a node running it can never be drained /
+  # decommissioned (cluster-autoscaler scale-down hangs). Switch to
+  # maxUnavailable: 1 (and clear minAvailable) so the single pod can be
+  # evicted; the VPA components self-recover on reschedule.
   admissionController:
     replicas: 1
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: null
+      maxUnavailable: 1
 
   recommender:
     replicas: 1
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: null
+      maxUnavailable: 1
 
   updater:
     replicas: 1
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: null
+      maxUnavailable: 1
 
   # Scheduling — global.* values are NOT automatically propagated here.
   # Set admissionController.tolerations / nodeSelector / affinity,

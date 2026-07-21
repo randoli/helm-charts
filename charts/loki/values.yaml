@@ -26,6 +26,12 @@ loki:
 
   singleBinary:
     replicas: 1
+    # safe-to-evict: the pod carries emptyDir volumes (tmp, sidecar rules)
+    # which otherwise block cluster-autoscaler scale-down / node decommission.
+    # Persistent data lives on the PVC below (Retain), so it survives eviction
+    # and re-attaches on reschedule.
+    podAnnotations:
+      cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
     # Preserve PVCs (and the data they hold) across StatefulSet scale-down or
     # deletion. Upstream defaults wipe them on uninstall; we want users to
     # delete the PVC manually if they no longer need the data.

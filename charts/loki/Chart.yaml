@@ -2,7 +2,7 @@ apiVersion: v2
 name: loki
 description: Randoli wrapper chart for Grafana Loki (v6.49.0)
 type: application
-version: 6.49.0
+version: 6.49.1
 appVersion: "3.6.3"
 dependencies:
   - name: loki
