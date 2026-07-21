@@ -13,7 +13,7 @@ maintainers:
 name: randoli-agent
 sources:
   - https://github.com/randoli/helm-charts
-version: 2.1.0-rc.9
+version: 2.1.0-rc.10
 dependencies:
   - name: opentelemetry-operator
     version: 0.111.0
@@ -26,13 +26,13 @@ dependencies:
     condition: global.prometheus.install
   - name: vertical-pod-autoscaler
     alias: vpa
-    version: 0.8.1
+    version: 0.8.2
     condition: costManagement.vpaOperator.enabled
     tags:
       - costManagement
   - name: security-scans
     alias: securityScans
-    version: 1.29.6
+    version: 1.29.8
     condition: observability.security.enabled
     tags:
       - security
@@ -65,7 +65,7 @@ dependencies:
       - observability
       - costManagement
   - name: loki
-    version: 6.49.0
+    version: 6.49.1
     condition: observability.loki.singleBinary.enabled
     tags:
       - observability
