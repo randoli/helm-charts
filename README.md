@@ -300,6 +300,45 @@ Note: because the PVCs are kept (`helm.sh/resource-policy: keep` / `persistentVo
 
 ## Upgrading
 
+### Updating CRDs
+
+This chart ships its Custom Resource Definitions in `charts/randoli-agent/crds/`:
+
+| CRD | File |
+|-----|------|
+| `telemetrybackends.telemetry.randoli.io` | `crd-telemetrybackends.yaml` |
+| `podmonitors.monitoring.coreos.com` | `crd-podmonitors.yaml` |
+| `prometheusrules.monitoring.coreos.com` | `crd-prometheusrules.yaml` |
+| `servicemonitors.monitoring.coreos.com` | `crd-servicemonitors.yaml` |
+
+Helm applies CRDs from the `crds/` directory **only on `helm install`** — it **never installs or updates them on `helm upgrade`** (this is Helm's documented behavior). Once a CRD exists in the cluster it persists, so ordinary upgrades work. But when a release introduces a **new** CRD (or ships a **changed** CRD schema), you must apply the CRDs yourself before upgrading, otherwise the upgrade fails with e.g.:
+
+```
+Error: UPGRADE FAILED: resource mapping not found for name: "randoli-prometheus" ...
+no matches for kind "TelemetryBackend" in version "telemetry.randoli.io/v1"
+ensure CRDs are installed first
+```
+
+Apply/refresh the CRDs from the chart version you are about to install, then run the upgrade:
+
+```
+# Pull the target chart version and apply its CRDs (drop --devel for stable releases)
+helm pull randoli/randoli-agent --version <version> --devel --untar
+kubectl apply -f randoli-agent/crds/
+
+# Wait for the API server to register them, then upgrade as normal
+kubectl wait --for=condition=established --timeout=60s \
+  crd/telemetrybackends.telemetry.randoli.io
+helm upgrade randoli randoli/randoli-agent -n randoli-agents \
+  --set tags.observability=true --set tags.costManagement=true --set tags.security=true
+```
+
+`kubectl apply` is non-destructive: it creates missing CRDs and patches changed ones without touching existing custom resources. **Never `kubectl delete` a CRD to "refresh" it** — deleting a CRD cascade-deletes every custom resource of that type.
+
+> On a brand-new cluster you can skip this step — a fresh `helm install` applies the `crds/` directory automatically.
+
+### FlowCollector field-ownership conflict
+
 `helm upgrade` may fail with a server-side-apply field-ownership conflict on the netobserv `FlowCollector`:
 
 ```
