@@ -2,7 +2,7 @@
 extract_runtime_exceptions:
   type: remap
   inputs:
-    - extract_trace_from_text
+    - extract_trace_id
   source: |
 
     msg = "";  

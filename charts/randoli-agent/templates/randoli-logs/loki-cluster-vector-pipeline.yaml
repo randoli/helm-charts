@@ -18,7 +18,7 @@ spec:
       {{- if and .Values.observability.logs.multilineLogs.enabled .Values.observability.logs.randoliTags.enabled }}
         - extract_runtime_exceptions
       {{- else }}
-        - extract_trace_from_text
+        - extract_trace_id
       {{- end }}
       labels:
         forwarder: vector
