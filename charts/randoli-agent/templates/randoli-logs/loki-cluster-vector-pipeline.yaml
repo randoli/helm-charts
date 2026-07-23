@@ -152,36 +152,27 @@ spec:
         .service_name = service_name
       type: remap 
 
-    extract_trace_from_json:
+    extract_trace_id:
       inputs:
         - extract_service_name
+      type: remap
       source: |
-        trace_id = null;
-
+        # first try structured JSON
         if exists(.message.trace_details.trace_id) {
-          trace_id = .message.trace_details.trace_id
+          .trace_id = .message.trace_details.trace_id
         }
+        else {
+          message_str = encode_json(.message)
 
-        .trace_id = trace_id
-      type: remap  
+          matches = parse_regex(
+            message_str,
+            r'(?i)traceId:\s*(?P<trace_id>[a-f0-9]{32})'
+          ) ?? null
 
-    extract_trace_from_text:
-      inputs:
-        - extract_trace_from_json
-      source: |
-         # if we didn't find trace_id in JSON, try regex on plain text
-         if is_null(.trace_id) {
-            # Convert message back to string for regex matching
-            message_str = encode_json(.message)
-            
-            # Match pattern: traceId: <hexadecimal> (case insensitive)
-            matches = parse_regex(message_str, r'(?i)traceId:\s*(?P<trace_id>[a-f0-9]{32})') ?? null
-            
-            if !is_null(matches) {
-              .trace_id = matches.trace_id
-            }
+          if !is_null(matches) {
+            .trace_id = matches.trace_id
           }
-      type: remap     
+        }  
 
   {{- if and .Values.observability.logs.multilineLogs.enabled .Values.observability.logs.randoliTags.enabled }}
   {{ include "vector.randoliTags.transform" . | nindent 4 }}
