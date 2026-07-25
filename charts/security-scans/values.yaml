@@ -76,3 +76,18 @@ kubescape-operator:
     nodeProfileService: disable
     admissionController: disable
     httpDetection: disable
+    kubescapeOffline: enable
+
+  continuousScanning:
+    configMapName: cs-matching-rules
+
+    # Matching rules for the monitored resources.
+    # Kubescape will watch resources of every provided GVR across the provided
+    # namespaces.
+    matchingRules:
+      match:
+        - apiGroups: ["apps"]
+          apiVersions: ["v1"]
+          resources: ["deployments","statefulsets","daemonsets"]
+      # namespaces:
+      #   - default
