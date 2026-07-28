@@ -11,6 +11,8 @@ kubescape-operator:
 
   kubescape:
     name: randoli-sec-kubescape
+    podLabels:
+      randoli.io/component-type: data-plane
     continuousScan: enable
     submit: true
     serviceMonitor:
@@ -24,15 +26,21 @@ kubescape-operator:
 
   storage:
     name: "randoli-sec-kubescape-storage"
+    podLabels:
+      randoli.io/component-type: data-plane
 
   nodeAgent:
     name: randoli-sec-kubescape-node-agent
+    podLabels:
+      randoli.io/component-type: data-plane
 
   synchronizer:
     name: randoli-sec-kubescape-synchronizer
 
   prometheusExporter:
     name: randoli-sec-kubescape-prometheus-exporter
+    podLabels:
+      randoli.io/component-type: data-plane
 
   # Randoli App Insights: scan statefulsets and daemonsets in addition to deployments
   kubescapeScheduler:

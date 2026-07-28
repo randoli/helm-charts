@@ -3,6 +3,9 @@
 # https://github.com/grafana/helm-charts/blob/main/charts/tempo-distributed/values.yaml
 tempo-distributed:
   fullnameOverride: "randoli-obs-tempo-dist"
+  global:
+    podLabels:
+      randoli.io/component-type: data-plane
 
   # Disable upstream anonymous usage reporting.
   reportingEnabled: false

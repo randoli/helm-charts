@@ -9,6 +9,8 @@
 # observability.nodeExporter toggle.
 prometheus-node-exporter:
   fullnameOverride: "randoli-obs-prometheus-node-exporter"
+  podLabels:
+    randoli.io/component-type: data-plane
 
   # Randoli's scrape configs only keep targets annotated with
   # randoli.prometheus.io/scrape; overriding service.annotations here

@@ -3,6 +3,8 @@
 # https://github.com/opencost/opencost-helm-chart/blob/main/charts/opencost/values.yaml
 opencost:
   fullnameOverride: "randoli-cmk-opencost"
+  podLabels:
+    randoli.io/component-type: data-plane
 
   imagePullSecrets: []
 

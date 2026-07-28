@@ -35,6 +35,8 @@ vector-operator:
     useApiServerCache: false
     agent:
       image: timberio/vector:0.55.0-distroless-libc
+      labels:
+        randoli.io/component-type: data-plane
       resources:
         limits:
           memory: 2Gi

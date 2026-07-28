@@ -39,6 +39,7 @@ spec:
         app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: randoli-agent
+        randoli.io/component-type: data-plane
         {{- with .Values.global.labels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

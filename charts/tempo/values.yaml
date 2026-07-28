@@ -3,6 +3,8 @@
 # https://github.com/grafana/helm-charts/blob/main/charts/tempo/values.yaml
 tempo:
   fullnameOverride: "randoli-obs-tempo"
+  podLabels:
+    randoli.io/component-type: data-plane
 
   persistence:
     enabled: true

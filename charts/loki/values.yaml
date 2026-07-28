@@ -9,6 +9,8 @@ loki:
   deploymentMode: SingleBinary
 
   loki:
+    podLabels:
+      randoli.io/component-type: data-plane
     auth_enabled: false
     commonConfig:
       replication_factor: 1

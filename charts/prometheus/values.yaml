@@ -4,6 +4,8 @@
 prometheus:
   server:
     fullnameOverride: "randoli-obs-prometheus"
+    podLabels:
+      randoli.io/component-type: data-plane
 
     extraFlags:
       - web.enable-lifecycle
@@ -343,6 +345,8 @@ prometheus:
 
   alertmanager:
     fullnameOverride: "randoli-obs-alerts"
+    podLabels:
+      randoli.io/component-type: data-plane
     config:
       enabled: true
       # Default route — override receivers/route for Slack or email notifications.

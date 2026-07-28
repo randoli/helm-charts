@@ -5,6 +5,7 @@ metadata:
   name: randoli-otel
   labels:
     randoli/app-type: otel-pipeline
+    randoli.io/component-type: data-plane
     {{- with .Values.global.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}

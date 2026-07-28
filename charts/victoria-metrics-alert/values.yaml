@@ -16,6 +16,8 @@
 victoria-metrics-alert:
   server:
     fullnameOverride: "randoli-obs-vmalert"
+    podLabels:
+      randoli.io/component-type: data-plane
 
     # vmalert reads metrics from vmsingle (PromQL/MetricsQL). vmalert and vmsingle
     # run in the same namespace, so the short Service name resolves without the
@@ -38,6 +40,8 @@ victoria-metrics-alert:
   alertmanager:
     enabled: true
     fullnameOverride: "randoli-obs-alerts"
+    podLabels:
+      randoli.io/component-type: data-plane
     # Mirrors the default route shipped with the Prometheus backend's
     # Alertmanager. Override receivers/route for Slack or email notifications;
     # the Randoli notification templates are mounted at /randoli/templates.

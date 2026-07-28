@@ -13,6 +13,8 @@ loki:
   deploymentMode: Distributed
 
   loki:
+    podLabels:
+      randoli.io/component-type: data-plane
     auth_enabled: false
 
     # Storage uses the S3 API. The bundled MinIO subchart is OFF by default

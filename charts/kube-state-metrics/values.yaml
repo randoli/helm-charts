@@ -10,6 +10,8 @@
 # observability.kubeStateMetrics toggle.
 kube-state-metrics:
   fullnameOverride: "randoli-obs-kube-state-metrics"
+  podLabels:
+    randoli.io/component-type: data-plane
 
   # Drop the upstream prometheus.io/scrape annotation so a non-Randoli
   # Prometheus does not also scrape this instance; Randoli targets the
