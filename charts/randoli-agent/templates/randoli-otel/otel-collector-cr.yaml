@@ -33,7 +33,7 @@ spec:
   affinity:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  image: docker.io/randoli/otelcol:v1.0.3
+  image: docker.io/randoli/otelcol:v1.3.0
   upgradeStrategy: automatic
   mode: statefulset
   serviceAccount: randoli-otel-collector
