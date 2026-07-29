@@ -89,5 +89,4 @@ kubescape-operator:
         - apiGroups: ["apps"]
           apiVersions: ["v1"]
           resources: ["deployments","statefulsets","daemonsets"]
-      # namespaces:
-      #   - default
+      namespaces: []
