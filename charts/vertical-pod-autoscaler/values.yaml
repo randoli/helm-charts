@@ -12,25 +12,28 @@ vertical-pod-autoscaler:
   # decommissioned (cluster-autoscaler scale-down hangs). Switch to
   # maxUnavailable: 1 (and clear minAvailable) so the single pod can be
   # evicted; the VPA components self-recover on reschedule.
+  #
+  # minAvailable is cleared with 0 instead of null to make the helm chart compatible with Helm 3.x versions.
+  # But still the best practice is to use null as it sets the default from upstream values file.
   admissionController:
     replicas: 1
     podDisruptionBudget:
       enabled: true
-      minAvailable: null
+      minAvailable: 0
       maxUnavailable: 1
 
   recommender:
     replicas: 1
     podDisruptionBudget:
       enabled: true
-      minAvailable: null
+      minAvailable: 0
       maxUnavailable: 1
 
   updater:
     replicas: 1
     podDisruptionBudget:
       enabled: true
-      minAvailable: null
+      minAvailable: 0
       maxUnavailable: 1
 
   # Scheduling — global.* values are NOT automatically propagated here.
