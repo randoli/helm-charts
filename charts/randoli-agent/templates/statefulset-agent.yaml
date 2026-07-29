@@ -147,7 +147,7 @@ spec:
                 sleep 1
               done
               echo "Starting agent..."
-              exec /tmp/guvnor
+              exec /app/cluster-agent
           command:
             - /bin/sh
             - -c
