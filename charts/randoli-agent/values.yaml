@@ -283,6 +283,12 @@ observability:
     #   when includeNamespaces is set.
     includeNamespaces: []
     excludeNamespaces: []
+
+    multilineLogs:
+      enabled: true
+    randoliTags:
+      enabled: true
+
     proxyCORS: "*"
     proxyImage: docker.io/randoli/telemetry-proxy:0.1.2
 
