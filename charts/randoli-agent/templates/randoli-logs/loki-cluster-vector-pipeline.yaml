@@ -18,7 +18,7 @@ spec:
       {{- if and .Values.observability.logs.multilineLogs.enabled .Values.observability.logs.randoliTags.enabled }}
         - extract_runtime_exceptions
       {{- else }}
-        - extract_trace_id
+        - extract_service_name
       {{- end }}
       labels:
         forwarder: vector
@@ -151,28 +151,6 @@ spec:
 
         .service_name = service_name
       type: remap 
-
-    extract_trace_id:
-      inputs:
-        - extract_service_name
-      type: remap
-      source: |
-        # first try structured JSON
-        if exists(.message.trace_details.trace_id) {
-          .trace_id = .message.trace_details.trace_id
-        }
-        else {
-          message_str = encode_json(.message)
-
-          matches = parse_regex(
-            message_str,
-            r'(?i)traceId:\s*(?P<trace_id>[a-f0-9]{32})'
-          ) ?? null
-
-          if !is_null(matches) {
-            .trace_id = matches.trace_id
-          }
-        }  
 
   {{- if and .Values.observability.logs.multilineLogs.enabled .Values.observability.logs.randoliTags.enabled }}
   {{ include "vector.randoliTags.transform" . | nindent 4 }}
