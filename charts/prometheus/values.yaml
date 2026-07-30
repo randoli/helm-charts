@@ -111,6 +111,12 @@ prometheus:
               regex: (.+)
               target_label: __metrics_path__
               replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+          metric_relabel_configs:
+            - source_labels: [pod]
+              regex: ^randoli-(agent|obs|tproxy|cmk|otel)-.*$
+              target_label: randoli_io_component_type
+              replacement: data-plane
+              action: replace
 
         - job_name: 'kubernetes-service-endpoints'
           honor_labels: true
@@ -150,6 +156,12 @@ prometheus:
             - source_labels: [__meta_kubernetes_pod_node_name]
               action: replace
               target_label: node
+          metric_relabel_configs:
+            - source_labels: [pod]
+              regex: ^randoli-(agent|obs|tproxy|cmk|otel)-.*$
+              target_label: randoli_io_component_type
+              replacement: data-plane
+              action: replace
 
         - job_name: 'kubernetes-service-endpoints-slow'
           honor_labels: true
