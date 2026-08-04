@@ -349,6 +349,10 @@ prometheus:
       annotations:
         randoli.prometheus.io/scrape: "true"
 
+    # Expliticly enable kube_pod_labels metric, alowing all labels and values to be added to the publiched metric
+    metricLabelsAllowlist:
+      - pods=[*]
+
   alertmanager:
     fullnameOverride: "randoli-obs-alerts"
     config:
