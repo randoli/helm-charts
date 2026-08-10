@@ -210,6 +210,22 @@ tproxy:
   # -- Extra annotations on the Deployment and its pod template (merged with global.annotations)
   annotations: {}
 
+  # OTEL observability for the proxy (metrics + traces via OTLP/gRPC)
+  otel:
+    enabled: false
+    traceSampleRatio: "1.0"
+    # Empty defaults to the in-cluster OTel collector
+    exporterOtlpEndpoint: ""
+
+  # FlightSQL / DuckDB connection (required for /security endpoints).
+  # Host defaults to the agent's ClusterIP service which exposes gizmosql on :31337.
+  # Credentials are injected from the randoli-agent-db secret via secretKeyRef
+  # in the Deployment (same pattern as the agent StatefulSet) — not via ConfigMap.
+  flightSql:
+    # Defaults to the agent's ClusterIP service which exposes gizmosql on :31337.
+    # Override to point at an external FlightSQL endpoint.
+    host: ""
+
 # ============================================================================
 # OTel Collector config
 # Operator and target-allocator feature toggles live under observability.otel.
