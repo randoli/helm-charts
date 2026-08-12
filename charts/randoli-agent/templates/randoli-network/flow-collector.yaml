@@ -50,6 +50,20 @@ spec:
             - 127.0.0.0/8
             - 169.254.0.0/16
           name: private
+    advanced:
+      scheduling:
+        {{- with $netobservAgentTolerations }}
+        tolerations:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with $netobservAgentNodeSelector }}
+        nodeSelector:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with $netobservAgentAffinity }}
+        affinity:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
   exporters:
     - type: OpenTelemetry
       openTelemetry:
