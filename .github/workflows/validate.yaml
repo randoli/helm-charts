@@ -1,0 +1,38 @@
+name: Validate Charts
+
+# The release workflow only runs on tags, which is too late to catch a
+# dependency version mismatch. Run the same guard on every PR/push.
+on:
+  pull_request:
+    paths:
+      - 'charts/**'
+      - 'scripts/**'
+      - '.github/workflows/validate.yaml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'charts/**'
+      - 'scripts/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Build subchart dependencies
+        run: ./scripts/build-subcharts.sh
+
+      # Guards the cost-management class of failure: a declared version that
+      # does not semver-match the vendored subchart makes Helm skip applying
+      # `alias:`, silently turning tag-only gates into no-ops.
+      - name: Check subchart dependency versions
+        run: ./scripts/check-subchart-versions.sh
+
+      - name: Lint umbrella chart
+        run: helm lint charts/randoli-agent

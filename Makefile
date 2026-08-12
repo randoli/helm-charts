@@ -2,7 +2,7 @@ CHART_DIR  := charts/randoli-agent
 CHART_NAME := randoli-agent
 VERSION    := $(shell awk '/^version:/ {print $$2}' $(CHART_DIR)/Chart.yaml)
 
-.PHONY: all subcharts package lint template clean help
+.PHONY: all subcharts check-deps package lint template clean help
 
 # Releases are published by .github/workflows/release.yaml on push to main:
 # chart-releaser-action creates a GitHub Release per tarball and updates
@@ -14,8 +14,12 @@ all: package
 subcharts:
 	./scripts/build-subcharts.sh
 
+## check-deps: assert declared dependency versions match the vendored subcharts
+check-deps:
+	./scripts/check-subchart-versions.sh
+
 ## package: package randoli-agent into $(CHART_NAME)-$(VERSION).tgz
-package: subcharts
+package: subcharts check-deps
 	helm package $(CHART_DIR)
 
 ## lint: lint the umbrella chart

@@ -34,6 +34,11 @@ jobs:
       - name: Build subchart dependencies
         run: ./scripts/build-subcharts.sh
 
+      # A declared/vendored version mismatch makes Helm silently drop the
+      # dependency's alias, which turns tag-only feature gates into no-ops.
+      - name: Check subchart dependency versions
+        run: ./scripts/check-subchart-versions.sh
+
       # Package randoli-agent
       - name: Package randoli-agent
         run: |
