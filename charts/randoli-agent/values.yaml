@@ -352,7 +352,7 @@ observability:
     # is only rendered when applyCRs is also true.
     flowMetrics:
       podEgressBytes:
-        enabled: true
+        enabled: false
       clusterExternalEgressBytes:
         enabled: false
     # eBPF agent DaemonSet scheduling. Falls back to global.* when empty.
