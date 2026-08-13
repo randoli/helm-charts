@@ -227,8 +227,8 @@ otelCollector:
   # -- Extra annotations on the OpenTelemetryCollector CR (merged with global.annotations)
   annotations: {}
 
-# OTLP receiver gRPC max receive message size in MiB. Defaults to 4MiB if not specified.
-grpcMaxRecvMsgSizeMiB: 4
+  # OTLP receiver gRPC max receive message size in MiB. Defaults to 4MiB if not specified.
+  grpcMaxRecvMsgSizeMiB: 4
 
 # ============================================================================
 # Observability stack (logs / traces / metrics + supporting infra).
