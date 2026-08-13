@@ -52,6 +52,9 @@ spec:
         protocols:
           grpc:
             endpoint: 0.0.0.0:4317
+            # Set the maximum receive message size for gRPC in MiB. This is useful for large payloads.
+            # The recommended size is 4 MiB.
+            max_recv_msg_size_mib: {{ .Values.otelCollector.grpcMaxRecvMsgSizeMiB }}
           http:
             endpoint: 0.0.0.0:4318
             cors:
