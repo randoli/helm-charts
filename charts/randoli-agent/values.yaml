@@ -75,7 +75,7 @@ agent:
   image:
     registry: docker.io
     repository: randoli/insights-agent
-    tag: "1.21.2-rc.1"
+    tag: "1.21.3-rc.1"
     digest: ""
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -95,6 +95,11 @@ agent:
   db:
     storage:
       pvSize: 10Gi
+    # Set to a migration version number to migrate the agent DB to that exact
+    # version on the next pod start, reverting migrations above it if needed
+    # (the files of reverted migrations must be present in the agent image).
+    # Empty (default) migrates up to the latest available version.
+    migrateTargetVersion: ""
     resources:
       limits:
         cpu: 1

@@ -116,11 +116,9 @@ spec:
               chmod +x /migrations/migrate
               ln -s /duckdb /bin/duckdb
 
-              # remove .wal file
-              rm -rf /persistence/agent.db.wal
-
               echo "running migrations..."
-              /migrations/migrate /persistence/agent.db
+              # Optional target version: empty migrates up to the latest available
+              /migrations/migrate /persistence/agent.db "{{ .Values.agent.db.migrateTargetVersion | default "" }}"
 
               echo "setting up permissions..."
               chown :1001 /persistence/agent.db
@@ -219,6 +217,17 @@ spec:
           {{- end }}
         - name: gizmosql
           image: docker.io/gizmodata/gizmosql:v1.19.2
+          lifecycle:
+            preStop:
+              exec:
+                # Checkpoint DuckDB before termination so the WAL stays small
+                # (or empty); if a later crash leaves an un-replayable WAL,
+                # quarantining it then costs little to no data.
+                command:
+                - sh
+                - -c
+                - gizmosql_client --host localhost --port 31337 --username
+                  "$GIZMOSQL_USERNAME" --command "CHECKPOINT;" || true
           livenessProbe:
             exec:
               command:
