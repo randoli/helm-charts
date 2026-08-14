@@ -6,35 +6,32 @@ vertical-pod-autoscaler:
 
   # Reduced to 1 replica each (upstream defaults to 2).
   #
-  # PodDisruptionBudget: the upstream chart defaults each component's PDB to
-  # minAvailable: 1. Combined with a single replica that makes the pod
-  # permanently unevictable, so a node running it can never be drained /
-  # decommissioned (cluster-autoscaler scale-down hangs). Switch to
-  # maxUnavailable: 1 (and clear minAvailable) so the single pod can be
-  # evicted; the VPA components self-recover on reschedule.
+  # PodDisruptionBudgets are DISABLED entirely. Background: the upstream chart
+  # defaults each component's PDB to minAvailable: 1, which — combined with a
+  # single replica — makes the pod permanently unevictable, so customer nodes
+  # can never be drained / decommissioned (cluster-autoscaler scale-down hangs).
   #
-  # minAvailable is cleared with 0 instead of null to make the helm chart compatible with Helm 3.x versions.
-  # But still the best practice is to use null as it sets the default from upstream values file.
+  # With the PDB absent, evictions are always permitted
+  #
+  # If replicas are ever scaled above 1, re-enable with:
+  #   podDisruptionBudget:
+  #     enabled: true
+  #     minAvailable: 0
+  #     maxUnavailable: 1
   admissionController:
     replicas: 1
     podDisruptionBudget:
-      enabled: true
-      minAvailable: 0
-      maxUnavailable: 1
+      enabled: false
 
   recommender:
     replicas: 1
     podDisruptionBudget:
-      enabled: true
-      minAvailable: 0
-      maxUnavailable: 1
+      enabled: false
 
   updater:
     replicas: 1
     podDisruptionBudget:
-      enabled: true
-      minAvailable: 0
-      maxUnavailable: 1
+      enabled: false
 
   # Scheduling — global.* values are NOT automatically propagated here.
   # Set admissionController.tolerations / nodeSelector / affinity,
