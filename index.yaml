@@ -459,6 +459,98 @@ entries:
     version: 2.2.0-rc.1
   - apiVersion: v2
     appVersion: 1.21.2
+    created: "2026-08-14T21:19:17.357613338Z"
+    dependencies:
+    - condition: observability.otel.operator.enabled
+      name: opentelemetry-operator
+      repository: ""
+      tags:
+      - observability
+      - costManagement
+      version: 0.111.0
+    - condition: global.prometheus.install
+      name: prometheus
+      repository: ""
+      version: 26.0.1
+    - alias: vpa
+      condition: costManagement.vpaOperator.enabled
+      name: vertical-pod-autoscaler
+      repository: ""
+      tags:
+      - costManagement
+      version: 0.8.3
+    - alias: securityScans
+      condition: observability.security.enabled
+      name: security-scans
+      repository: ""
+      tags:
+      - security
+      version: 1.29.8
+    - alias: vectorOperator
+      condition: observability.vector.enabled
+      name: logs
+      repository: ""
+      tags:
+      - observability
+      version: 0.8.1
+    - alias: costManagement
+      name: cost-management
+      repository: ""
+      tags:
+      - costManagement
+      version: 2.5.23
+    - condition: observability.tempo.singleBinary.enabled
+      name: tempo
+      repository: ""
+      tags:
+      - observability
+      version: 1.24.1
+    - alias: tempoDistributed
+      condition: observability.tempo.distributed.enabled
+      name: tempo-distributed
+      repository: ""
+      tags:
+      - observability
+      version: 1.61.3
+    - condition: observability.netobserv.enabled
+      name: network
+      repository: ""
+      tags:
+      - observability
+      - costManagement
+      version: 1.11.3
+    - condition: observability.loki.singleBinary.enabled
+      name: loki
+      repository: ""
+      tags:
+      - observability
+      version: 6.49.1
+    - alias: lokiDistributed
+      condition: observability.loki.distributed.enabled
+      name: loki-distributed
+      repository: ""
+      tags:
+      - observability
+      version: 6.49.0
+    description: Randoli Data Plane & Observability Agent
+    digest: de81a017d8a9819c045923e37de024646748f7edd670432fa3057859821493da
+    home: https://randoli.ca
+    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
+    keywords:
+    - randoli-agent
+    - randoli
+    maintainers:
+    - email: support@randoli.ca
+      name: Randoli
+      url: https://randoli.ca
+    name: randoli-agent
+    sources:
+    - https://github.com/randoli/helm-charts
+    urls:
+    - https://github.com/randoli/helm-charts/releases/download/randoli-agent-2.1.0-rc.31/randoli-agent-2.1.0-rc.31.tgz
+    version: 2.1.0-rc.31
+  - apiVersion: v2
+    appVersion: 1.21.2
     created: "2026-08-14T21:03:28.895201633Z"
     dependencies:
     - condition: observability.otel.operator.enabled
@@ -5718,4 +5810,4 @@ entries:
     urls:
     - https://github.com/randoli/helm-charts/releases/download/randoli-agent-1.17.8/randoli-agent-1.17.8.tgz
     version: 1.17.8
-generated: "2026-08-14T21:03:28.895596955Z"
+generated: "2026-08-14T21:19:17.357983007Z"
