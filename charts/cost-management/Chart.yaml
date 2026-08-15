@@ -2,8 +2,8 @@ apiVersion: v2
 name: cost-management
 description: Randoli wrapper chart for OpenCost (v2.5.23)
 type: application
-version: 2.5.23
-appVersion: "1.120.3"
+version: 2.5.24
+appVersion: "1.120.4"
 dependencies:
   - name: opencost
     version: 2.5.23

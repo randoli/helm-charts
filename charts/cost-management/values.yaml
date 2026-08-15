@@ -12,7 +12,7 @@ opencost:
         registry: docker.io
         repository: randoli/opencost
         # TODO: confirm the published fork image tag for OpenCost v1.120.3 before release.
-        tag: "1.120.3"
+        tag: "1.120.4"
         pullPolicy: IfNotPresent
 
       # Prometheus query/subquery resolution -> PROMETHEUS_QUERY_RESOLUTION_SECONDS.
