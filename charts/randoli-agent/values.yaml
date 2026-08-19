@@ -236,6 +236,36 @@ otelCollector:
   grpcMaxRecvMsgSizeMiB: 4
 
 # ============================================================================
+# Randoli SRE Agent (AI) — optional subchart published from
+# https://github.com/randoli/helm-charts-ai (chart `sre-agent`, aliased here as
+# `sreAgent`). Any sre-agent chart value can be overridden under this key.
+# The subchart also inherits global.tolerations / global.nodeSelector.
+# ============================================================================
+sreAgent:
+  # -- Install the SRE agent together with randoli-agent
+  enabled: false
+
+  # -- Namespaces the SRE agent may analyze (comma-separated). Required when enabled.
+  enabledNamespaces: ""
+
+  # -- Daily budget for LLM (Bedrock) calls, in USD
+  dailyBudgetUsd: "20"
+
+  # Endpoints below are owned by this umbrella chart and pinned to its fixed
+  # service names. Short form resolves within the release namespace.
+  # If Tempo/Loki run in distributed mode or external instances are configured
+  # (observability.traceConfig.storage.tempo.*Url / observability.logs.loki.*Url),
+  # set the matching sreAgent.* URLs to the same endpoints.
+  prometheusUrl: http://randoli-obs-prometheus:80
+  logLokiUrl: http://randoli-obs-loki:3100
+  tempoUrl: http://randoli-obs-tempo:3200
+  otelExporterEndpoint: http://randoli-otel-collector:4317
+  traceLoopBaseUrl: http://randoli-otel-collector:4318
+  agentCallbackUrl: http://randoli-agent:8080/
+  flightSqlUrl: grpc+tcp://randoli-agent:31337
+  databaseSecretName: randoli-agent-db
+
+# ============================================================================
 # Observability stack (logs / traces / metrics + supporting infra).
 # ============================================================================
 observability:

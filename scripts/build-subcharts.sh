@@ -19,5 +19,9 @@ for chart_path in "$CHARTS_DIR"/*/; do
   helm package "$chart_path" -d "$DEST_DIR"
 done
 
+# Fetch remote dependencies of the umbrella chart (e.g. sre-agent from
+# helm.randoli.io). Wrapper deps above have no repository: and are left as-is.
+helm dependency update "$CHARTS_DIR/randoli-agent"
+
 echo "Done. Bundled subcharts:"
 ls -1 "$DEST_DIR"/*.tgz
