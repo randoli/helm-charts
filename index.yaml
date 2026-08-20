@@ -5994,4 +5994,15 @@ entries:
     urls:
     - https://github.com/randoli/helm-charts/releases/download/randoli-agent-1.17.8/randoli-agent-1.17.8.tgz
     version: 1.17.8
-generated: "2026-08-15T00:32:41.914590195Z"
+  sre-agent:
+  - apiVersion: v2
+    appVersion: "0.2"
+    created: "2026-08-20T05:43:41.710410713Z"
+    description: 'A Helm chart to deploy Randoli SRE Agent '
+    digest: 3a39cf0e6bc093a3052d905ec46f0d2f683ab9066cd2e10c156366f84fc780a8
+    name: sre-agent
+    type: application
+    urls:
+    - https://github.com/randoli/helm-charts-ai/releases/download/sre-agent-0.3.0-rc.1/sre-agent-0.3.0-rc.1.tgz
+    version: 0.3.0-rc.1
+generated: "2026-08-20T05:43:41.710587457Z"
