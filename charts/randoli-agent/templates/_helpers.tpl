@@ -44,8 +44,34 @@ randoli-agent
   {{- if .Values.global.prometheus.install -}}
     {{- printf "http://randoli-obs-prometheus.%s.svc:80" .Release.Namespace -}}
   {{- else if .Values.global.prometheus.url -}}
-    {{ tpl .Values.global.prometheus.url . }}
+    {{- tpl .Values.global.prometheus.url . -}}
   {{- end -}}
+{{- end -}}
+
+{{/*
+Cluster endpoints of umbrella-owned services.
+
+These helpers are referenced as template strings from values.yaml
+(sreAgent.observability.* / sreAgent.dataPlane.*), which the sre-agent
+subchart renders through `tpl`.
+
+Note: Avoid using Parent-only .Values here as they are not visible in the 
+context of the referenced subchart.
+*/}}
+{{- define "otel-collector-grpc-endpoint" -}}
+{{- printf "http://randoli-otel-collector.%s.svc:4317" .Release.Namespace -}}
+{{- end -}}
+
+{{- define "otel-collector-http-endpoint" -}}
+{{- printf "http://randoli-otel-collector.%s.svc:4318" .Release.Namespace -}}
+{{- end -}}
+
+{{- define "agent-callback-url" -}}
+{{- printf "http://randoli-agent.%s.svc:8080/" .Release.Namespace -}}
+{{- end -}}
+
+{{- define "agent-flightsql-url" -}}
+{{- printf "grpc+tcp://randoli-agent.%s.svc:31337" .Release.Namespace -}}
 {{- end -}}
 
 

@@ -245,25 +245,29 @@ sreAgent:
   # -- Install the SRE agent together with randoli-agent
   enabled: false
 
-  # -- Namespaces the SRE agent may analyze (comma-separated). Required when enabled.
-  enabledNamespaces: ""
+  analysis:
+    # -- Namespaces the SRE agent may analyze (comma-separated). Required when enabled.
+    enabledNamespaces: ""
 
-  # -- Daily budget for LLM (Bedrock) calls, in USD
-  dailyBudgetUsd: "20"
+    # -- Daily budget for LLM (Bedrock) calls, in USD
+    dailyBudgetUsd: "20"
 
-  # Endpoints below are owned by this umbrella chart and pinned to its fixed
-  # service names. Short form resolves within the release namespace.
-  # If Tempo/Loki run in distributed mode or external instances are configured
-  # (observability.traceConfig.storage.tempo.*Url / observability.logs.loki.*Url),
-  # set the matching sreAgent.* URLs to the same endpoints.
-  prometheusUrl: http://randoli-obs-prometheus:80
-  logLokiUrl: http://randoli-obs-loki:3100
-  tempoUrl: http://randoli-obs-tempo:3200
-  otelExporterEndpoint: http://randoli-otel-collector:4317
-  traceLoopBaseUrl: http://randoli-otel-collector:4318
-  agentCallbackUrl: http://randoli-agent:8080/
-  flightSqlUrl: grpc+tcp://randoli-agent:31337
-  databaseSecretName: randoli-agent-db
+  # Endpoints used to fetch data for analysis and recommendations.
+  #
+  # The subchart renders these with its OWN values scope and it sees
+  # global.* and .Release.*, but NOT this chart's values.
+  observability:
+    prometheusUrl: '{{ include "prometheus-server-endpoint" . }}'
+    lokiUrl: '{{ include "logs-loki-read-url" . }}'
+    tempoUrl: '{{ include "trace-storage-url" . }}'
+    otelExporterEndpoint: '{{ include "otel-collector-grpc-endpoint" . }}'
+    traceLoopBaseUrl: '{{ include "otel-collector-http-endpoint" . }}'
+
+  # Data plane config for the SRE agent (same template-string mechanism).
+  dataPlane:
+    agentCallbackUrl: '{{ include "agent-callback-url" . }}'
+    flightSqlUrl: '{{ include "agent-flightsql-url" . }}'
+    databaseSecretName: randoli-agent-db
 
 # ============================================================================
 # Observability stack (logs / traces / metrics + supporting infra).
