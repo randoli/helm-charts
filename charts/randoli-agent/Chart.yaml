@@ -13,11 +13,11 @@ maintainers:
 name: randoli-agent
 sources:
   - https://github.com/randoli/helm-charts
-version: 2.1.0-rc.35
+version: 2.1.0-rc.36
 dependencies:
   - name: sre-agent
     alias: sreAgent
-    version: 0.3.0-rc.2
+    version: 1.0.0-rc.1
     repository: "https://helm.randoli.io"
     condition: sreAgent.enabled
   - name: opentelemetry-operator
@@ -37,7 +37,7 @@ dependencies:
       - costManagement
   - name: security-scans
     alias: securityScans
-    version: 1.29.8
+    version: 1.29.7
     condition: observability.security.enabled
     tags:
       - security
