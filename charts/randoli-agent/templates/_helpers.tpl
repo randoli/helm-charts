@@ -70,8 +70,16 @@ context of the referenced subchart.
 {{- printf "http://randoli-agent.%s.svc:8080/" .Release.Namespace -}}
 {{- end -}}
 
+{{/*
+DNS host of the randoli-agent-db Service (FlightSQL endpoint), without the port.
+The service name is hardcoded so this is safe to render from subchart contexts as well.
+*/}}
+{{- define "agent-db-host" -}}
+{{- printf "randoli-agent-db.%s.svc" .Release.Namespace -}}
+{{- end -}}
+
 {{- define "agent-flightsql-url" -}}
-{{- printf "grpc+tcp://randoli-agent.%s.svc:31337" .Release.Namespace -}}
+{{- printf "grpc+tcp://randoli-agent-db.%s.svc:31337" .Release.Namespace -}}
 {{- end -}}
 
 

@@ -57,7 +57,7 @@ data:
   TRACE_STORAGE_BACKEND_URL: {{ include "trace-storage-url" . }}
   SUPERVISOR_AGENT_HTTP_URL: 'http://sre-agent'
   POPULATE_RES_INDEX_FROM_DB: ''
-  FLIGHT_SQL_HOST: localhost:31337
+  FLIGHT_SQL_HOST: {{ include "agent-db-host" . }}:31337
   RANDOLI_AGENT_HTTP_ENDPOINT: 'http://randoli-agent.{{ include "randoli-agent.namespace" . }}:8080'
   ENABLE_SUPERVISOR_AGENT_REPORTS: '{{ .Values.observability.sreAgent.enableReports }}'
 

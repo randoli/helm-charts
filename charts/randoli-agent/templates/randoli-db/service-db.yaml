@@ -1,0 +1,23 @@
+{{- /*
+Service fronting the randoli-agent-db StatefulSet. All FlightSQL consumers
+(agent, tproxy, SRE agent) reach the DB through this stable ClusterIP.
+*/ -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: randoli-agent-db
+  namespace: {{ include "randoli-agent.namespace" . }}
+  labels:
+    app.kubernetes.io/component: randoli-agent-db
+    {{- include "labels" . | nindent 4 }}
+spec:
+  ports:
+    - name: gizmosql
+      protocol: TCP
+      port: 31337
+      targetPort: 31337
+  selector:
+    app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: randoli-agent-db
+  type: ClusterIP

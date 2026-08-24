@@ -1,0 +1,255 @@
+{{- /*
+Randoli agent DB (GizmoSQL FlightSQL server over DuckDB) in its own
+StatefulSet, split out of the agent pod so it can be shared by the agent,
+tproxy and the SRE agent.
+
+The DB pod owns the agent PVC (agent.db lives on it) and runs the schema
+migrations as init containers before GizmoSQL starts: the migration scripts
+are copied from the agent container image, then executed with the DuckDB
+image against /persistence/agent.db.
+*/ -}}
+{{- $dbCredsSecretName := printf "%s-db" (include "randoli-agent.fullname" .) -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: randoli-agent-db
+  namespace: {{ include "randoli-agent.namespace" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: randoli-agent-db
+    {{- include "labels" . | nindent 4 }}
+    {{- with .Values.global.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.agent.db.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- if or .Values.global.annotations .Values.agent.db.annotations }}
+  annotations:
+    {{- with .Values.global.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.agent.db.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  replicas: 1
+  serviceName: randoli-agent-db
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: randoli-agent-db
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: randoli-agent-db
+        {{- with .Values.global.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.agent.db.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        # DB pod uses emptyDir volumes (shared-migrations, gizmosql-tmp) which blocks cluster-autoscaler
+        # this annotation allows eviction of Pods
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        {{- with .Values.global.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.agent.db.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      # Allow the preStop CHECKPOINT to finish on large databases before the
+      # kubelet force-kills the container (SIGKILL mid-checkpoint leaves a
+      # large WAL to replay on the next start).
+      terminationGracePeriodSeconds: 120
+      volumes:
+        - name: agent-pv
+          persistentVolumeClaim:
+            claimName: {{ include "randoli-agent.fullname" . }}
+        - name: shared-migrations
+          emptyDir: {}
+        - name: gizmosql-tmp
+          emptyDir: {}
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: init
+          {{- with .Values.agent.image }}
+          image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{ .digest }}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.agent.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "copying migrations..."
+              cp -r /migration-scripts/* /migrations/
+              cp -r /migrate /migrations/migrate
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+          volumeMounts:
+            - name: shared-migrations
+              mountPath: /migrations
+            - name: agent-pv
+              mountPath: /persistence
+        - name: migrate-db
+          {{- with .Values.agent.db.migrateImage }}
+          image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}:{{ .tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.agent.db.migrateImage.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "waiting for migration scripts..." &&
+              while [ ! -f /migrations/migrate ]; do sleep 1; done
+              chmod +x /migrations/migrate
+              ln -s /duckdb /bin/duckdb
+
+              echo "running migrations..."
+              # Optional target version: empty migrates up to the latest available
+              /migrations/migrate /persistence/agent.db "{{ .Values.agent.db.migrateTargetVersion | default "" }}"
+
+              echo "setting up permissions..."
+              chown :1001 /persistence/agent.db
+              chmod 660 /persistence/agent.db
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+          volumeMounts:
+            - name: shared-migrations
+              mountPath: /migrations
+            - name: agent-pv
+              mountPath: /persistence
+      containers:
+        - name: gizmosql
+          {{- with .Values.agent.db.image }}
+          image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}:{{ .tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.agent.db.image.pullPolicy }}
+          lifecycle:
+            preStop:
+              exec:
+                # Checkpoint DuckDB before termination so the WAL stays small
+                # (or empty); if a later crash leaves an un-replayable WAL,
+                # quarantining it then costs little to no data.
+                command:
+                - sh
+                - -c
+                - gizmosql_client --host localhost --port 31337 --username
+                  "$GIZMOSQL_USERNAME" --command "CHECKPOINT;" || true
+          # WAL replay after a crash can take minutes; give the server a
+          # generous startup budget before liveness applies, otherwise it
+          # gets killed mid-replay and crashloops on the recovery path.
+          startupProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - gizmosql_client --host localhost --port 31337 --username
+                "$GIZMOSQL_USERNAME" --command "SELECT 1503+1503"
+                | grep -q 3006 || exit 1
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 60
+          # Gate the randoli-agent-db Service endpoints so consumers (agent,
+          # tproxy, sreAgent) are only routed once the DB actually serves.
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - gizmosql_client --host localhost --port 31337 --username
+                "$GIZMOSQL_USERNAME" --command "SELECT 1503+1503"
+                | grep -q 3006 || exit 1
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
+            successThreshold: 1
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - gizmosql_client --host localhost --port 31337 --username
+                "$GIZMOSQL_USERNAME" --command "SELECT 1503+1503"
+                | grep -q 3006 || exit 1
+            failureThreshold: 2
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 2
+          ports:
+          - containerPort: 31337
+          volumeMounts:
+          - name: agent-pv
+            mountPath: /persistence
+          - name: gizmosql-tmp
+            mountPath: /var/gizmosql-tmp
+          env:
+          - name: GIZMOSQL_PATH
+            value: /persistence/agent.db
+          - name: GIZMOSQL_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: {{ $dbCredsSecretName }}
+                key: username
+          - name: GIZMOSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ $dbCredsSecretName }}
+                key: password
+          - name: DATABASE_BACKEND
+            value: duckdb
+          - name: DATABASE_FILENAME
+            value: /persistence/agent.db
+          - name: TLS_ENABLED
+            value: "0"
+          - name: GIZMOSQL_LOG_LEVEL
+            value: ERROR
+          - name: GIZMOSQL_QUERY_LOG_LEVEL
+            value: ERROR
+          - name: GIZMOSQL_AUTH_LOG_LEVEL
+            value: ERROR
+          - name: SECRET_KEY
+            value: "randoli_db_test"
+          - name: INIT_SQL_COMMANDS
+            value: |
+              PRAGMA memory_limit={{ .Values.agent.db.flightEngine.memoryLimit | squote }};
+              PRAGMA threads={{ .Values.agent.db.flightEngine.threads }};
+              PRAGMA max_temp_directory_size={{ .Values.agent.db.flightEngine.tempDirectorySize | squote }};
+              PRAGMA preserve_insertion_order=false;
+              CREATE SCHEMA IF NOT EXISTS insights_agent;
+              PRAGMA schema='insights_agent';
+              PRAGMA search_path='insights_agent';
+          resources:
+            {{- toYaml .Values.agent.db.resources | nindent 12 }}
+      {{- with .Values.agent.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+        # Skip the recursive chown on volume mount unless the root ownership
+        # actually differs — keeps DB pod starts fast on large volumes.
+        fsGroupChangePolicy: OnRootMismatch
+      {{- end }}
+      {{- with coalesce .Values.agent.db.tolerations .Values.agent.tolerations .Values.global.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with coalesce .Values.agent.db.nodeSelector .Values.agent.nodeSelector .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with coalesce .Values.agent.db.affinity .Values.agent.affinity .Values.global.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
