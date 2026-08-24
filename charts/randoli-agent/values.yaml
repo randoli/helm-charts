@@ -91,7 +91,7 @@ agent:
       cpu: 150m
       memory: 1.5Gi
 
-  # Agent DB Config — runs in its own StatefulSet/Service (randoli-agent-db),
+  # Agent DB Config — runs in its own StatefulSet/Service (randoli-fsqld),
   # shared by the agent, tproxy and the SRE agent.
   db:
     # GizmoSQL (FlightSQL over DuckDB) server image
@@ -167,7 +167,7 @@ agent:
     fsGroup: 1001
 
   # StorageClass for the agent DB's PVC (templates/pvc.yaml, mounted by the
-  # randoli-agent-db StatefulSet). Leave empty to use the cluster's default
+  # randoli-fsqld StatefulSet). Leave empty to use the cluster's default
   # StorageClass.
   storageClassName:
 

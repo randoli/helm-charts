@@ -1,14 +1,14 @@
 {{- /*
-Service fronting the randoli-agent-db StatefulSet. All FlightSQL consumers
+Service fronting the randoli-fsqld StatefulSet. All FlightSQL consumers
 (agent, tproxy, SRE agent) reach the DB through this stable ClusterIP.
 */ -}}
 apiVersion: v1
 kind: Service
 metadata:
-  name: randoli-agent-db
+  name: randoli-fsqld
   namespace: {{ include "randoli-agent.namespace" . }}
   labels:
-    app.kubernetes.io/component: randoli-agent-db
+    app.kubernetes.io/component: randoli-fsqld
     {{- include "labels" . | nindent 4 }}
 spec:
   ports:
@@ -19,5 +19,5 @@ spec:
   selector:
     app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: randoli-agent-db
+    app.kubernetes.io/component: randoli-fsqld
   type: ClusterIP
