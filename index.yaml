@@ -6482,6 +6482,16 @@ entries:
   sre-agent:
   - apiVersion: v2
     appVersion: 0.2.0-rc.2
+    created: "2026-08-25T12:44:21.835284116Z"
+    description: 'Randoli SRE Agent for AI driven troubleshooting and root cause analysis '
+    digest: f3c3951748bf887588c4598b04ba0d69d13ca2aa10acfd61c8312e38d1bdec5d
+    name: sre-agent
+    type: application
+    urls:
+    - https://github.com/randoli/helm-charts-ai/releases/download/sre-agent-1.0.0-rc.5/sre-agent-1.0.0-rc.5.tgz
+    version: 1.0.0-rc.5
+  - apiVersion: v2
+    appVersion: 0.2.0-rc.2
     created: "2026-08-25T03:25:59.405517464Z"
     description: 'Randoli SRE Agent for AI driven troubleshooting and root cause analysis '
     digest: 09651ec5730f691c245b19d8abccab608616acb4060ff9d2b8cb3190f7eb3191
@@ -6540,4 +6550,4 @@ entries:
     urls:
     - https://github.com/randoli/helm-charts-ai/releases/download/sre-agent-0.3.0-rc.1/sre-agent-0.3.0-rc.1.tgz
     version: 0.3.0-rc.1
-generated: "2026-08-25T03:38:29.350223011Z"
+generated: "2026-08-25T12:44:21.835527038Z"
