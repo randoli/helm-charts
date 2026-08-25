@@ -459,6 +459,103 @@ entries:
     version: 2.2.0-rc.1
   - apiVersion: v2
     appVersion: 1.21.2
+    created: "2026-08-25T20:09:05.686568113Z"
+    dependencies:
+    - alias: sreAgent
+      condition: sreAgent.enabled
+      name: sre-agent
+      repository: https://helm.randoli.io
+      version: 1.0.0-rc.7
+    - condition: observability.otel.operator.enabled
+      name: opentelemetry-operator
+      repository: ""
+      tags:
+      - observability
+      - costManagement
+      version: 0.111.0
+    - condition: global.prometheus.install
+      name: prometheus
+      repository: ""
+      version: 26.0.1
+    - alias: vpa
+      condition: costManagement.vpaOperator.enabled
+      name: vertical-pod-autoscaler
+      repository: ""
+      tags:
+      - costManagement
+      version: 0.8.4
+    - alias: securityScans
+      condition: observability.security.enabled
+      name: security-scans
+      repository: ""
+      tags:
+      - security
+      version: 1.29.8
+    - alias: vectorOperator
+      condition: observability.vector.enabled
+      name: logs
+      repository: ""
+      tags:
+      - observability
+      version: 0.8.1
+    - alias: costManagement
+      name: cost-management
+      repository: ""
+      tags:
+      - costManagement
+      version: 2.5.24
+    - condition: observability.tempo.singleBinary.enabled
+      name: tempo
+      repository: ""
+      tags:
+      - observability
+      version: 1.24.1
+    - alias: tempoDistributed
+      condition: observability.tempo.distributed.enabled
+      name: tempo-distributed
+      repository: ""
+      tags:
+      - observability
+      version: 1.61.3
+    - condition: observability.netobserv.enabled
+      name: network
+      repository: ""
+      tags:
+      - observability
+      - costManagement
+      version: 1.11.3
+    - condition: observability.loki.singleBinary.enabled
+      name: loki
+      repository: ""
+      tags:
+      - observability
+      version: 6.49.1
+    - alias: lokiDistributed
+      condition: observability.loki.distributed.enabled
+      name: loki-distributed
+      repository: ""
+      tags:
+      - observability
+      version: 6.49.0
+    description: Randoli Data Plane & Observability Agent
+    digest: e5c64865a9900b5f7ec3b1afaa121e39ca13ab54278d708715c166d07c21ec5f
+    home: https://randoli.ca
+    icon: https://s3.ca-central-1.amazonaws.com/randoli.ca/icons/icon-384x384.png
+    keywords:
+    - randoli-agent
+    - randoli
+    maintainers:
+    - email: support@randoli.ca
+      name: Randoli
+      url: https://randoli.ca
+    name: randoli-agent
+    sources:
+    - https://github.com/randoli/helm-charts
+    urls:
+    - https://github.com/randoli/helm-charts/releases/download/randoli-agent-2.1.0-rc.43/randoli-agent-2.1.0-rc.43.tgz
+    version: 2.1.0-rc.43
+  - apiVersion: v2
+    appVersion: 1.21.2
     created: "2026-08-25T16:36:13.939355837Z"
     dependencies:
     - alias: sreAgent
@@ -6958,4 +7055,4 @@ entries:
     urls:
     - https://github.com/randoli/helm-charts-ai/releases/download/sre-agent-0.3.0-rc.1/sre-agent-0.3.0-rc.1.tgz
     version: 0.3.0-rc.1
-generated: "2026-08-25T16:36:13.939806775Z"
+generated: "2026-08-25T20:09:05.686887085Z"
