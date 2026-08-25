@@ -10,10 +10,6 @@ spec:
       protocol: TCP
       port: 8080
       targetPort: 8080
-    - name: gizmosql
-      protocol: TCP
-      port: 31337
-      targetPort: 31337  
   selector:
     app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}

@@ -9,18 +9,27 @@ kubescape-operator:
 
   clusterName: "cluster"
 
+  # safe-to-evict: these Deployments use emptyDir volumes (scan results,
+  # grype DB cache, tmp dirs — all regenerable), which otherwise block
+  # cluster-autoscaler scale-down and node decommission. Opt in to eviction.
   kubescape:
     name: randoli-sec-kubescape
     continuousScan: enable
     submit: true
     serviceMonitor:
       enabled: false
+    podAnnotations:
+      cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
 
   operator:
     name: randoli-sec-kubescape-operator
+    podAnnotations:
+      cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
 
   kubevuln:
     name: randoli-sec-kubevuln
+    podAnnotations:
+      cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
 
   storage:
     name: "randoli-sec-kubescape-storage"
@@ -48,3 +57,36 @@ kubescape-operator:
     affinity: {}
 
   imagePullSecrets: ""
+
+  capabilities:
+    # Configuration scanning related capabilities
+    # Continuous Scanning continuously evaluates the security posture of your cluster.
+    continuousScan: enable
+    nodeScan: disable
+
+    # Image vulnerabilities scanning related capabilities
+    relevancy: disable 
+
+    # Runtime related capabilities
+    runtimeObservability: disable
+    networkPolicyService: disable
+    networkEventsStreaming: disable
+    runtimeDetection: disable
+    malwareDetection: disable
+    nodeProfileService: disable
+    admissionController: disable
+    httpDetection: disable
+    kubescapeOffline: enable
+
+  continuousScanning:
+    configMapName: cs-matching-rules
+
+    # Matching rules for the monitored resources.
+    # Kubescape will watch resources of every provided GVR across the provided
+    # namespaces.
+    matchingRules:
+      match:
+        - apiGroups: ["apps"]
+          apiVersions: ["v1"]
+          resources: ["deployments","statefulsets","daemonsets"]
+      namespaces: []

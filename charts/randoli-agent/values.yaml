@@ -45,10 +45,10 @@ global:
     cert: randoli-agent-cert
     config: randoli-agent-secret
 
-  # Default scheduling for randoli-managed pods (agent, tproxy, otel collector,
-  # host-metrics collector). Each component may override these by setting its
-  # own tolerations / nodeSelector / affinity. When the component-level value
-  # is empty, the global value is used as a fallback.
+  # Default scheduling for randoli-managed pods (agent, agent DB, tproxy, otel
+  # collector, host-metrics collector). Each component may override these by
+  # setting its own tolerations / nodeSelector / affinity. When the
+  # component-level value is empty, the global value is used as a fallback.
   nodeSelector: {}
   affinity: {}
   tolerations: []
@@ -75,7 +75,7 @@ agent:
   image:
     registry: docker.io
     repository: randoli/insights-agent
-    tag: "1.20.0"
+    tag: "1.21.3-rc.1"
     digest: ""
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -91,10 +91,30 @@ agent:
       cpu: 150m
       memory: 1.5Gi
 
-  # Agent DB Config
+  # Agent DB Config — runs in its own StatefulSet/Service (randoli-fsqld),
+  # shared by the agent, tproxy and the SRE agent.
   db:
+    # GizmoSQL (FlightSQL over DuckDB) server image
+    image:
+      registry: docker.io
+      repository: gizmodata/gizmosql
+      tag: "v1.19.2"
+      pullPolicy: IfNotPresent
+    # Image for the migrate-db init container that runs schema migrations.
+    # The migration scripts themselves are copied from the agent image.
+    migrateImage:
+      registry: docker.io
+      repository: datacatering/duckdb
+      tag: "v1.5.0"
+      pullPolicy: IfNotPresent
+    # PVC (templates/pvc.yaml) mounted at /persistence by the DB pod
     storage:
       pvSize: 10Gi
+    # Set to a migration version number to migrate the agent DB to that exact
+    # version on the next pod start, reverting migrations above it if needed
+    # (the files of reverted migrations must be present in the agent image).
+    # Empty (default) migrates up to the latest available version.
+    migrateTargetVersion: ""
     resources:
       limits:
         cpu: 1
@@ -106,6 +126,17 @@ agent:
       memoryLimit: 1GB
       threads: 2
       tempDirectorySize: 5GB
+
+    # Scheduling for the DB pod. When empty, falls back to the agent-level
+    # value, then to the global one (agent.db.* → agent.* → global.*).
+    tolerations: []
+    nodeSelector: {}
+    affinity: {}
+
+    # -- Extra labels on the DB StatefulSet and its pod template (merged with global.labels)
+    labels: {}
+    # -- Extra annotations on the DB StatefulSet and its pod template (merged with global.annotations)
+    annotations: {}
 
   anomalyDetection:
     # Defaults anomaly detection list contains detections for:
@@ -135,8 +166,9 @@ agent:
   securityContext:
     fsGroup: 1001
 
-  # StorageClass for the randoli-agent's PVC (templates/pvc.yaml). Leave empty
-  # to use the cluster's default StorageClass.
+  # StorageClass for the agent DB's PVC (templates/pvc.yaml, mounted by the
+  # randoli-fsqld StatefulSet). Leave empty to use the cluster's default
+  # StorageClass.
   storageClassName:
 
   # -- Toleration labels for pod assignment (falls back to global.tolerations when empty)
@@ -171,7 +203,7 @@ tproxy:
   image:
     registry: docker.io
     repository: randoli/telemetry-proxy
-    tag: "0.1.2"
+    tag: "1.2.0"
     pullPolicy: Always
 
   # CORS_ALLOW_ORIGIN. Empty falls back to the default Randoli console origins
@@ -227,6 +259,43 @@ otelCollector:
   # -- Extra annotations on the OpenTelemetryCollector CR (merged with global.annotations)
   annotations: {}
 
+  # OTLP receiver gRPC max receive message size in MiB. Defaults to 4MiB if not specified.
+  grpcMaxRecvMsgSizeMiB: 4
+
+# ============================================================================
+# Randoli SRE Agent (AI) — optional subchart published from
+# https://github.com/randoli/helm-charts-ai (chart `sre-agent`, aliased here as
+# `sreAgent`). Any sre-agent chart value can be overridden under this key.
+# The subchart also inherits global.tolerations / global.nodeSelector.
+# ============================================================================
+sreAgent:
+  # -- Install the SRE agent together with randoli-agent
+  enabled: false
+
+  analysis:
+    # -- Namespaces the SRE agent may analyze (comma-separated). Required when enabled.
+    enabledNamespaces: ""
+
+    # -- Daily budget for LLM (Bedrock) calls, in USD
+    dailyBudgetUsd: "20"
+
+  # Endpoints used to fetch data for analysis and recommendations.
+  #
+  # The subchart renders these with its OWN values scope and it sees
+  # global.* and .Release.*, but NOT this chart's values.
+  observability:
+    prometheusUrl: '{{ include "prometheus-server-endpoint" . }}'
+    lokiUrl: '{{ include "logs-loki-read-url" . }}'
+    tempoUrl: '{{ include "trace-storage-url" . }}'
+    otelExporterEndpoint: '{{ include "otel-collector-grpc-endpoint" . }}'
+    traceLoopBaseUrl: '{{ include "otel-collector-http-endpoint" . }}'
+
+  # Data plane config for the SRE agent (same template-string mechanism).
+  dataPlane:
+    agentCallbackUrl: '{{ include "agent-callback-url" . }}'
+    flightSqlUrl: '{{ include "agent-flightsql-url" . }}'
+    databaseSecretName: randoli-agent-db
+
 # ============================================================================
 # Observability stack (logs / traces / metrics + supporting infra).
 # ============================================================================
@@ -247,6 +316,12 @@ observability:
     #   when includeNamespaces is set.
     includeNamespaces: []
     excludeNamespaces: []
+
+    multilineLogs:
+      enabled: true
+    randoliTags:
+      enabled: true
+
     proxyCORS: "*"
     proxyImage: docker.io/randoli/telemetry-proxy:0.1.2
 
@@ -342,6 +417,13 @@ observability:
   netobserv:
     enabled: true
     applyCRs: true
+    # FlowMetric CRs in templates/randoli-network/. Each is toggled independently and
+    # is only rendered when applyCRs is also true.
+    flowMetrics:
+      podEgressBytes:
+        enabled: false
+      clusterExternalEgressBytes:
+        enabled: false
     # eBPF agent DaemonSet scheduling. Falls back to global.* when empty.
     # Plumbed into the FlowCollector CR at spec.agent.ebpf.advanced.scheduling.
     agent:

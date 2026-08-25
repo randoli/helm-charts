@@ -17,13 +17,7 @@ rules:
     resources:
       - configmaps
     resourceNames:
-      - randoli-alerts
+      - randoli-obs-alerts
     verbs: 
       - get
       - update
-  - apiGroups:
-      - ''
-    resources:
-      - pods
-    verbs: 
-      - delete

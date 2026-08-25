@@ -33,7 +33,7 @@ spec:
   affinity:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  image: docker.io/randoli/otelcol:v1.0.3
+  image: docker.io/randoli/otelcol:1.3.2
   upgradeStrategy: automatic
   mode: statefulset
   serviceAccount: randoli-otel-collector
@@ -52,6 +52,9 @@ spec:
         protocols:
           grpc:
             endpoint: 0.0.0.0:4317
+            # Set the maximum receive message size for gRPC in MiB. This is useful for large payloads.
+            # The recommended size is 4 MiB.
+            max_recv_msg_size_mib: {{ .Values.otelCollector.grpcMaxRecvMsgSizeMiB }}
           http:
             endpoint: 0.0.0.0:4318
             cors:

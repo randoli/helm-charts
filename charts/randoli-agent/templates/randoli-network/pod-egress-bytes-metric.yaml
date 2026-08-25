@@ -1,4 +1,4 @@
-{{- if eq (include "apply-network-crs" . | trim) "true" -}}
+{{- if and (eq (include "apply-network-crs" . | trim) "true") .Values.observability.netobserv.flowMetrics.podEgressBytes.enabled -}}
 # This metric provides egress (Tx) byte-rate per pod. It also provides a dashboard chart.
 # More examples in https://github.com/netobserv/network-observability-operator/tree/main/config/samples/flowmetrics
 apiVersion: flows.netobserv.io/v1alpha1
