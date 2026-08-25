@@ -1,4 +1,19 @@
-charts/**/charts/*.tgz
-./*.tgz
+# Packaged chart tarballs are build artifacts — never commit them.
+# Root-level packages (helm package / make package) are published via GitHub
+# Releases + gh-pages; charts/*/charts/*.tgz are regenerated in CI by
+# scripts/build-subcharts.sh.
+*.tgz
 
+# The root index.yaml lives on the gh-pages branch only, never on main.
+/index.yaml
+
+# Scratch / debug output
 temp
+template-debug*.yaml
+templates.hoc.yaml
+
+# Local cluster credentials — secrets must not be committed
+scripts/cluster-credentials.yaml
+
+# Local Claude Code state
+.claude/

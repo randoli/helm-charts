@@ -1,3 +1,4 @@
+{{- $dbCredsSecretName := printf "%s-db" (include "randoli-agent.fullname" .) -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -65,7 +66,17 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.global.secrets.config }}
-                  key: CLUSTER_ID    
+                  key: CLUSTER_ID
+            - name: FLIGHT_SQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $dbCredsSecretName }}
+                  key: username
+            - name: FLIGHT_SQL_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $dbCredsSecretName }}
+                  key: password
           envFrom:
             - configMapRef:
                 name: randoli-tproxy

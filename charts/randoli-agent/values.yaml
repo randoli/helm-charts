@@ -203,7 +203,7 @@ tproxy:
   image:
     registry: docker.io
     repository: randoli/telemetry-proxy
-    tag: "1.2.0"
+    tag: "1.5.0-rc.1"
     pullPolicy: Always
 
   # CORS_ALLOW_ORIGIN. Empty falls back to the default Randoli console origins
@@ -229,6 +229,15 @@ tproxy:
   # The server URL must be provided in the TUNNEL mode.
   # Please contact Randoli team to get the address
   tunnelServerUrl: ""
+
+  # OTel instrumentation for the proxy. When enabled, the proxy exports traces/metrics to the OTel Collector.
+  otelInstrumentation:
+    enabled: true
+    # -- OTLP gRPC endpoint override. Empty falls back to the in-cluster
+    # randoli-otel-collector service.
+    otlpEndpoint: ""
+    # -- Trace sampling ratio, 0.0 - 1.0 (exported as OTEL_TRACE_SAMPLE_RATIO)
+    traceSampleRatio: "1.0"
 
   # -- Toleration labels (falls back to global.tolerations)
   tolerations: []
@@ -441,9 +450,14 @@ observability:
   sreAgent:
     enableReports: false
 
+  # OTel instrumentation for the agent. When enabled, the agent exports traces/metrics to the OTel Collector.
   agentInstrumentation:
     enabled: true
-    otlpEndpoint:
+    # -- OTLP gRPC endpoint override. Empty falls back to the in-cluster
+    # randoli-otel-collector service.
+    otlpEndpoint: ""
+    # -- Trace sampling ratio, 0.0 - 1.0 (exported as OTEL_TRACE_SAMPLE_RATIO)
+    traceSampleRatio: "1.0"
 
   hostMetrics:
     # provider options:
