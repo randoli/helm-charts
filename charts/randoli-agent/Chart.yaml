@@ -17,7 +17,7 @@ version: 2.1.0-rc.40
 dependencies:
   - name: sre-agent
     alias: sreAgent
-    version: 1.0.0-rc.5
+    version: 1.0.0-rc.6
     repository: "https://helm.randoli.io"
     condition: sreAgent.enabled
   - name: opentelemetry-operator
