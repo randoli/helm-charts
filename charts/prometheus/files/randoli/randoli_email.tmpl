@@ -1,5 +1,6 @@
+{{/* Attribute annotations use keys "__attribute_NNN_Name" so sorted rendering preserves order. */}}
 {{ define "randoli.email.subject" -}}
-[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ if .CommonLabels.deployment }} in {{ .CommonLabels.deployment }}{{ else if .CommonLabels.node }} on {{ .CommonLabels.node }}{{ end }}{{ with .CommonLabels.cluster }} ({{ . }}){{ end }}
+[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ with .CommonLabels.target }} on {{ . }}{{ end }}{{ with .CommonLabels.cluster }} ({{ . }}){{ end }}
 {{- end }}
 
 {{ define "randoli.email.body" }}
@@ -58,23 +59,17 @@
                     <td style="border-bottom:1px solid #eeeeee;">{{ . }}</td>
                   </tr>
                   {{ end }}
-                  {{ with .CommonLabels.namespace }}
-                  <tr>
-                    <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Namespace</td>
-                    <td style="border-bottom:1px solid #eeeeee;">{{ . }}</td>
-                  </tr>
-                  {{ end }}
-                  {{ with .CommonLabels.deployment }}
-                  <tr>
-                    <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Deployment</td>
-                    <td style="border-bottom:1px solid #eeeeee;">{{ . }}</td>
-                  </tr>
-                  {{ end }}
-                  {{ with .CommonLabels.node }}
-                  <tr>
-                    <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Node</td>
-                    <td style="border-bottom:1px solid #eeeeee;">{{ . }}</td>
-                  </tr>
+                  {{ range $key, $value := .CommonAnnotations }}
+                    {{ if match "^__attribute_[0-9]+_" $key }}
+                    <tr>
+                      <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">
+                        {{ reReplaceAll "^__attribute_[0-9]+_" "" $key }}
+                      </td>
+                      <td style="border-bottom:1px solid #eeeeee;">
+                        {{ $value }}
+                      </td>
+                    </tr>
+                    {{ end }}
                   {{ end }}
                   {{ with .CommonAnnotations.description }}
                   <tr>
@@ -86,14 +81,16 @@
               </table>
 
               <!-- Button -->
+              {{ with .CommonAnnotations.sourceUrl }}
               <p style="text-align:center; margin:30px 0;">
-                <a href="{{ .CommonAnnotations.sourceUrl }}"
+                <a href="{{ . }}"
                    class="button"
                    style="padding:12px 24px; background-color:#007398; color:#ffffff;
                           text-decoration:none; border-radius:4px; font-weight:bold;">
-                  View {{ .CommonLabels.alertType }}
+                  View {{ $.CommonLabels.alertType }}
                 </a>
               </p>
+              {{ end }}
 
             </td>
           </tr>
