@@ -18,6 +18,10 @@ data:
   
   FLIGHT_SQL_HOST: {{ include "agent-db-host" . }}:31337
 
+  {{- if .Values.tags.sreAgent }}
+  CHATBOT_BASE_URL: {{ include "sre-agent-http-endpoint" . }}
+  {{- end }}
+
   {{- if .Values.tproxy.otelInstrumentation.enabled }}
   OTEL_ENABLED: 'true'
   {{- if .Values.tproxy.otelInstrumentation.otlpEndpoint }}

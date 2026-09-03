@@ -82,6 +82,14 @@ The service name is hardcoded so this is safe to render from subchart contexts a
 {{- printf "grpc+tcp://randoli-fsqld.%s.svc:31337" .Release.Namespace -}}
 {{- end -}}
 
+{{/*
+HTTP endpoint of the sre-agent Service (AI chatbot backend). Only referenced
+when tags.sreAgent is enabled and the subchart is installed.
+*/}}
+{{- define "sre-agent-http-endpoint" -}}
+{{- printf "http://randoli-sre-agent.%s.svc:80" .Release.Namespace -}}
+{{- end -}}
+
 
 {{/*
 Dependencies Logic for config map
