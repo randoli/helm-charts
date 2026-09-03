@@ -106,7 +106,7 @@ agent:
     migrateImage:
       registry: docker.io
       repository: datacatering/duckdb
-      tag: "v1.5.0"
+      tag: "v1.5.1"
       pullPolicy: IfNotPresent
     # PVC (templates/pvc.yaml) mounted at /persistence by the DB pod
     storage:
