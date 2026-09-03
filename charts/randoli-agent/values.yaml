@@ -67,6 +67,7 @@ tags:
   observability: true
   costManagement: false
   security: false
+  sreAgent: false
 
 # ============================================================================
 # Randoli Agent Pod config
@@ -274,13 +275,11 @@ otelCollector:
 # ============================================================================
 # Randoli SRE Agent (AI) — optional subchart published from
 # https://github.com/randoli/helm-charts-ai (chart `sre-agent`, aliased here as
-# `sreAgent`). Any sre-agent chart value can be overridden under this key.
+# `sreAgent`). Disabled by default; install with `--set tags.sreAgent=true`.
+# Any sre-agent chart value can be overridden under this key.
 # The subchart also inherits global.tolerations / global.nodeSelector.
 # ============================================================================
 sreAgent:
-  # -- Install the SRE agent together with randoli-agent
-  enabled: false
-
   analysis:
     # -- Namespaces the SRE agent may analyze (comma-separated). Required when enabled.
     enabledNamespaces: ""

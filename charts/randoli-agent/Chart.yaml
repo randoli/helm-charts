@@ -19,7 +19,8 @@ dependencies:
     alias: sreAgent
     version: 1.0.0-rc.7
     repository: "https://helm.randoli.io"
-    condition: sreAgent.enabled
+    tags:
+      - sreAgent
   - name: opentelemetry-operator
     version: 0.111.0
     condition: observability.otel.operator.enabled
