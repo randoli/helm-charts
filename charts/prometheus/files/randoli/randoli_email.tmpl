@@ -1,104 +1,150 @@
-{{/* Attribute annotations use keys "__attribute_NNN_Name" so sorted rendering preserves order. */}}
 {{ define "randoli.email.subject" -}}
-[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ with .CommonLabels.target }} on {{ . }}{{ end }}{{ with .CommonLabels.cluster }} ({{ . }}){{ end }}
+[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ with .CommonLabels.source }} on {{ . }}{{ end }}{{ with .CommonLabels.dataPlane }} ({{ . }}){{ end }}
+{{- end }}
+
+{{/* Severity mapping: CRITICAL/HIGH/ERROR → red, MEDIUM/WARNING → orange, INFO/LOW → yellow. */}}
+{{ define "randoli.email.severityBar" -}}
+{{- $s := . | toUpper -}}
+{{- if or (eq $s "CRITICAL") (eq $s "HIGH") (eq $s "ERROR") -}}#dc2626
+{{- else if or (eq $s "MEDIUM") (eq $s "WARNING") -}}#ea580c
+{{- else if or (eq $s "INFO") (eq $s "LOW") -}}#eab308
+{{- else -}}#6b7280
+{{- end -}}
+{{- end }}
+
+{{/* Severity badge background using the same severity tiers. */}}
+{{ define "randoli.email.severityBg" -}}
+{{- $s := . | toUpper -}}
+{{- if or (eq $s "CRITICAL") (eq $s "HIGH") (eq $s "ERROR") -}}#fee2e2
+{{- else if or (eq $s "MEDIUM") (eq $s "WARNING") -}}#ffedd5
+{{- else if or (eq $s "INFO") (eq $s "LOW") -}}#fef9c3
+{{- else -}}#f3f4f6
+{{- end -}}
+{{- end }}
+
+{{/* Severity badge text color using the same severity tiers. */}}
+{{ define "randoli.email.severityFg" -}}
+{{- $s := . | toUpper -}}
+{{- if or (eq $s "CRITICAL") (eq $s "HIGH") (eq $s "ERROR") -}}#b91c1c
+{{- else if or (eq $s "MEDIUM") (eq $s "WARNING") -}}#c2410c
+{{- else if or (eq $s "INFO") (eq $s "LOW") -}}#a16207
+{{- else -}}#4b5563
+{{- end -}}
 {{- end }}
 
 {{ define "randoli.email.body" }}
+<!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* Fallback fluid container */
-    .container { width:100% !important; max-width:600px; margin:0 auto; }
-    /* Responsive button */
-    .button { display:inline-block; width:100%; max-width:200px; text-align:center; }
+    .container { width:100% !important; max-width:660px; margin:0 auto; }
+    .button { display:inline-block; width:100%; max-width:240px; text-align:center; }
     @media only screen and (max-width: 480px) {
       .container { padding: 0 10px !important; }
       .button { width:100% !important; }
     }
   </style>
 </head>
-<body style="margin:0; padding:0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px 0;">
+<body style="margin:0; padding:0; font-family: Arial, sans-serif; background-color: #eef0f2;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef0f2; padding:16px 0;">
     <tr>
       <td align="center">
+        <table class="container" width="660" cellpadding="0" cellspacing="0"
+               style="background-color:#ffffff; border-radius:14px; overflow:hidden; border:1px solid #eaecef;">
 
-        <!-- Top Logo -->
-        <table class="container" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-          <tr><td align="center">
-            <img src="https://cdn.prod.website-files.com/66e2aa7f74a05584d1dc32d8/67b4ede66602c10c41838925_logo_48px.png"
-                 alt="Randoli Logo"
-                 style="display:block; max-width:100%; height:auto; max-height:60px;">
-          </td></tr>
-        </table>
-
-        <!-- Main Card -->
-        <table class="container" cellpadding="0" cellspacing="0"
-               style="background-color:#ffffff; border-radius:8px; overflow:hidden;
-                      box-shadow:0 2px 4px rgba(0,0,0,0.1);">
-
-          <!-- Header -->
+          <!-- Accent bar -->
           <tr>
-            <td style="background-color: #007398; padding:20px; text-align:center;">
-              <h1 style="color:#ffffff; margin:0; font-size:24px;">
-                [{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}
-              </h1>
+            <td style="background-color:{{ template "randoli.email.severityBar" .CommonLabels.severity }}; height:5px; font-size:0; line-height:0;">&nbsp;</td>
+          </tr>
+
+          <!-- Alert header -->
+          <tr>
+            <td style="padding:20px 28px 18px 28px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="vertical-align:middle;">
+                    <table cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="vertical-align:middle; padding-right:14px;">
+                          <img src="https://cdn.prod.website-files.com/66e2aa7f74a05584d1dc32d8/67b4ede66602c10c41838925_logo_48px.png"
+                               width="44" height="44" alt="" style="display:block; margin-top:-2px;">
+                        </td>
+                        <td style="vertical-align:middle; font-size:24px; font-weight:700; color:#14171a; line-height:1.3;">
+                          {{ .CommonLabels.alertName }}
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td align="right" style="vertical-align:top; white-space:nowrap; padding-left:14px; padding-top:2px;">
+                    <span style="display:inline-block; padding:7px 14px; border-radius:6px; background-color:{{ template "randoli.email.severityBg" .CommonLabels.severity }}; color:{{ template "randoli.email.severityFg" .CommonLabels.severity }}; font-size:13px; font-weight:700; letter-spacing:0.04em;">
+                      {{ .CommonLabels.severity | toUpper }}
+                    </span>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
-          <!-- Body -->
           <tr>
-            <td style="padding:20px; color:#333333; font-size:14px; line-height:1.6;">
+            <td style="padding:0 28px;">
+              <hr style="border:none; border-top:1px solid #eceef1; margin:0;">
+            </td>
+          </tr>
 
-              <p><strong>Alert Summary</strong></p>
-              <table width="100%" cellpadding="5" cellspacing="0"
-                     style="border-collapse:collapse; margin-bottom:20px;">
-                <tbody>
-                  {{ with .CommonLabels.cluster }}
-                  <tr>
-                    <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">Cluster</td>
-                    <td style="border-bottom:1px solid #eeeeee;">{{ . }}</td>
-                  </tr>
-                  {{ end }}
-                  {{ range $key, $value := .CommonAnnotations }}
-                    {{ if match "^__attribute_[0-9]+_" $key }}
-                    <tr>
-                      <td style="border-bottom:1px solid #eeeeee; font-weight:bold;">
-                        {{ reReplaceAll "^__attribute_[0-9]+_" "" $key }}
-                      </td>
-                      <td style="border-bottom:1px solid #eeeeee;">
-                        {{ $value }}
-                      </td>
-                    </tr>
-                    {{ end }}
-                  {{ end }}
-                  {{ with .CommonAnnotations.description }}
-                  <tr>
-                    <td style="font-weight:bold;">Description</td>
-                    <td>{{ . }}</td>
-                  </tr>
-                  {{ end }}
-                </tbody>
+          <!-- Alert details -->
+          <tr>
+            <td style="padding:18px 28px 4px 28px;">
+              {{ with .CommonAnnotations.description }}
+              <p style="margin:0 0 18px 0; font-size:16px; line-height:1.6; color:#4b5560;">{{ . }}</p>
+              {{ end }}
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eceef1; border-radius:10px; margin-bottom:22px;">
+                <tr>
+                  <td style="padding:12px 20px; border-bottom:1px solid #eceef1;">
+                    {{ template "randoli.email.icon.details" . }}<span style="font-size:12.5px; font-weight:700; color:#0e6e8c; letter-spacing:0.04em; vertical-align:middle;">DETAILS</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:2px 20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+
+                      {{ with .CommonLabels.dataPlane }}
+                      <tr>
+                        <td style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:13px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Data Plane</td>
+                        <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:15px; color:#232629; font-weight:500;">{{ . }}</td>
+                      </tr>
+                      {{ end }}
+
+                      {{ template "randoli.email.details.rows" . }}
+
+                      {{ with .CommonAnnotations.occurredAt }}
+                      <tr>
+                        <td style="padding:6px 0; font-size:13px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Occurred At</td>
+                        <td align="right" style="padding:6px 0; font-size:15px; color:#232629; font-weight:500;">{{ . }}</td>
+                      </tr>
+                      {{ end }}
+
+                    </table>
+                  </td>
+                </tr>
               </table>
 
-              <!-- Button -->
               {{ with .CommonAnnotations.sourceUrl }}
-              <p style="text-align:center; margin:30px 0;">
-                <a href="{{ . }}"
-                   class="button"
-                   style="padding:12px 24px; background-color:#007398; color:#ffffff;
-                          text-decoration:none; border-radius:4px; font-weight:bold;">
-                  View {{ $.CommonLabels.alertType }}
+              <p style="text-align:center; margin:0 0 22px 0;">
+                <a href="{{ . }}" class="button"
+                  style="padding:15px 36px; background-color:#0e6e8c; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:600; font-size:15.5px;">
+                  {{ template "randoli.email.icon.console" . }}View in Console
                 </a>
               </p>
               {{ end }}
-
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td style="background-color:#f4f4f4; padding:10px 20px;
-                       font-size:12px; color:#777777; text-align:center;">
+            <td style="background-color:#f8f9fa; padding:16px 28px 18px 28px; font-size:12.5px; color:#b3b8bf; text-align:center; border-top:1px solid #f0f1f3;">
               This is an automated notification from Randoli App Insights. Please do not reply.
             </td>
           </tr>

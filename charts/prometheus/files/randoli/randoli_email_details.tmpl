@@ -1,0 +1,63 @@
+{{/* Icons used in the DETAILS header and console button. */}}
+{{ define "randoli.email.icon.details" -}}
+<span style="display:inline-block; vertical-align:middle; margin-right:6px; font-size:15px; line-height:16px;">📄</span>
+{{- end }}
+
+{{ define "randoli.email.icon.console" -}}
+<span style="display:inline-block; vertical-align:middle; margin-right:8px; font-size:14px; line-height:16px;">🖥️</span>
+{{- end }}
+
+{{ define "randoli.email.details.rows" -}}
+{{- $m := index .CommonLabels "module" | toLower -}}
+{{- if eq $m "kube" -}}
+{{- template "randoli.email.details.kube" . -}}
+{{- else if eq $m "otel" -}}
+{{- template "randoli.email.details.otel" . -}}
+{{- else -}}
+{{- template "randoli.email.details.default" . -}}
+{{- end }}
+{{- end }}
+
+{{/* Kube: use kind as the row label when available. */}}
+{{ define "randoli.email.details.kube" -}}
+{{- with .CommonAnnotations.namespace }}
+<tr>
+  <td style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:13px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Namespace</td>
+  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:15px; color:#232629; font-weight:500;">{{ . }}</td>
+</tr>
+{{- end }}
+{{- with .CommonLabels.source -}}
+{{- $label := "Source" -}}
+{{- with $.CommonLabels.kind -}}
+{{- $label = . -}}
+{{- end }}
+<tr>
+  <td style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:13px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">{{ $label }}</td>
+  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:15px; color:#232629; font-weight:500;">{{ . }}</td>
+</tr>
+{{- end -}}
+{{- end }}
+
+{{/* OTEL: use kind as the row label when available. */}}
+{{ define "randoli.email.details.otel" -}}
+{{- with .CommonLabels.source -}}
+{{- $label := "Service Name" -}}
+{{- with $.CommonLabels.kind -}}
+{{- $label = . -}}
+{{- end }}
+<tr>
+  <td style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:13px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">{{ $label }}</td>
+  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:15px; color:#232629; font-weight:500;">{{ . }}</td>
+</tr>
+{{- end -}}
+{{- end }}
+
+{{/* Default: fallback for unknown or missing modules. */}}
+{{ define "randoli.email.details.default" -}}
+{{- with .CommonLabels.source }}
+<tr>
+  <td style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:13px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Source</td>
+  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:15px; color:#232629; font-weight:500;">{{ . }}</td>
+</tr>
+{{- end -}}
+{{- end }}
