@@ -1,17 +1,12 @@
-{{/* Attribute annotations use keys "__attribute_NNN_Name" so sorted rendering preserves order. */}}
 {{ define "randoli.slack.title" -}}
-[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ with .CommonLabels.target }} on {{ . }}{{ end }}{{ with .CommonLabels.cluster }} ({{ . }}){{ end }}
+[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ with .CommonLabels.source }} on {{ . }}{{ end }}{{ with .CommonLabels.dataPlane }} ({{ . }}){{ end }}
 {{- end }}
 
 {{ define "randoli.slack.text" -}}
-{{- with .CommonLabels.cluster }}
-*Cluster:* {{ . }}
+{{- with .CommonLabels.dataPlane }}
+*Data Plane:* {{ . }}
 {{- end }}
-{{- range $key, $value := .CommonAnnotations }}
-{{- if match "^__attribute_[0-9]+_" $key }}
-*{{ reReplaceAll "^__attribute_[0-9]+_" "" $key }}:* {{ $value }}
-{{- end }}
-{{- end }}
+{{- template "randoli.slack.details" . }}
 {{- with .CommonAnnotations.description }}
 *Description:* {{ . }}
 {{- end }}
