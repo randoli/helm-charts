@@ -38,7 +38,7 @@ dependencies:
       - costManagement
   - name: security-scans
     alias: securityScans
-    version: 1.29.8
+    version: 1.40.1
     condition: observability.security.enabled
     tags:
       - security

@@ -53,7 +53,7 @@ charts/
 ├── vertical-pod-autoscaler/ # Wraps kubernetes/vertical-pod-autoscaler@0.8.1
 ├── cost-management/         # Wraps opencost/opencost@1.42.0
 │   └── templates/configmap-disabled-metrics.yaml  # Creates randoli-cost-metrics-config ConfigMap
-├── security-scans/          # Wraps kubescape/kubescape-operator@1.29.6
+├── security-scans/          # Wraps kubescape/kubescape-operator@1.40.1
 ├── logs/                    # Wraps kaasops/vector-operator@0.0.40
 └── network/                 # Wraps netobserv/netobserv-operator@1.8.2
 ```
