@@ -1,0 +1,42 @@
+{{ define "randoli.slack.details" -}}
+{{- $m := index .CommonLabels "module" | toLower -}}
+{{- if eq $m "kube" -}}
+{{- template "randoli.slack.details.kube" . -}}
+{{- else if eq $m "otel" -}}
+{{- template "randoli.slack.details.otel" . -}}
+{{- else -}}
+{{- template "randoli.slack.details.default" . -}}
+{{- end }}
+{{- end }}
+
+{{/* kube: the kind label (Node, Pod, Deployment, ...) names the line; default "Source". */}}
+{{ define "randoli.slack.details.kube" -}}
+{{- with .CommonAnnotations.namespace }}
+*Namespace:* {{ . }}
+{{- end }}
+{{- with .CommonLabels.source -}}
+{{- $label := "Source" -}}
+{{- with $.CommonLabels.kind -}}
+{{- $label = . -}}
+{{- end }}
+*{{ $label }}:* {{ . }}
+{{- end -}}
+{{- end }}
+
+{{/* otel: kind names the line when present; otherwise "Service Name". */}}
+{{ define "randoli.slack.details.otel" -}}
+{{- with .CommonLabels.source -}}
+{{- $label := "Service Name" -}}
+{{- with $.CommonLabels.kind -}}
+{{- $label = . -}}
+{{- end }}
+*{{ $label }}:* {{ . }}
+{{- end -}}
+{{- end }}
+
+{{/* Fallback: alerts without a known module label get a plain Source line. */}}
+{{ define "randoli.slack.details.default" -}}
+{{- with .CommonLabels.source }}
+*Source:* {{ . }}
+{{- end -}}
+{{- end }}

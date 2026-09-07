@@ -1,20 +1,12 @@
 {{ define "randoli.slack.title" -}}
-[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ if .CommonLabels.deployment }} in {{ .CommonLabels.deployment }}{{ else if .CommonLabels.node }} on {{ .CommonLabels.node }}{{ end }}{{ with .CommonLabels.cluster }} ({{ . }}){{ end }}
+[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ with .CommonLabels.source }} on {{ . }}{{ end }}{{ with .CommonLabels.dataPlane }} ({{ . }}){{ end }}
 {{- end }}
 
 {{ define "randoli.slack.text" -}}
-{{- with .CommonLabels.cluster }}
-*Cluster:* {{ . }}
+{{- with .CommonLabels.dataPlane }}
+*Data Plane:* {{ . }}
 {{- end }}
-{{- with .CommonLabels.namespace }}
-*Namespace:* {{ . }}
-{{- end }}
-{{- with .CommonLabels.deployment }}
-*Deployment:* {{ . }}
-{{- end }}
-{{- with .CommonLabels.node }}
-*Node:* {{ . }}
-{{- end }}
+{{- template "randoli.slack.details" . }}
 {{- with .CommonAnnotations.description }}
 *Description:* {{ . }}
 {{- end }}
