@@ -4,11 +4,13 @@ metadata:
   name: randoli-alert-templates
   namespace: {{ .Release.Namespace }}
 data:
+  randoli_common.tmpl: |-
+{{ .Files.Get "files/randoli/randoli_common.tmpl" | indent 4 }}
   randoli_email.tmpl: |-
-{{ .Files.Get "files/randoli/randoli_email.tmpl" | indent 4 }}
+{{ .Files.Get "files/randoli/email/randoli_email.tmpl" | indent 4 }}
   randoli_email_details.tmpl: |-
-{{ .Files.Get "files/randoli/randoli_email_details.tmpl" | indent 4 }}
+{{ .Files.Get "files/randoli/email/randoli_email_details.tmpl" | indent 4 }}
   randoli_slack.tmpl: |-
-{{ .Files.Get "files/randoli/randoli_slack.tmpl" | indent 4 }}
+{{ .Files.Get "files/randoli/slack/randoli_slack.tmpl" | indent 4 }}
   randoli_slack_details.tmpl: |-
-{{ .Files.Get "files/randoli/randoli_slack_details.tmpl" | indent 4 }}
+{{ .Files.Get "files/randoli/slack/randoli_slack_details.tmpl" | indent 4 }}

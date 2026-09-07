@@ -1,0 +1,38 @@
+{{/* Icons used in the DETAILS header and console button. */}}
+{{ define "randoli.common.icon.details" -}}
+<span style="display:inline-block; vertical-align:middle; margin-right:6px; font-size:15px; line-height:16px;">📄</span>
+{{- end }}
+
+{{ define "randoli.common.icon.console" -}}
+<span style="display:inline-block; vertical-align:middle; margin-right:8px; font-size:14px; line-height:16px;">🖥️</span>
+{{- end }}
+
+{{/* Severity mapping: CRITICAL/HIGH/ERROR → red, MEDIUM/WARNING → orange, INFO/LOW → yellow. */}}
+{{ define "randoli.common.severityBar" -}}
+{{- $s := . | toUpper -}}
+{{- if or (eq $s "CRITICAL") (eq $s "HIGH") (eq $s "ERROR") -}}#dc2626
+{{- else if or (eq $s "MEDIUM") (eq $s "WARNING") -}}#ea580c
+{{- else if or (eq $s "INFO") (eq $s "LOW") -}}#eab308
+{{- else -}}#6b7280
+{{- end -}}
+{{- end }}
+
+{{/* Severity badge background using the same severity tiers. */}}
+{{ define "randoli.common.severityBg" -}}
+{{- $s := . | toUpper -}}
+{{- if or (eq $s "CRITICAL") (eq $s "HIGH") (eq $s "ERROR") -}}#fee2e2
+{{- else if or (eq $s "MEDIUM") (eq $s "WARNING") -}}#ffedd5
+{{- else if or (eq $s "INFO") (eq $s "LOW") -}}#fef9c3
+{{- else -}}#f3f4f6
+{{- end -}}
+{{- end }}
+
+{{/* Severity badge text color using the same severity tiers. */}}
+{{ define "randoli.common.severityFg" -}}
+{{- $s := . | toUpper -}}
+{{- if or (eq $s "CRITICAL") (eq $s "HIGH") (eq $s "ERROR") -}}#b91c1c
+{{- else if or (eq $s "MEDIUM") (eq $s "WARNING") -}}#c2410c
+{{- else if or (eq $s "INFO") (eq $s "LOW") -}}#a16207
+{{- else -}}#4b5563
+{{- end -}}
+{{- end }}
