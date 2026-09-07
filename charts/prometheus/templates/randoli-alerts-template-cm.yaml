@@ -6,5 +6,9 @@ metadata:
 data:
   randoli_email.tmpl: |-
 {{ .Files.Get "files/randoli/randoli_email.tmpl" | indent 4 }}
+  randoli_email_details.tmpl: |-
+{{ .Files.Get "files/randoli/randoli_email_details.tmpl" | indent 4 }}
   randoli_slack.tmpl: |-
 {{ .Files.Get "files/randoli/randoli_slack.tmpl" | indent 4 }}
+  randoli_slack_details.tmpl: |-
+{{ .Files.Get "files/randoli/randoli_slack_details.tmpl" | indent 4 }}
