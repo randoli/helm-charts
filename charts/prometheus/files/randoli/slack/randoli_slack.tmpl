@@ -1,5 +1,5 @@
 {{ define "randoli.slack.title" -}}
-[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ with .CommonLabels.source }} on {{ . }}{{ end }}{{ with .CommonLabels.dataPlane }} ({{ . }}){{ end }}
+[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ with .CommonLabels.resource }} on {{ . }}{{ end }}{{ with .CommonLabels.dataPlane }} ({{ . }}){{ end }}
 {{- end }}
 
 {{ define "randoli.slack.text" -}}

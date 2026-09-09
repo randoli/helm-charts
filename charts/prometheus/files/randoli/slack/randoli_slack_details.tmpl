@@ -9,13 +9,13 @@
 {{- end }}
 {{- end }}
 
-{{/* kube: the kind label (Node, Pod, Deployment, ...) names the line; default "Source". */}}
+{{/* kube: the kind label (Node, Pod, Deployment, ...) names the line; default "Resource". */}}
 {{ define "randoli.slack.details.kube" -}}
 {{- with .CommonAnnotations.namespace }}
 *Namespace:* {{ . }}
 {{- end }}
-{{- with .CommonLabels.source -}}
-{{- $label := "Source" -}}
+{{- with .CommonLabels.resource -}}
+{{- $label := "Resource" -}}
 {{- with $.CommonLabels.kind -}}
 {{- $label = . -}}
 {{- end }}
@@ -25,7 +25,7 @@
 
 {{/* otel: kind names the line when present; otherwise "Service Name". */}}
 {{ define "randoli.slack.details.otel" -}}
-{{- with .CommonLabels.source -}}
+{{- with .CommonLabels.resource -}}
 {{- $label := "Service Name" -}}
 {{- with $.CommonLabels.kind -}}
 {{- $label = . -}}
@@ -34,9 +34,9 @@
 {{- end -}}
 {{- end }}
 
-{{/* Fallback: alerts without a known module label get a plain Source line. */}}
+{{/* Fallback: alerts without a known module label get a plain Resource line. */}}
 {{ define "randoli.slack.details.default" -}}
-{{- with .CommonLabels.source }}
-*Source:* {{ . }}
+{{- with .CommonLabels.resource }}
+*Resource:* {{ . }}
 {{- end -}}
 {{- end }}
