@@ -17,6 +17,10 @@ global:
   opencost:
     url:
   openshift:
+    # Set to true when installing on OpenShift. Effects: the agent and
+    # randoli-fsqld pods omit the explicit fsGroup (1001) so the SCC assigns
+    # one from the namespace's supplemental-groups range, and the DB migration
+    # init container skips its group-1001 chown.
     enabled: false
 
   # global Prometheus config

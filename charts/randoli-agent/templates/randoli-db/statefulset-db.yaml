@@ -113,14 +113,26 @@ spec:
               echo "waiting for migration scripts..." &&
               while [ ! -f /migrations/migrate ]; do sleep 1; done
               chmod +x /migrations/migrate
-              ln -s /duckdb /bin/duckdb
+              # Resolve the duckdb CLI from the writable emptyDir instead of
+              # symlinking into root-owned /bin — OpenShift runs this init
+              # container as an arbitrary UID. -f survives init retries.
+              ln -sf /duckdb /migrations/duckdb
+              export PATH=/migrations:$PATH
+              # DuckDB resolves its state dir from HOME, which is unset (or
+              # root-owned) under arbitrary-UID platforms like OpenShift.
+              export HOME=/migrations
 
               echo "running migrations..."
               # Optional target version: empty migrates up to the latest available
               /migrations/migrate /persistence/agent.db "{{ .Values.agent.db.migrateTargetVersion | default "" }}"
 
               echo "setting up permissions..."
+              # Skipped on OpenShift (global.openshift.enabled): the SCC-assigned
+              # fsGroup is inherited via the setgid PVC root instead, and an
+              # arbitrary UID cannot chgrp to 1001.
+              {{- if not .Values.global.openshift.enabled }}
               chown :1001 /persistence/agent.db
+              {{- end }}
               chmod 660 /persistence/agent.db
           resources:
             requests:
@@ -197,6 +209,12 @@ spec:
           - name: gizmosql-tmp
             mountPath: /var/gizmosql-tmp
           env:
+          # Platforms that run pods with an arbitrary UID (e.g. OpenShift
+          # restricted SCC) leave HOME unset — DuckDB then resolves its state
+          # dir to "//.duckdb" and fails to start. Point HOME at the scratch
+          # volume (always mounted, group-writable via fsGroup).
+          - name: HOME
+            value: /var/gizmosql-tmp
           - name: GIZMOSQL_PATH
             value: /persistence/agent.db
           - name: GIZMOSQL_USERNAME
@@ -234,12 +252,20 @@ spec:
               PRAGMA search_path='insights_agent';
           resources:
             {{- toYaml .Values.agent.db.resources | nindent 12 }}
+      {{- if .Values.global.openshift.enabled }}
+      # Let the SCC assign fsGroup from the namespace's supplemental-groups
+      # range — an explicit fsGroup (1001) is rejected on OpenShift, where
+      # restricted-v2 and anyuid-class SCCs all enforce fsGroup MustRunAs.
+      securityContext:
+        fsGroupChangePolicy: OnRootMismatch
+      {{- else }}
       {{- with .Values.agent.securityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
         # Skip the recursive chown on volume mount unless the root ownership
         # actually differs — keeps DB pod starts fast on large volumes.
         fsGroupChangePolicy: OnRootMismatch
+      {{- end }}
       {{- end }}
       {{- with coalesce .Values.agent.db.tolerations .Values.agent.tolerations .Values.global.tolerations }}
       tolerations:

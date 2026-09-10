@@ -179,6 +179,14 @@ spec:
       {{- with .Values.agent.topologySpreadConstraints }}
       topologySpreadConstraints: {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.global.openshift.enabled }}
+      # Let the SCC assign fsGroup from the namespace's supplemental-groups
+      # range — an explicit fsGroup (1001) is rejected on OpenShift, where
+      # restricted-v2 and anyuid-class SCCs all enforce fsGroup MustRunAs.
+      securityContext:
+        fsGroupChangePolicy: OnRootMismatch
+      {{- else }}
       {{- with .Values.agent.securityContext }}
       securityContext: {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- end }}

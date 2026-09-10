@@ -36,3 +36,12 @@ jobs:
 
       - name: Lint umbrella chart
         run: helm lint charts/randoli-agent
+
+      # The chart must render for all platforms (Vanilla Kubernetes, OpenShift)
+      # and the security context must be correct for each.
+      - name: Render both platform modes
+        run: |
+          helm template charts/randoli-agent > /tmp/vanilla.yaml
+          helm template charts/randoli-agent --set global.openshift.enabled=true > /tmp/openshift.yaml
+          ! grep -Eq 'fsGroup: 1001([^0-9]|$)' /tmp/openshift.yaml
+          grep -Eq 'fsGroup: 1001([^0-9]|$)' /tmp/vanilla.yaml
