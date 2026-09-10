@@ -70,7 +70,7 @@ data:
   {{- if .Values.observability.agentInstrumentation.otlpEndpoint }}
   OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.observability.agentInstrumentation.otlpEndpoint | quote }}
   {{- else }}
-  OTEL_EXPORTER_OTLP_ENDPOINT: {{ include "otel-collector-grpc-endpoint-fqdn" . | quote }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ include "otel-collector-grpc-endpoint" . | quote }}
   {{- end }}
   OTEL_TRACE_SAMPLE_RATIO: {{ .Values.observability.agentInstrumentation.traceSampleRatio | quote }}
   {{- end }}
