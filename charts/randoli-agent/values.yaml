@@ -132,6 +132,12 @@ agent:
       threads: 2
       tempDirectorySize: 5GB
 
+    # Co-locate the agent pod with the DB pod: adds a required podAffinity on
+    # the agent StatefulSet (topologyKey kubernetes.io/hostname) so FlightSQL
+    # traffic stays node-local. The agent pod then only schedules once the DB
+    # pod is placed. Set to false to schedule them independently.
+    colocateAgent: true
+
     # Scheduling for the DB pod. When empty, falls back to the agent-level
     # value, then to the global one (agent.db.* → agent.* → global.*).
     tolerations: []
@@ -180,7 +186,9 @@ agent:
   tolerations: []
   # -- Node labels for pod assignment (falls back to global.nodeSelector wnen empty)
   nodeSelector: {}
-  # -- Affinity settings for pod assignment (falls back to global.affinity when empty)
+  # -- Affinity settings for pod assignment (falls back to global.affinity when empty).
+  # Merged with the built-in DB co-location podAffinity (agent.db.colocateAgent);
+  # setting podAffinity here replaces that rule.
   affinity: {}
   # -- Assign custom TopologySpreadConstraints rules
   topologySpreadConstraints: []

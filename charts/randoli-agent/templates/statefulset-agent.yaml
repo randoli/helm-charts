@@ -172,10 +172,29 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with coalesce .Values.agent.affinity .Values.global.affinity }}
+      {{- /*
+      Schedule the agent in the same node where the flightSQL server is running.
+      this setup merges global, agent and db colocate affinity configs
+      */ -}}
+      {{- $dbCoLocateAffinity := dict "podAffinity" 
+        (dict "requiredDuringSchedulingIgnoredDuringExecution" (list (dict "labelSelector"
+          (dict "matchLabels" (dict 
+            "app.kubernetes.io/name" (include "randoli-agent.name" .) 
+            "app.kubernetes.io/instance" .Release.Name 
+            "app.kubernetes.io/component" "randoli-fsqld")) 
+            "topologyKey" "kubernetes.io/hostname")))
+      -}}
+      
+      {{- $userAffinity := coalesce .Values.agent.affinity .Values.global.affinity | default dict -}}
+      {{- $affinity := $userAffinity -}}
+      {{- if .Values.agent.db.colocateAgent -}}
+      {{- $affinity = mergeOverwrite (deepCopy $dbCoLocateAffinity) $userAffinity -}}
+      {{- end -}}
+      {{- if $affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml $affinity | nindent 8 }}
       {{- end }}
+
       {{- with .Values.agent.topologySpreadConstraints }}
       topologySpreadConstraints: {{- toYaml . | nindent 8 }}
       {{- end }}
