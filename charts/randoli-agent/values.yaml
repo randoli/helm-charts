@@ -80,7 +80,7 @@ agent:
   image:
     registry: docker.io
     repository: randoli/insights-agent
-    tag: "1.22.0-rc.1"
+    tag: "1.22.0-rc.3"
     digest: ""
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -316,6 +316,26 @@ sreAgent:
     flightSqlUrl: '{{ include "agent-flightsql-url" . }}'
     databaseSecretName: randoli-agent-db
 
+  # ------------------------------------------------------------------------
+  # MCP servers wired into the SRE agent. Passed through to the sreAgent
+  # subchart, which renders the server Deployments/Services/RBAC and the
+  # MCPConfiguration CRs
+  # ------------------------------------------------------------------------
+  mcpServers:
+    # Kubernetes MCP server
+    # Automatically disabled on OpenShift (global.openshift.enabled=true).
+    kubernetes:
+      enabled: true
+
+    # Loki MCP server
+    loki:
+      enabled: true
+
+    # Tempo MCP — no server Deployment; uses the Tempo query-frontend's
+    # built-in MCP endpoint (/api/mcp)
+    tempo:
+      enabled: true
+
 # ============================================================================
 # Observability stack (logs / traces / metrics + supporting infra).
 # ============================================================================
@@ -543,7 +563,7 @@ loki:
       # limits_config.retention_period is the time-based cutoff; the compactor
       # actually deletes chunks older than that.
       limits_config:
-        retention_period: 168h   # 7d
+        retention_period: 168h # 7d
       compactor:
         working_directory: /var/loki/compactor
         retention_enabled: true
@@ -605,7 +625,7 @@ lokiDistributed:
     # ingester.persistence.claims[0].storageClass — null = cluster default
     loki:
       limits_config:
-        retention_period: "720h"   # 30d
+        retention_period: "720h" # 30d
     ingester:
       persistence:
         # `claims` is a list — overriding it replaces the wrapper's entry
@@ -626,13 +646,13 @@ network:
     # Create the secret before helm install:
     #   kubectl create secret tls <name> --cert=tls.crt --key=tls.key -n <namespace>
     existingSecret:
-      name: ""          # set to the secret name to use Mode A
+      name: "" # set to the secret name to use Mode A
       certKey: tls.crt
       keyKey: tls.key
 
     # Mode B (fallback): auto-generate a self-signed cert via a pre-install Job.
     generateJob:
-      enabled: true    # set to true to use Mode B
+      enabled: true # set to true to use Mode B
 
 opentelemetry-operator:
   opentelemetry-operator:
@@ -716,7 +736,11 @@ tempo:
     # persistence.size                — PVC size for trace data
     # persistence.storageClassName    — "" = cluster default; set to target a specific SC
     tempo:
-      retention: "168h"   # 7d
+      retention: "168h" # 7d
+    # Enables the query-frontend's built-in MCP endpoint
+    queryFrontend:
+      mcp_server:
+        enabled: true
     persistence:
       size: 50Gi
       storageClassName: ""
@@ -734,11 +758,17 @@ tempoDistributed:
     compactor:
       config:
         compaction:
-          block_retention: "730h"   # a month
+          block_retention: "730h" # a month
     ingester:
       persistence:
         size: 100Gi
         storageClass: ""
+    tempo:
+      structuredConfig:
+        query_frontend:
+          # Enables the query-frontend's built-in MCP endpoint
+          mcp_server:
+            enabled: true
 
 vectorOperator:
   vector-operator:
