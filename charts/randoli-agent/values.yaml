@@ -336,6 +336,10 @@ sreAgent:
     tempo:
       enabled: true
 
+    # Prometheus MCP server
+    prometheus:
+      enables: true
+
 # ============================================================================
 # Observability stack (logs / traces / metrics + supporting infra).
 # ============================================================================
