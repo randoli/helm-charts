@@ -27,9 +27,9 @@ data:
   {{- if .Values.tproxy.otelInstrumentation.otlpEndpoint }}
 
   {{- /* eventhough we are using gRPC here, the OTel SDK expects http:// prefix to be added to the endpoint */ -}}
-  OTEL_EXPORTER_OTLP_ENDPOINT: http://{{ .Values.tproxy.otelInstrumentation.otlpEndpoint | quote }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.tproxy.otelInstrumentation.otlpEndpoint | quote }}
   {{- else }}
-  OTEL_EXPORTER_OTLP_ENDPOINT: {{ include "otel-collector-grpc-endpoint" . | quote }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ include "otel-collector-grpc-endpoint-http-prefix" . | quote }}
   {{- end }}
   OTEL_TRACE_SAMPLE_RATIO: {{ .Values.tproxy.otelInstrumentation.traceSampleRatio | quote }}
   {{- end }}

@@ -55,11 +55,16 @@ These helpers are referenced as template strings from values.yaml
 (sreAgent.observability.* / sreAgent.dataPlane.*), which the sre-agent
 subchart renders through `tpl`.
 
-Note: Avoid using Parent-only .Values here as they are not visible in the 
+Note: Avoid using Parent-only .Values here as they are not visible in the
 context of the referenced subchart.
 */}}
 {{- define "otel-collector-grpc-endpoint" -}}
 {{- printf "randoli-otel-collector.%s.svc.cluster.local:4317" .Release.Namespace -}}
+{{- end -}}
+
+{{/* the OTel SDK expects the http:// prefix eventhough the gRPC endpoint being used */}}
+{{- define "otel-collector-grpc-endpoint-http-prefix" -}}
+{{- printf "http://randoli-otel-collector.%s.svc.cluster.local:4317" .Release.Namespace -}}
 {{- end -}}
 
 {{- define "otel-collector-http-endpoint" -}}
