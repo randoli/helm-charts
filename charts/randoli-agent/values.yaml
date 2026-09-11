@@ -91,10 +91,10 @@ agent:
   resources:
     limits:
       cpu: 1
-      memory: 1.5Gi
+      memory: 2.5Gi
     requests:
       cpu: 150m
-      memory: 1.5Gi
+      memory: 2.5Gi
 
   # Agent DB Config — runs in its own StatefulSet/Service (randoli-fsqld),
   # shared by the agent, tproxy and the SRE agent.
@@ -123,12 +123,12 @@ agent:
     resources:
       limits:
         cpu: 1
-        memory: 3Gi
+        memory: 4Gi
       requests:
         cpu: 150m
-        memory: 2Gi
+        memory: 4Gi
     flightEngine:
-      memoryLimit: 1GB
+      memoryLimit: 4GB
       threads: 2
       tempDirectorySize: 5GB
 
