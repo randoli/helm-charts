@@ -59,7 +59,7 @@ Note: Avoid using Parent-only .Values here as they are not visible in the
 context of the referenced subchart.
 */}}
 {{- define "otel-collector-grpc-endpoint" -}}
-{{- printf "http://randoli-otel-collector.%s.svc:4317" .Release.Namespace -}}
+{{- printf "randoli-otel-collector.%s.svc.cluster.local:4317" .Release.Namespace -}}
 {{- end -}}
 
 {{- define "otel-collector-http-endpoint" -}}

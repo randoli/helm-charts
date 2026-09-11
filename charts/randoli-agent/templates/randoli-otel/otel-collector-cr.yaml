@@ -168,8 +168,8 @@ spec:
           insecure: true
       otlphttp:
         endpoint: "{{ include "prometheus-server-endpoint" . }}/api/v1/otlp"
-      loki:
-        endpoint: "{{ include "logs-loki-url" . }}/loki/api/v1/push"
+      otlphttp/loki:
+        endpoint: "{{ include "logs-loki-url" . }}/otlp"
       debug:
         verbosity: basic
         sampling_initial: 5
@@ -238,7 +238,7 @@ spec:
         logs:
           receivers: [otlp]
           processors: [memory_limiter, batch]
-          exporters: [debug, loki]
+          exporters: [debug, otlphttp/loki]
   {{- if .Values.observability.otel.applyTargetAllocator }}
   targetAllocator:
     {{- with coalesce .Values.otelCollector.tolerations .Values.global.tolerations }}

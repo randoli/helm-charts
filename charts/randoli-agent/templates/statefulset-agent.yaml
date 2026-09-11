@@ -158,6 +158,18 @@ spec:
               {{- toYaml .Values.agent.extraEnv | nindent 12 }}
             {{- end }}
           {{- end }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /system/healthz
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
       serviceAccountName: {{ template "randoli-agent.serviceAccountName" . }}
       serviceAccount: {{ template "randoli-agent.serviceAccountName" . }}
       {{- with .Values.global.imagePullSecrets }}
