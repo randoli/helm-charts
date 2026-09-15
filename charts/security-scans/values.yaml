@@ -30,6 +30,10 @@ kubescape-operator:
     name: randoli-sec-kubevuln
     podAnnotations:
       cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+    image:
+      repository: quay.io/kubescape/kubevuln
+      tag: v0.3.441
+      pullPolicy: IfNotPresent
 
   storage:
     name: "randoli-sec-kubescape-storage"
