@@ -88,6 +88,18 @@ The service name is hardcoded so this is safe to render from subchart contexts a
 {{- end -}}
 
 {{/*
+HTTP endpoint of the OpenCost MCP server (streamable HTTP, served at the port
+root on the OpenCost Service's mcp-server port, 8081).
+*/}}
+{{- define "opencost-mcp-url" -}}
+{{- if .Values.global.opencost.mcpUrl -}}
+{{- tpl .Values.global.opencost.mcpUrl . -}}
+{{- else -}}
+{{- printf "http://randoli-cmk-opencost.%s.svc:8081" .Release.Namespace -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 HTTP endpoint of the sre-agent Service (AI chatbot backend). Only referenced
 when tags.sreAgent is enabled and the subchart is installed.
 */}}

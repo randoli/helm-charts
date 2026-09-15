@@ -15,7 +15,13 @@ global:
     prometheusTimeout: 30s
     url:
   opencost:
+    # -- OpenCost query API URL (port 9003). Empty = the bundled OpenCost
+    # installed by the costManagement stack.
     url:
+    # -- OpenCost MCP endpoint (port 8081) registered with the SRE agent via
+    # sreAgent.dataPlane.opencostUrl. Empty = the bundled OpenCost Service's
+    # mcp-server port. Set this for an external OpenCost or a custom MCP port.
+    mcpUrl:
   openshift:
     # Set to true when installing on OpenShift. Effects: the agent and
     # randoli-fsqld pods omit the explicit fsGroup (1001) so the SCC assigns
@@ -314,6 +320,9 @@ sreAgent:
   dataPlane:
     agentCallbackUrl: '{{ include "agent-callback-url" . }}'
     flightSqlUrl: '{{ include "agent-flightsql-url" . }}'
+    # OpenCost MCP endpoint (bundled OpenCost Service's mcp-server port, or
+    # global.opencost.mcpUrl when set).
+    opencostUrl: '{{ include "opencost-mcp-url" . }}'
     databaseSecretName: randoli-agent-db
 
   # ------------------------------------------------------------------------
@@ -338,7 +347,13 @@ sreAgent:
 
     # Prometheus MCP server
     prometheus:
-      enables: true
+      enabled: true
+
+    # OpenCost MCP — no server Deployment; the CR points at the OpenCost
+    # service's built-in MCP endpoint (sreAgent.dataPlane.opencostUrl).
+    # Requires the costManagement stack (OpenCost) to be installed.
+    opencost:
+      enabled: true
 
 # ============================================================================
 # Observability stack (logs / traces / metrics + supporting infra).
