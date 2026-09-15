@@ -13,7 +13,7 @@ maintainers:
 name: randoli-agent
 sources:
   - https://github.com/randoli/helm-charts
-version: 2.1.0-rc.61
+version: 2.1.0-rc.62
 dependencies:
   - name: sre-agent
     alias: sreAgent
@@ -49,7 +49,7 @@ dependencies:
     tags:
       - observability
   - name: cost-management
-    version: 2.5.24
+    version: 2.5.25
     alias: costManagement
     tags:
       - costManagement
