@@ -756,10 +756,11 @@ tempo:
     # persistence.storageClassName    — "" = cluster default; set to target a specific SC
     tempo:
       retention: "168h" # 7d
-    # Enables the query-frontend's built-in MCP endpoint
-    queryFrontend:
-      mcp_server:
-        enabled: true
+
+      # Enables the query-frontend's built-in MCP endpoint
+      queryFrontend:
+        mcp_server:
+          enabled: true
     persistence:
       size: 50Gi
       storageClassName: ""
