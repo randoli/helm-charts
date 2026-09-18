@@ -1,0 +1,54 @@
+{{ define "randoli.email.details.rows" -}}
+{{- $m := index .CommonLabels "module" | toLower -}}
+{{- if eq $m "kube" -}}
+{{- template "randoli.email.details.kube" . -}}
+{{- else if eq $m "otel" -}}
+{{- template "randoli.email.details.otel" . -}}
+{{- else -}}
+{{- template "randoli.email.details.default" . -}}
+{{- end }}
+{{- end }}
+
+{{/* Kube: use kind as the row label when available. */}}
+{{ define "randoli.email.details.kube" -}}
+{{- with .CommonAnnotations.namespace }}
+<tr>
+  <td style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:13px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Namespace</td>
+  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:15px; color:#232629; font-weight:500;">{{ . }}</td>
+</tr>
+{{- end }}
+{{- with .CommonLabels.resource -}}
+{{- $label := "Resource" -}}
+{{- with $.CommonLabels.kind -}}
+{{- $label = . -}}
+{{- end }}
+<tr>
+  <td style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:13px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">{{ $label }}</td>
+  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:15px; color:#232629; font-weight:500;">{{ . }}</td>
+</tr>
+{{- end -}}
+{{- end }}
+
+{{/* OTEL: use kind as the row label when available. */}}
+{{ define "randoli.email.details.otel" -}}
+{{- with .CommonLabels.resource -}}
+{{- $label := "Service Name" -}}
+{{- with $.CommonLabels.kind -}}
+{{- $label = . -}}
+{{- end }}
+<tr>
+  <td style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:13px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">{{ $label }}</td>
+  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:15px; color:#232629; font-weight:500;">{{ . }}</td>
+</tr>
+{{- end -}}
+{{- end }}
+
+{{/* Default: fallback for unknown or missing modules. */}}
+{{ define "randoli.email.details.default" -}}
+{{- with .CommonLabels.resource }}
+<tr>
+  <td style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:13px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Resource</td>
+  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:15px; color:#232629; font-weight:500;">{{ . }}</td>
+</tr>
+{{- end -}}
+{{- end }}

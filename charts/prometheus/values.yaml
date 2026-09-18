@@ -349,6 +349,10 @@ prometheus:
       annotations:
         randoli.prometheus.io/scrape: "true"
 
+    # Expliticly enable kube_pod_labels metric, alowing all labels and values to be added to the publiched metric
+    metricLabelsAllowlist:
+      - pods=[*]
+
   alertmanager:
     fullnameOverride: "randoli-obs-alerts"
     config:
@@ -361,6 +365,9 @@ prometheus:
         repeat_interval: 3h
       receivers:
         - name: default-receiver
+    configmapReload:
+      ## enable config reload side car
+      enabled: true
     # Mount Randoli alert notification templates (email + slack).
     extraVolumeMounts:
       - name: randoli-alert-templates

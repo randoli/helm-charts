@@ -44,8 +44,67 @@ randoli-agent
   {{- if .Values.global.prometheus.install -}}
     {{- printf "http://randoli-obs-prometheus.%s.svc:80" .Release.Namespace -}}
   {{- else if .Values.global.prometheus.url -}}
-    {{ tpl .Values.global.prometheus.url . }}
+    {{- tpl .Values.global.prometheus.url . -}}
   {{- end -}}
+{{- end -}}
+
+{{/*
+Cluster endpoints of umbrella-owned services.
+
+These helpers are referenced as template strings from values.yaml
+(sreAgent.observability.* / sreAgent.dataPlane.*), which the sre-agent
+subchart renders through `tpl`.
+
+Note: Avoid using Parent-only .Values here as they are not visible in the
+context of the referenced subchart.
+*/}}
+{{- define "otel-collector-grpc-endpoint" -}}
+{{- printf "randoli-otel-collector.%s.svc.cluster.local:4317" .Release.Namespace -}}
+{{- end -}}
+
+{{/* the OTel SDK expects the http:// prefix eventhough the gRPC endpoint being used */}}
+{{- define "otel-collector-grpc-endpoint-http-prefix" -}}
+{{- printf "http://randoli-otel-collector.%s.svc.cluster.local:4317" .Release.Namespace -}}
+{{- end -}}
+
+{{- define "otel-collector-http-endpoint" -}}
+{{- printf "http://randoli-otel-collector.%s.svc:4318" .Release.Namespace -}}
+{{- end -}}
+
+{{- define "agent-callback-url" -}}
+{{- printf "http://randoli-agent.%s.svc:8080/" .Release.Namespace -}}
+{{- end -}}
+
+{{/*
+DNS host of the randoli-fsqld Service (FlightSQL endpoint), without the port.
+The service name is hardcoded so this is safe to render from subchart contexts as well.
+*/}}
+{{- define "agent-db-host" -}}
+{{- printf "randoli-fsqld.%s.svc" .Release.Namespace -}}
+{{- end -}}
+
+{{- define "agent-flightsql-url" -}}
+{{- printf "grpc+tcp://randoli-fsqld.%s.svc:31337" .Release.Namespace -}}
+{{- end -}}
+
+{{/*
+HTTP endpoint of the OpenCost MCP server (streamable HTTP, served at the port
+root on the OpenCost Service's mcp-server port, 8081).
+*/}}
+{{- define "opencost-mcp-url" -}}
+{{- if .Values.global.opencost.mcpUrl -}}
+{{- tpl .Values.global.opencost.mcpUrl . -}}
+{{- else -}}
+{{- printf "http://randoli-cmk-opencost.%s.svc:8081" .Release.Namespace -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+HTTP endpoint of the sre-agent Service (AI chatbot backend). Only referenced
+when tags.sreAgent is enabled and the subchart is installed.
+*/}}
+{{- define "sre-agent-http-endpoint" -}}
+{{- printf "http://randoli-sre-agent.%s.svc:80" .Release.Namespace -}}
 {{- end -}}
 
 

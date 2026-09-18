@@ -4,15 +4,34 @@
 vertical-pod-autoscaler:
   fullnameOverride: "randoli-cmk-vpa"
 
-  # Reduced to 1 replica each (upstream defaults to 2)
+  # Reduced to 1 replica each (upstream defaults to 2).
+  #
+  # PodDisruptionBudgets are DISABLED entirely. Background: the upstream chart
+  # defaults each component's PDB to minAvailable: 1, which — combined with a
+  # single replica — makes the pod permanently unevictable, so customer nodes
+  # can never be drained / decommissioned (cluster-autoscaler scale-down hangs).
+  #
+  # With the PDB absent, evictions are always permitted
+  #
+  # If replicas are ever scaled above 1, re-enable with:
+  #   podDisruptionBudget:
+  #     enabled: true
+  #     minAvailable: 0
+  #     maxUnavailable: 1
   admissionController:
     replicas: 1
+    podDisruptionBudget:
+      enabled: false
 
   recommender:
     replicas: 1
+    podDisruptionBudget:
+      enabled: false
 
   updater:
     replicas: 1
+    podDisruptionBudget:
+      enabled: false
 
   # Scheduling — global.* values are NOT automatically propagated here.
   # Set admissionController.tolerations / nodeSelector / affinity,

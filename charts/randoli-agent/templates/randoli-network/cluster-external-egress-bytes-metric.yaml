@@ -1,4 +1,4 @@
-{{- if eq (include "apply-network-crs" . | trim) "true" -}}
+{{- if and (eq (include "apply-network-crs" . | trim) "true") .Values.observability.netobserv.flowMetrics.clusterExternalEgressBytes.enabled -}}
 # This metric provides egress cluster-external byte-rate per host and workload. It also provides dashboard charts.
 # More examples in https://github.com/netobserv/network-observability-operator/tree/main/config/samples/flowmetrics
 apiVersion: flows.netobserv.io/v1alpha1

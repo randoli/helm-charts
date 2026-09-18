@@ -1,0 +1,17 @@
+{{ define "randoli.slack.title" -}}
+[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ with .CommonLabels.resource }} on {{ . }}{{ end }}{{ with .CommonLabels.dataPlane }} ({{ . }}){{ end }}
+{{- end }}
+
+{{ define "randoli.slack.text" -}}
+{{- with .CommonLabels.dataPlane }}
+*Data Plane:* {{ . }}
+{{- end }}
+{{- template "randoli.slack.details" . }}
+{{- with .CommonAnnotations.description }}
+*Description:* {{ . }}
+{{- end }}
+{{- end }}
+
+{{ define "randoli.slack.footer" }}
+{{ with .CommonAnnotations.occurredAt }}Occurred At {{ . }}{{ end }}
+{{ end }}
