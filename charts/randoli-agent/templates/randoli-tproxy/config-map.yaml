@@ -34,8 +34,8 @@ data:
   OTEL_TRACE_SAMPLE_RATIO: {{ .Values.tproxy.otelInstrumentation.traceSampleRatio | quote }}
   {{- end }}
 
-  {{- with .Values.tproxy.tunnelServerUrl }}
-  TUNNEL_SERVER_URL: {{ . | quote }}
+  {{- with .Values.tproxy.tunnelServerAddr }}
+  TUNNEL_SERVER_ADDR: {{ . | quote }}
   {{- end }}
   {{- with .Values.tproxy.mode }}
   MODE: {{ . | quote }}

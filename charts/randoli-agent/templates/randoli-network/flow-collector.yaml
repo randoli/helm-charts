@@ -15,6 +15,9 @@ spec:
   agent:
     ebpf:
       advanced:
+        env:
+          # Older kernels do not have TCX links, so we need to fall back to the legacy TC mode.
+          TC_ATTACH_MODE: "any"
         scheduling:
           {{- with $netobservAgentTolerations }}
           tolerations:
