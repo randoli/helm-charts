@@ -29,6 +29,27 @@ global:
     # init container skips its group-1001 chown.
     enabled: false
 
+  # Standard location for the host-metrics provider; overrides
+  # observability.hostMetrics.provider when set. Options:
+  #   "node-exporter"        — (default) prometheus-community node-exporter DaemonSet.
+  #   "otel-host-metrics"    — OTel Collector DaemonSet with the hostmetrics receiver.
+  #   "openshift-monitoring" — OpenShift only: no per-node workload at all; the
+  #                            bundled Prometheus federates the node_* series the
+  #                            platform monitoring stack already collects.
+  # "openshift-monitoring" MUST be set here (not at
+  # observability.hostMetrics.provider): The reason to have this in the global section
+  # is that this comfig must be accessible to the prometheus subchart that renders the federation scrape job.
+  hostMetrics:
+    provider: ""
+    # Tunables for the "openshift-monitoring" provider
+    # the defaults live in charts/prometheus/templates/_helpers.tpl, "prometheus.ocpFederation.*"):
+    # openshiftMonitoring:
+    #   target: prometheus-k8s.openshift-monitoring.svc:9091
+    #   serverName: prometheus-k8s.openshift-monitoring.svc  # override together with target
+    #   scrapeInterval: 30s
+    #   scrapeTimeout: 25s
+    #   match: '{__name__=~"node_.+"}'
+
   # global Prometheus config
   prometheus:
     # Prometheus will not be automatically installed when this flag is false.
@@ -513,8 +534,13 @@ observability:
     # provider options:
     #   "node-exporter"     (default) keeps the prometheus-community node-exporter DaemonSet.
     #   "otel-host-metrics" disables it and deploys an OTel Collector DaemonSet instead.
-    # IMPORTANT: when switching to "otel-host-metrics" you must also set:
-    #   prometheus.prometheus-node-exporter.enabled: false
+    #   "openshift-monitoring" (OpenShift only) reuses the platform monitoring
+    #     stack's node-exporter instead of running one here — set it via
+    #     global.hostMetrics.provider (see there), not here.
+    # global.hostMetrics.provider overrides this value when set.
+    # IMPORTANT: when switching to any provider other than "node-exporter" you
+    # must also set:
+    #   prometheus.prometheus.prometheus-node-exporter.enabled: false
     provider: "node-exporter"
 
     # OTel host-metrics collector config. Only used when the provider is "otel-host-metrics".
@@ -687,7 +713,8 @@ opentelemetry-operator:
 
 prometheus:
   prometheus:
-    # Set to false when using observability.hostMetrics.provider: otel-host-metrics
+    # Set to false when using any host-metrics provider other than
+    # "node-exporter" (otel-host-metrics / openshift-monitoring).
     prometheus-node-exporter:
       enabled: true
     server:
