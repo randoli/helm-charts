@@ -28,7 +28,7 @@ dependencies:
       - observability
       - costManagement
   - name: prometheus
-    version: 26.0.1
+    version: 26.0.2
     condition: global.prometheus.install
   - name: vertical-pod-autoscaler
     alias: vpa
