@@ -278,9 +278,28 @@ https://sso.randoli.io/auth/realms/sso
 {{- end -}}
 {{- end -}}
 
+{{/*
+Host-metrics provider. global.hostMetrics.provider is the standard location
+(The OpenShift federation scrape job is rendered inside the prometheus subchart)
+and overrides the legacy observability.hostMetrics.provider when set.
+
+For the "openshift-monitoring" provider the mechanism, tunables
+(global.hostMetrics.openshiftMonitoring.*) and RBAC live in the prometheus
+wrapper chart.
+
+Note: that chart always renders as a dependency of randoli-agent, i.e. in
+subchart values scope, where only global.* is visible — never the parent's
+observability.* values. Its copy of the predicate is therefore duplicated
+there deliberately; keep the two in sync.
+*/}}
+{{- define "hostmetrics.provider" -}}
+{{- $global := dig "hostMetrics" "provider" "" (.Values.global | default dict) -}}
+{{- $local := dig "hostMetrics" "provider" "" (.Values.observability | default dict) -}}
+{{- $global | default ($local | default "node-exporter") -}}
+{{- end -}}
+
 {{- define "enable.otel-host-metrics" -}}
-{{- $hm := .Values.observability.hostMetrics | default dict }}
-{{- if and .Values.tags.observability (eq ($hm.provider | default "node-exporter") "otel-host-metrics") -}}
+{{- if and .Values.tags.observability (eq (include "hostmetrics.provider" .) "otel-host-metrics") -}}
 true
 {{- else -}}
 false

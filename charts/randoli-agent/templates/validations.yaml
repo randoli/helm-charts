@@ -10,3 +10,37 @@ with a useful error when the configuration is inconsistent.
 {{- fail (printf "\n\nsecurityScans.kubescape-operator.ksNamespace (%q) must match the Helm install namespace (%q).\nThe kubescape subchart hardcodes resource namespaces from this value, so they must match the -n flag.\n\nFix: add to your install command:\n  --set securityScans.kubescape-operator.ksNamespace=%s\n\nOr disable security scanning: --set tags.security=false\n" $ksNs .Release.Namespace .Release.Namespace) -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Host-metrics provider checks.
+*/}}
+{{- $provider := include "hostmetrics.provider" . -}}
+{{- $g := .Values.global | default dict -}}
+{{- $ocpEnabled := dig "openshift" "enabled" false $g -}}
+{{- $promInstall := dig "prometheus" "install" true $g -}}
+{{- $ne := dig "prometheus" "prometheus-node-exporter" dict (.Values.prometheus | default dict) -}}
+{{- $neEnabled := dig "enabled" true $ne -}}
+{{- $neHostNetwork := dig "hostNetwork" true $ne -}}
+
+{{- if not (has $provider (list "node-exporter" "otel-host-metrics" "openshift-monitoring")) -}}
+{{- fail (printf "\n\nInvalid host-metrics provider %q. Valid values: \"node-exporter\", \"otel-host-metrics\", \"openshift-monitoring\".\n\n" $provider) -}}
+{{- end -}}
+
+{{- if eq $provider "openshift-monitoring" -}}
+{{- if empty (dig "hostMetrics" "provider" "" $g) -}}
+{{- fail "\n\nobservability.hostMetrics.provider=openshift-monitoring has no effect: the federation scrape job is rendered inside the prometheus subchart, which only sees global.* values.\n\nFix: set it at the canonical location instead:\n  global.hostMetrics.provider=openshift-monitoring\n\n" -}}
+{{- end -}}
+{{- if not $ocpEnabled -}}
+{{- fail "\n\nglobal.hostMetrics.provider=openshift-monitoring is only supported on OpenShift (it federates node metrics from the platform monitoring stack).\n\nFix: also set global.openshift.enabled=true, or choose a different host-metrics provider.\n\n" -}}
+{{- end -}}
+{{- if not $promInstall -}}
+{{- fail "\n\nglobal.hostMetrics.provider=openshift-monitoring requires the bundled Prometheus (the federation scrape job runs in it).\n\nFix: set global.prometheus.install=true, or choose a different host-metrics provider.\n\n" -}}
+{{- end -}}
+{{- if $neEnabled -}}
+{{- fail "\n\nglobal.hostMetrics.provider=openshift-monitoring replaces the bundled node-exporter DaemonSet.\n\nFix: also set:\n  prometheus.prometheus.prometheus-node-exporter.enabled=false\n\n" -}}
+{{- end -}}
+{{- end -}}
+
+{{- if and $ocpEnabled $promInstall (eq $provider "node-exporter") $neEnabled $neHostNetwork -}}
+{{- fail "\n\nOn OpenShift the platform node-exporter already owns host port 9100, so the bundled node-exporter DaemonSet cannot schedule with hostNetwork: true.\n\nFix (either):\n  1. Keep the DaemonSet without host networking:\n       prometheus.prometheus.prometheus-node-exporter.hostNetwork=false\n  2. Reuse the platform monitoring stack instead (no per-node pods):\n       global.hostMetrics.provider=openshift-monitoring\n       prometheus.prometheus.prometheus-node-exporter.enabled=false\n\n" -}}
+{{- end -}}
