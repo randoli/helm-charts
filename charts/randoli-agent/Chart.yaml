@@ -13,11 +13,11 @@ maintainers:
 name: randoli-agent
 sources:
   - https://github.com/randoli/helm-charts
-version: 2.2.0-rc.8
+version: 2.2.0-rc.9
 dependencies:
   - name: sre-agent
     alias: sreAgent
-    version: 1.1.0-rc.3
+    version: 1.1.0-rc.4
     repository: "https://helm.randoli.io"
     tags:
       - sreAgent
