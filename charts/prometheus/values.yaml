@@ -313,6 +313,398 @@ prometheus:
               action: replace
               target_label: node
 
+    # Recording rules for the metrics the SRE agent queries most (span metrics,
+    # container resources, JVM, LLM usage). Pre-aggregating keeps agent
+    # queries cheap on large clusters. Naming follows level:metric:operations.
+    # Override with prometheus.serverFiles."recording_rules.yml": {} to disable.
+    recording_rules.yml:
+      groups:
+
+        # ---------------------------------------------------------------------------
+        # OTel span metrics (randoli_metrics_otel_span_metrics_*)
+        # Backing for blast-score p95/error-rate and the RCA/SRE-chat latency queries.
+        # ---------------------------------------------------------------------------
+        - name: randoli-span-metrics
+          interval: 1m
+          rules:
+            - record: service:span_calls:rate5m
+              expr: |
+                sum by (k8s_namespace_name, service_name, span_kind, status_code) (
+                  rate(randoli_metrics_otel_span_metrics_calls_total[5m])
+                )
+
+            - record: service:span_errors:ratio_rate5m
+              expr: |
+                sum by (k8s_namespace_name, service_name) (service:span_calls:rate5m{status_code="STATUS_CODE_ERROR"})
+                /
+                sum by (k8s_namespace_name, service_name) (service:span_calls:rate5m)
+
+            - record: service:span_server_errors:ratio_rate5m
+              expr: |
+                sum by (k8s_namespace_name, service_name) (service:span_calls:rate5m{span_kind="SPAN_KIND_SERVER", status_code="STATUS_CODE_ERROR"})
+                /
+                sum by (k8s_namespace_name, service_name) (service:span_calls:rate5m{span_kind="SPAN_KIND_SERVER"})
+
+            # Same window the blast score uses (PROMQL_ERROR_RATE, 10m).
+            - record: service:span_errors:ratio_rate10m
+              expr: |
+                sum by (k8s_namespace_name, service_name) (rate(randoli_metrics_otel_span_metrics_calls_total{status_code="STATUS_CODE_ERROR"}[10m]))
+                /
+                sum by (k8s_namespace_name, service_name) (rate(randoli_metrics_otel_span_metrics_calls_total[10m]))
+
+            # Inbound HTTP status mix (common_prompts uses http_status_code!="200").
+            - record: service:span_server_calls_by_http_status:rate5m
+              expr: |
+                sum by (k8s_namespace_name, service_name, http_status_code) (
+                  rate(randoli_metrics_otel_span_metrics_calls_total{span_kind="SPAN_KIND_SERVER"}[5m])
+                )
+
+            # Pre-aggregated buckets: 10.7k raw bucket series -> a few hundred.
+            - record: service:span_duration_milliseconds_bucket:rate5m
+              expr: |
+                sum by (k8s_namespace_name, service_name, span_kind, le) (
+                  rate(randoli_metrics_otel_span_metrics_duration_milliseconds_bucket[5m])
+                )
+
+            - record: service:span_duration_milliseconds_bucket:rate10m
+              expr: |
+                sum by (k8s_namespace_name, service_name, le) (
+                  rate(randoli_metrics_otel_span_metrics_duration_milliseconds_bucket[10m])
+                )
+
+            - record: service:span_duration_milliseconds:p50_5m
+              expr: histogram_quantile(0.50, service:span_duration_milliseconds_bucket:rate5m)
+            - record: service:span_duration_milliseconds:p95_5m
+              expr: histogram_quantile(0.95, service:span_duration_milliseconds_bucket:rate5m)
+            - record: service:span_duration_milliseconds:p99_5m
+              expr: histogram_quantile(0.99, service:span_duration_milliseconds_bucket:rate5m)
+
+            # Matches blast-score PROMQL_P95_LATENCY (all span kinds, 10m).
+            - record: service:span_duration_milliseconds:p95_10m
+              expr: histogram_quantile(0.95, service:span_duration_milliseconds_bucket:rate10m)
+
+            - record: service:span_duration_milliseconds:avg_5m
+              expr: |
+                sum by (k8s_namespace_name, service_name, span_kind) (rate(randoli_metrics_otel_span_metrics_duration_milliseconds_sum[5m]))
+                /
+                sum by (k8s_namespace_name, service_name, span_kind) (rate(randoli_metrics_otel_span_metrics_duration_milliseconds_count[5m]))
+
+            # Per-operation (endpoint / DB statement / topic) view, server+client+consumer only.
+            - record: service_operation:span_calls:rate5m
+              expr: |
+                sum by (k8s_namespace_name, service_name, span_kind, span_name, status_code) (
+                  rate(randoli_metrics_otel_span_metrics_calls_total{span_kind!="SPAN_KIND_INTERNAL"}[5m])
+                )
+
+            - record: service_operation:span_duration_milliseconds:p95_5m
+              expr: |
+                histogram_quantile(0.95,
+                  sum by (k8s_namespace_name, service_name, span_kind, span_name, le) (
+                    rate(randoli_metrics_otel_span_metrics_duration_milliseconds_bucket{span_kind!="SPAN_KIND_INTERNAL"}[5m])
+                  )
+                )
+
+        # ---------------------------------------------------------------------------
+        # OTel semconv HTTP server/client (http_server_request_duration_seconds,
+        # http_client_request_duration_seconds) - includes the new outgoing-call visibility.
+        # ---------------------------------------------------------------------------
+        - name: randoli-http-semconv
+          interval: 1m
+          rules:
+            - record: service_route:http_server_requests:rate5m
+              expr: |
+                sum by (k8s_namespace_name, service_name, http_route, http_request_method, http_response_status_code) (
+                  rate(http_server_request_duration_seconds_count[5m])
+                )
+
+            - record: service:http_server_errors:ratio_rate5m
+              expr: |
+                sum by (k8s_namespace_name, service_name) (rate(http_server_request_duration_seconds_count{http_response_status_code=~"5.."}[5m]))
+                /
+                sum by (k8s_namespace_name, service_name) (rate(http_server_request_duration_seconds_count[5m]))
+
+            - record: service_route:http_server_request_duration_seconds:p95_5m
+              expr: |
+                histogram_quantile(0.95,
+                  sum by (k8s_namespace_name, service_name, http_route, le) (rate(http_server_request_duration_seconds_bucket[5m]))
+                )
+
+            - record: service_peer:http_client_requests:rate5m
+              expr: |
+                sum by (k8s_namespace_name, service_name, server_address, http_response_status_code, error_type) (
+                  rate(http_client_request_duration_seconds_count[5m])
+                )
+
+            - record: service_peer:http_client_errors:ratio_rate5m
+              expr: |
+                sum by (k8s_namespace_name, service_name, server_address) (
+                  rate(http_client_request_duration_seconds_count{error_type!=""}[5m])
+                )
+                /
+                sum by (k8s_namespace_name, service_name, server_address) (
+                  rate(http_client_request_duration_seconds_count[5m])
+                )
+
+            - record: service_peer:http_client_request_duration_seconds:p95_5m
+              expr: |
+                histogram_quantile(0.95,
+                  sum by (k8s_namespace_name, service_name, server_address, le) (rate(http_client_request_duration_seconds_bucket[5m]))
+                )
+
+        # ---------------------------------------------------------------------------
+        # Spring Boot / Micrometer (http_server_requests_seconds_*), JVM
+        # ---------------------------------------------------------------------------
+        - name: randoli-jvm-micrometer
+          interval: 1m
+          rules:
+            - record: service_uri:http_server_requests_seconds:rate5m
+              expr: |
+                sum by (namespace, service_name, uri, method, status, outcome) (
+                  rate(http_server_requests_seconds_count{uri!~"/actuator.*"}[5m])
+                )
+
+            - record: service_uri:http_server_requests_seconds:avg_5m
+              expr: |
+                sum by (namespace, service_name, uri) (rate(http_server_requests_seconds_sum{uri!~"/actuator.*"}[5m]))
+                /
+                sum by (namespace, service_name, uri) (rate(http_server_requests_seconds_count{uri!~"/actuator.*"}[5m]))
+
+            - record: namespace_pod:jvm_memory_used_bytes:sum
+              expr: sum by (namespace, pod, service_name, area) (jvm_memory_used_bytes)
+
+            - record: namespace_pod:jvm_memory_heap_utilisation:ratio
+              expr: |
+                sum by (namespace, pod, service_name) (jvm_memory_used_bytes{area="heap"})
+                /
+                sum by (namespace, pod, service_name) (jvm_memory_max_bytes{area="heap"} > 0)
+
+        # ---------------------------------------------------------------------------
+        # Container resources (cAdvisor) + workload attribution (kube-state-metrics)
+        # Backing for PROMQL_CPU_USAGE / PROMQL_MEM_WSS_MB / PROMQL_NET_BYTES_PER_S.
+        # ---------------------------------------------------------------------------
+        - name: randoli-k8s-workload-mapping
+          interval: 1m
+          rules:
+            # pod -> workload. Deployments are resolved through their ReplicaSet.
+            - record: namespace_workload_pod:kube_pod_owner:relabel
+              expr: |
+                max by (namespace, workload, pod) (
+                  label_replace(
+                    label_replace(kube_pod_owner{owner_kind="ReplicaSet"}, "replicaset", "$1", "owner_name", "(.*)")
+                    * on (namespace, replicaset) group_left (owner_name)
+                      topk by (namespace, replicaset) (1, max by (namespace, replicaset, owner_name) (kube_replicaset_owner{owner_kind="Deployment"})),
+                    "workload", "$1", "owner_name", "(.*)"
+                  )
+                )
+              labels:
+                workload_type: deployment
+            - record: namespace_workload_pod:kube_pod_owner:relabel
+              expr: |
+                max by (namespace, workload, pod) (label_replace(kube_pod_owner{owner_kind="StatefulSet"}, "workload", "$1", "owner_name", "(.*)"))
+              labels:
+                workload_type: statefulset
+            - record: namespace_workload_pod:kube_pod_owner:relabel
+              expr: |
+                max by (namespace, workload, pod) (label_replace(kube_pod_owner{owner_kind="DaemonSet"}, "workload", "$1", "owner_name", "(.*)"))
+              labels:
+                workload_type: daemonset
+            - record: namespace_workload_pod:kube_pod_owner:relabel
+              expr: |
+                max by (namespace, workload, pod) (label_replace(kube_pod_owner{owner_kind="Job"}, "workload", "$1", "owner_name", "(.*)"))
+              labels:
+                workload_type: job
+
+        - name: randoli-container-resources
+          interval: 1m
+          rules:
+            - record: namespace_pod_container:container_cpu_usage_seconds_total:rate5m
+              expr: |
+                sum by (namespace, pod, container, node) (
+                  label_replace(
+                    rate(container_cpu_usage_seconds_total{container!="", container!="POD", image!=""}[5m]),
+                    "node", "$1", "instance", "(.*)"
+                  )
+                )
+
+            - record: namespace_pod_container:container_memory_working_set_bytes:max
+              expr: |
+                max by (namespace, pod, container) (container_memory_working_set_bytes{container!="", container!="POD", image!=""})
+
+            - record: namespace_pod_container:container_memory_rss:max
+              expr: |
+                max by (namespace, pod, container) (container_memory_rss{container!="", container!="POD", image!=""})
+
+            - record: namespace_pod_container:container_cpu_cfs_throttled:ratio_rate5m
+              expr: |
+                sum by (namespace, pod, container) (rate(container_cpu_cfs_throttled_periods_total{container!=""}[5m]))
+                /
+                sum by (namespace, pod, container) (rate(container_cpu_cfs_periods_total{container!=""}[5m]))
+
+            - record: namespace_pod:container_network_receive_bytes:rate5m
+              expr: sum by (namespace, pod) (rate(container_network_receive_bytes_total{pod!=""}[5m]))
+            - record: namespace_pod:container_network_transmit_bytes:rate5m
+              expr: sum by (namespace, pod) (rate(container_network_transmit_bytes_total{pod!=""}[5m]))
+            - record: namespace_pod:container_network_drops:rate5m
+              expr: |
+                sum by (namespace, pod) (
+                    rate(container_network_receive_packets_dropped_total{pod!=""}[5m])
+                  + rate(container_network_transmit_packets_dropped_total{pod!=""}[5m])
+                )
+
+            # Requests / limits (kube-state-metrics, running pods only)
+            - record: namespace_pod_container:kube_pod_container_resource_requests:cpu_cores
+              expr: |
+                kube_pod_container_resource_requests{resource="cpu"}
+                * on (namespace, pod) group_left () max by (namespace, pod) (kube_pod_status_phase{phase=~"Running|Pending"} == 1)
+            - record: namespace_pod_container:kube_pod_container_resource_requests:memory_bytes
+              expr: |
+                kube_pod_container_resource_requests{resource="memory"}
+                * on (namespace, pod) group_left () max by (namespace, pod) (kube_pod_status_phase{phase=~"Running|Pending"} == 1)
+            - record: namespace_pod_container:kube_pod_container_resource_limits:cpu_cores
+              expr: |
+                kube_pod_container_resource_limits{resource="cpu"}
+                * on (namespace, pod) group_left () max by (namespace, pod) (kube_pod_status_phase{phase=~"Running|Pending"} == 1)
+            - record: namespace_pod_container:kube_pod_container_resource_limits:memory_bytes
+              expr: |
+                kube_pod_container_resource_limits{resource="memory"}
+                * on (namespace, pod) group_left () max by (namespace, pod) (kube_pod_status_phase{phase=~"Running|Pending"} == 1)
+
+        - name: randoli-workload-rollups
+          interval: 1m
+          rules:
+            - record: namespace_workload:container_cpu_usage_seconds_total:rate5m
+              expr: |
+                sum by (namespace, workload, workload_type) (
+                  namespace_pod_container:container_cpu_usage_seconds_total:rate5m
+                  * on (namespace, pod) group_left (workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel
+                )
+            - record: namespace_workload:container_memory_working_set_bytes:sum
+              expr: |
+                sum by (namespace, workload, workload_type) (
+                  namespace_pod_container:container_memory_working_set_bytes:max
+                  * on (namespace, pod) group_left (workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel
+                )
+            - record: namespace_workload:container_cpu_usage_vs_requests:ratio
+              expr: |
+                namespace_workload:container_cpu_usage_seconds_total:rate5m
+                /
+                sum by (namespace, workload, workload_type) (
+                  namespace_pod_container:kube_pod_container_resource_requests:cpu_cores
+                  * on (namespace, pod) group_left (workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel
+                )
+            - record: namespace_workload:container_memory_vs_limits:ratio
+              expr: |
+                namespace_workload:container_memory_working_set_bytes:sum
+                /
+                sum by (namespace, workload, workload_type) (
+                  namespace_pod_container:kube_pod_container_resource_limits:memory_bytes
+                  * on (namespace, pod) group_left (workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel
+                )
+            - record: namespace:container_cpu_usage_seconds_total:rate5m
+              expr: sum by (namespace) (namespace_pod_container:container_cpu_usage_seconds_total:rate5m)
+            - record: namespace:container_memory_working_set_bytes:sum
+              expr: sum by (namespace) (namespace_pod_container:container_memory_working_set_bytes:max)
+
+        # ---------------------------------------------------------------------------
+        # Pod health (kube-state-metrics)
+        # ---------------------------------------------------------------------------
+        - name: randoli-pod-health
+          interval: 1m
+          rules:
+            - record: namespace_pod_container:kube_pod_container_status_restarts:increase1h
+              expr: sum by (namespace, pod, container) (increase(kube_pod_container_status_restarts_total[1h])) > 0
+            - record: namespace_pod_container:kube_pod_container_oomkilled:last
+              expr: max by (namespace, pod, container) (kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}) == 1
+            - record: namespace_pod_container:kube_pod_container_waiting:reason
+              expr: max by (namespace, pod, container, reason) (kube_pod_container_status_waiting_reason) == 1
+            - record: namespace:kube_pod_not_ready:count
+              expr: count by (namespace) (max by (namespace, pod) (kube_pod_status_ready{condition="false"}) == 1)
+            - record: namespace_deployment:kube_deployment_replicas_unavailable:sum
+              expr: sum by (namespace, deployment) (kube_deployment_status_replicas_unavailable) > 0
+
+        # ---------------------------------------------------------------------------
+        # Nodes (cAdvisor root cgroup, so it works even where node-exporter is not scheduled)
+        # ---------------------------------------------------------------------------
+        - name: randoli-node
+          interval: 1m
+          rules:
+            - record: node:container_cpu_usage_seconds_total:rate5m
+              expr: |
+                sum by (node) (label_replace(rate(container_cpu_usage_seconds_total{id="/"}[5m]), "node", "$1", "instance", "(.*)"))
+            - record: node:cpu_utilisation:ratio
+              expr: |
+                node:container_cpu_usage_seconds_total:rate5m
+                / on (node) sum by (node) (kube_node_status_allocatable{resource="cpu"})
+            - record: node:container_memory_working_set_bytes:sum
+              expr: |
+                sum by (node) (label_replace(container_memory_working_set_bytes{id="/"}, "node", "$1", "instance", "(.*)"))
+            - record: node:memory_utilisation:ratio
+              expr: |
+                node:container_memory_working_set_bytes:sum
+                / on (node) sum by (node) (kube_node_status_allocatable{resource="memory"})
+            - record: node:kube_pod_container_resource_requests_cpu:ratio
+              expr: |
+                sum by (node) (namespace_pod_container:kube_pod_container_resource_requests:cpu_cores)
+                / on (node) sum by (node) (kube_node_status_allocatable{resource="cpu"})
+            - record: node:kube_pod_container_resource_requests_memory:ratio
+              expr: |
+                sum by (node) (namespace_pod_container:kube_pod_container_resource_requests:memory_bytes)
+                / on (node) sum by (node) (kube_node_status_allocatable{resource="memory"})
+
+        # ---------------------------------------------------------------------------
+        # Kafka consumers (client-side lag from instrumented services)
+        # ---------------------------------------------------------------------------
+        - name: randoli-kafka
+          interval: 1m
+          rules:
+            - record: service_topic:kafka_consumer_records_lag:max
+              expr: max by (k8s_namespace_name, service_name, topic) (kafka_consumer_records_lag_max)
+            # Committed-offset throughput per consumer group (by topic would be ~5.7k series).
+            - record: group:kafka_consumer_group_offset:rate5m
+              expr: sum by (group) (rate(kafka_consumer_group_offset_ratio[5m]))
+
+        # ---------------------------------------------------------------------------
+        # LLM usage / cost (randoli-sre-agent)
+        # ---------------------------------------------------------------------------
+        - name: randoli-llm
+          interval: 1m
+          rules:
+            - record: agent_model:randoli_aiagent_tokens:rate5m
+              expr: |
+                sum by (agent, model, direction) (
+                    label_replace(rate(randoli_aiagent_input_token_total[5m]),  "direction", "input",  "", "")
+                  or
+                    label_replace(rate(randoli_aiagent_output_token_total[5m]), "direction", "output", "", "")
+                )
+            - record: agent_model:randoli_aiagent_cost_usd:increase1h
+              expr: |
+                sum by (agent, model) (increase(randoli_aiagent_input_token_cost_usd_USD_total[1h]))
+                + on (agent, model)
+                sum by (agent, model) (increase(randoli_aiagent_output_token_cost_usd_USD_total[1h]))
+            - record: agent_model:randoli_aiagent_latency_milliseconds:p95_5m
+              expr: |
+                histogram_quantile(0.95, sum by (agent, model, le) (rate(randoli_aiagent_latency_ms_milliseconds_bucket[5m])))
+
+        # ---------------------------------------------------------------------------
+        # Telemetry pipeline health (OTel collector)
+        # ---------------------------------------------------------------------------
+        - name: randoli-telemetry-pipeline
+          interval: 1m
+          rules:
+            - record: collector:otelcol_exporter_send_failed:rate5m
+              expr: |
+                sum by (service_name, exporter) (
+                    rate(otelcol_exporter_send_failed_spans_total[5m])
+                  or rate(otelcol_exporter_send_failed_metric_points_total[5m])
+                )
+            - record: collector:otelcol_receiver_refused:rate5m
+              expr: |
+                sum by (service_name, receiver) (
+                    rate(otelcol_receiver_refused_spans_total[5m])
+                  or rate(otelcol_receiver_refused_metric_points_total[5m])
+                  or rate(otelcol_receiver_refused_log_records_total[5m])
+                )
+
   # Adds opencost and network-cost-metrics scrape jobs.
   # The helper functions are defined in templates/_helpers.tpl and resolved via tpl.
   extraScrapeConfigs: |
