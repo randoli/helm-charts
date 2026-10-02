@@ -389,7 +389,17 @@ prometheus:
                 /
                 sum by (k8s_namespace_name, service_name, span_kind) (rate(randoli_metrics_otel_span_metrics_duration_milliseconds_count[5m]))
 
-            # Per-operation (endpoint / DB statement / topic) view, server+client+consumer only.
+        # ---------------------------------------------------------------------------
+        # Per-operation span metrics (endpoint / DB statement / topic), keyed by span_name.
+        # Kept in a separate group so a slow evaluation cannot delay the per-service
+        # rules above. span_name cardinality depends on the customer's instrumentation:
+        # if a rule would produce more than `limit` series the evaluation fails and
+        # nothing is stored (visible in prometheus_rule_evaluation_failures_total).
+        # ---------------------------------------------------------------------------
+        - name: randoli-span-operations
+          interval: 1m
+          limit: 5000
+          rules:
             - record: service_operation:span_calls:rate5m
               expr: |
                 sum by (k8s_namespace_name, service_name, span_kind, span_name, status_code) (
@@ -459,24 +469,45 @@ prometheus:
           rules:
             - record: service_uri:http_server_requests_seconds:rate5m
               expr: |
-                sum by (namespace, service_name, uri, method, status, outcome) (
+                sum by (k8s_namespace_name, service_name, uri, method, status, outcome) (
                   rate(http_server_requests_seconds_count{uri!~"/actuator.*"}[5m])
                 )
 
             - record: service_uri:http_server_requests_seconds:avg_5m
               expr: |
-                sum by (namespace, service_name, uri) (rate(http_server_requests_seconds_sum{uri!~"/actuator.*"}[5m]))
+                sum by (k8s_namespace_name, service_name, uri) (rate(http_server_requests_seconds_sum{uri!~"/actuator.*"}[5m]))
                 /
-                sum by (namespace, service_name, uri) (rate(http_server_requests_seconds_count{uri!~"/actuator.*"}[5m]))
+                sum by (k8s_namespace_name, service_name, uri) (rate(http_server_requests_seconds_count{uri!~"/actuator.*"}[5m]))
 
+            # JVM memory per pod. OTel reports jvm_memory_type="heap|non_heap" with
+            # jvm_memory_limit_bytes; Micrometer reports area="heap|nonheap" with
+            # jvm_memory_max_bytes. A pod can expose both (with different service_name
+            # values), so aggregate per pod and prefer OTel, falling back to Micrometer.
+            # OTLP series have no namespace/pod labels, hence the k8s_* attributes.
             - record: namespace_pod:jvm_memory_used_bytes:sum
-              expr: sum by (namespace, pod, service_name, area) (jvm_memory_used_bytes)
+              expr: |
+                sum by (k8s_namespace_name, k8s_pod_name, area) (
+                  label_replace(
+                    label_replace(jvm_memory_used_bytes{jvm_memory_type!=""}, "area", "heap", "jvm_memory_type", "heap"),
+                    "area", "nonheap", "jvm_memory_type", "non_heap"
+                  )
+                )
+                or
+                sum by (k8s_namespace_name, k8s_pod_name, area) (jvm_memory_used_bytes{area!=""})
 
             - record: namespace_pod:jvm_memory_heap_utilisation:ratio
               expr: |
-                sum by (namespace, pod, service_name) (jvm_memory_used_bytes{area="heap"})
-                /
-                sum by (namespace, pod, service_name) (jvm_memory_max_bytes{area="heap"} > 0)
+                (
+                  sum by (k8s_namespace_name, k8s_pod_name) (jvm_memory_used_bytes{jvm_memory_type="heap"})
+                  /
+                  sum by (k8s_namespace_name, k8s_pod_name) (jvm_memory_limit_bytes{jvm_memory_type="heap"} > 0)
+                )
+                or
+                (
+                  sum by (k8s_namespace_name, k8s_pod_name) (jvm_memory_used_bytes{area="heap"})
+                  /
+                  sum by (k8s_namespace_name, k8s_pod_name) (jvm_memory_max_bytes{area="heap"} > 0)
+                )
 
         # ---------------------------------------------------------------------------
         # Container resources (cAdvisor) + workload attribution (kube-state-metrics)
@@ -659,9 +690,6 @@ prometheus:
           rules:
             - record: service_topic:kafka_consumer_records_lag:max
               expr: max by (k8s_namespace_name, service_name, topic) (kafka_consumer_records_lag_max)
-            # Committed-offset throughput per consumer group (by topic would be ~5.7k series).
-            - record: group:kafka_consumer_group_offset:rate5m
-              expr: sum by (group) (rate(kafka_consumer_group_offset_ratio[5m]))
 
         # ---------------------------------------------------------------------------
         # LLM usage / cost (randoli-sre-agent)
