@@ -3,7 +3,7 @@ name: cost-management
 description: Randoli wrapper chart for OpenCost (v2.5.25)
 type: application
 version: 2.5.27
-appVersion: "1.121.3-rc.3"
+appVersion: "1.121.3-rc.4"
 dependencies:
   - name: opencost
     version: 2.5.23

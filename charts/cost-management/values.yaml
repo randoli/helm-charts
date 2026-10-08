@@ -12,7 +12,7 @@ opencost:
         registry: docker.io
         repository: randoli/opencost
         # OpenCost fork v1.121.3 RC: GCP pricing via Workload Identity / default credentials (customer key -> WI -> Randoli key).
-        tag: "1.121.3-rc.3"
+        tag: "1.121.3-rc.4"
         pullPolicy: IfNotPresent
 
       # Prometheus query/subquery resolution -> PROMETHEUS_QUERY_RESOLUTION_SECONDS.
