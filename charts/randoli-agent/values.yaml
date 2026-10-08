@@ -397,8 +397,14 @@ observability:
     includeNamespaces: []
     excludeNamespaces: []
 
+    # Enable support for multiline log entries, such as stack traces, panics, and similar errors.
+    # Disable if multiline log processing is not required and the standard log pipeline is preferred.
     multilineLogs:
       enabled: true
+
+    # Enable Randoli custom tags to include additional context from multiline log entries,
+    # such as stack trace and panic details. Requires multilineLogs to be enabled.
+    # Disable if Randoli custom tags are not required.
     randoliTags:
       enabled: true
 

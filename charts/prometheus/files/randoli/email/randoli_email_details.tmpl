@@ -13,8 +13,8 @@
 {{ define "randoli.email.details.kube" -}}
 {{- with .CommonAnnotations.namespace }}
 <tr>
-  <td style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:13px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Namespace</td>
-  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:15px; color:#232629; font-weight:500;">{{ . }}</td>
+  <td style="padding:6px 12px 6px 0; border-bottom:1px solid #f0f1f3; font-size:12px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap; vertical-align:baseline;">Namespace</td>
+  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:14px; color:#232629; font-weight:500; word-wrap:break-word; overflow-wrap:break-word; word-break:break-word; vertical-align:baseline;">{{ . }}</td>
 </tr>
 {{- end }}
 {{- with .CommonLabels.resource -}}
@@ -23,8 +23,8 @@
 {{- $label = . -}}
 {{- end }}
 <tr>
-  <td style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:13px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">{{ $label }}</td>
-  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:15px; color:#232629; font-weight:500;">{{ . }}</td>
+  <td style="padding:6px 12px 6px 0; border-bottom:1px solid #f0f1f3; font-size:12px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap; vertical-align:baseline;">{{ $label }}</td>
+  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:14px; color:#232629; font-weight:500; word-wrap:break-word; overflow-wrap:break-word; word-break:break-word; vertical-align:baseline;">{{ . }}</td>
 </tr>
 {{- end -}}
 {{- end }}
@@ -37,8 +37,8 @@
 {{- $label = . -}}
 {{- end }}
 <tr>
-  <td style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:13px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">{{ $label }}</td>
-  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:15px; color:#232629; font-weight:500;">{{ . }}</td>
+  <td style="padding:6px 12px 6px 0; border-bottom:1px solid #f0f1f3; font-size:12px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap; vertical-align:baseline;">{{ $label }}</td>
+  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:14px; color:#232629; font-weight:500; word-wrap:break-word; overflow-wrap:break-word; word-break:break-word; vertical-align:baseline;">{{ . }}</td>
 </tr>
 {{- end -}}
 {{- end }}
@@ -47,8 +47,8 @@
 {{ define "randoli.email.details.default" -}}
 {{- with .CommonLabels.resource }}
 <tr>
-  <td style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:13px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Resource</td>
-  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:15px; color:#232629; font-weight:500;">{{ . }}</td>
+  <td style="padding:6px 12px 6px 0; border-bottom:1px solid #f0f1f3; font-size:12px; color:#9aa1ab; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap; vertical-align:baseline;">Resource</td>
+  <td align="right" style="padding:6px 0; border-bottom:1px solid #f0f1f3; font-size:14px; color:#232629; font-weight:500; word-wrap:break-word; overflow-wrap:break-word; word-break:break-word; vertical-align:baseline;">{{ . }}</td>
 </tr>
 {{- end -}}
 {{- end }}
