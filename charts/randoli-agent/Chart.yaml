@@ -49,7 +49,7 @@ dependencies:
     tags:
       - observability
   - name: cost-management
-    version: 2.5.26
+    version: 2.5.27
     alias: costManagement
     tags:
       - costManagement
