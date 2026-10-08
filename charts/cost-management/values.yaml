@@ -11,8 +11,8 @@ opencost:
       image:
         registry: docker.io
         repository: randoli/opencost
-        # TODO: confirm the published fork image tag for OpenCost v1.120.5 before release.
-        tag: "1.120.5"
+        # OpenCost fork v1.121.3 RC: GCP pricing via Workload Identity / default credentials (customer key -> WI -> Randoli key).
+        tag: "1.121.3-rc.4"
         pullPolicy: IfNotPresent
 
       # Prometheus query/subquery resolution -> PROMETHEUS_QUERY_RESOLUTION_SECONDS.
