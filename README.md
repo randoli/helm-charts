@@ -194,7 +194,7 @@ The config lives under `observability.telemetry.proxy.*`:
 | Value | Purpose | Default |
 |-------|---------|---------|
 | `observability.telemetry.proxy.image` | Container image for the proxy Deployment | `docker.io/randoli/telemetry-proxy:0.1.2` |
-| `observability.telemetry.proxy.cors` | `CORS_ALLOW_ORIGIN` — `*` or comma-separated origin list. Empty falls back to the default Randoli console origins. | `"*"` |
+| `observability.telemetry.proxy.cors` | `CORS_ALLOW_ORIGIN` — `*` or comma-separated origin list. Empty uses `CONSOLE_URL` from the agent secret; a non-empty value overrides it. | `"*"` |
 | `observability.telemetry.proxy.keycloakIssuer` | `KEYCLOAK_ISSUER_URL` — Keycloak realm issuer URL. Empty falls back to `https://sso.randoli.io/auth/realms/sso`. | unset |
 | `observability.telemetry.proxy.tunnelServerUrl` | `TUNNEL_SERVER_URL` — only injected into the proxy ConfigMap when non-empty. | `""` |
 | `observability.telemetry.proxy.mode` | `MODE` — only injected into the proxy ConfigMap when non-empty. | `""` |

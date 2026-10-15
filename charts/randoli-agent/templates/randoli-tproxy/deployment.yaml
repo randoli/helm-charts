@@ -67,6 +67,30 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.global.secrets.config }}
                   key: CLUSTER_ID
+            {{- if not .Values.tproxy.keycloakIssuer }}
+            - name: KEYCLOAK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secrets.config }}
+                  key: KEYCLOAK_SERVICE_URL
+                  optional: true
+            - name: KEYCLOAK_REALM_TPROXY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secrets.config }}
+                  key: KEYCLOAK_REALM_TPROXY
+                  optional: true
+            {{- end }}
+            {{- if empty .Values.tproxy.cors }}
+            # Console origin provisioned into the agent secret. Skipped when
+            # tproxy.cors is set explicitly, so the ConfigMap value wins.
+            - name: CORS_ALLOW_ORIGIN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secrets.config }}
+                  key: CONSOLE_URL
+                  optional: true
+            {{- end }}
             - name: FLIGHT_SQL_USER
               valueFrom:
                 secretKeyRef:

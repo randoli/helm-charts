@@ -246,14 +246,16 @@ tproxy:
     tag: "1.5.0"
     pullPolicy: Always
 
-  # CORS_ALLOW_ORIGIN. Empty falls back to the default Randoli console origins
-  # (https://telemetry-app.randoli.io,https://console.insights.randoli.io).
-  # Set to "*" to allow any origin, or to a comma-separated list to allow
-  # specific origins.
+  # CORS_ALLOW_ORIGIN override. Empty (default) takes the origin from CONSOLE_URL
+  # in the agent secret. Set to "*" to allow any origin, or to a comma-separated
+  # list of origins; a non-empty value takes precedence over the secret.
   cors: ""
 
-  # KEYCLOAK_ISSUER_URL. Empty falls back to
-  # https://sso.randoli.io/auth/realms/sso
+  # KEYCLOAK_ISSUER_URL. Explicit override: when set, the secret's
+  # KEYCLOAK_URL / KEYCLOAK_REALM_TPROXY are not passed to the tproxy.
+  # Empty falls back to https://sso.randoli.io/auth/realms/sso, used only when
+  # the agent secret has no KEYCLOAK_URL + KEYCLOAK_REALM_TPROXY (the tproxy
+  # prefers that pair: <KEYCLOAK_URL>/realms/<KEYCLOAK_REALM_TPROXY>).
   keycloakIssuer: ""
 
   # Proxy mode

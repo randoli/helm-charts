@@ -218,14 +218,6 @@ observability.traceConfig.storage.tempo.writeUrl when set (external Tempo).
 {{- end -}}
 {{- end -}}
 
-{{- define "telemetry-proxy-cors" -}}
-{{- if not (empty .Values.tproxy.cors)  -}}
-{{ .Values.tproxy.cors | quote}}
-{{- else -}}
-https://console.insights.randoli.io
-{{- end -}}
-{{- end -}}
-
 {{/*
 Loki deployment mode: singleBinary (charts/loki) or distributed (charts/loki-distributed).
 The two booleans below are mutually exclusive; the distributed branch wins when both are on.
@@ -270,6 +262,11 @@ when set, falling back to writeUrl for the single-binary external case.
 {{- end -}}
 {{- end -}}
 
+{{/*
+Legacy / fallback issuer URL for the tproxy. Installs whose agent secret has no
+KEYCLOAK_URL + KEYCLOAK_REALM_TPROXY keep using this; the tproxy prefers the
+URL + realm pair when both are present (see randoli-tproxy/deployment.yaml).
+*/}}
 {{- define "telemetry-proxy-keycloak-issuer" -}}
 {{- if not (empty .Values.tproxy.keycloakIssuer)  -}}
 {{ .Values.tproxy.keycloakIssuer }}
