@@ -36,6 +36,8 @@ spec:
   image: docker.io/randoli/otelcol:1.3.2
   upgradeStrategy: automatic
   mode: statefulset
+  podAnnotations:
+    resource.opentelemetry.io/service.name: randoli-otel-collector
   serviceAccount: randoli-otel-collector
   autoscaler:
     maxReplicas: 5
