@@ -84,6 +84,10 @@ spec:
   template:
     spec:
       serviceAccountName: netobserv-tls-setup
+      {{- with (.Values.global | default dict).imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       restartPolicy: OnFailure
       securityContext:
         runAsNonRoot: true

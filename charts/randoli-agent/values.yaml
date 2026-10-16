@@ -139,6 +139,9 @@ agent:
       repository: datacatering/duckdb
       tag: "v1.5.1"
       pullPolicy: IfNotPresent
+    # Image (registry/repo:tag or repo@sha256:digest) of the bootstrap Job that
+    # creates the DB secret. Needs bash + kubectl.
+    bootstrapImage: docker.io/alpine/k8s@sha256:7aa52956f4bfa7e95bd9a6ee59674748033e2f192df3ccf8487086b1c390974b
     # PVC (templates/pvc.yaml) mounted at /persistence by the DB pod
     storage:
       pvSize: 10Gi
@@ -298,6 +301,15 @@ tproxy:
 # Operator and target-allocator feature toggles live under observability.otel.
 # ============================================================================
 otelCollector:
+  # -- Image of the Randoli OTel Collector (registry/repo:tag)
+  image: docker.io/randoli/otelcol:1.3.2
+  # -- Auto-instrumentation images used by the Instrumentation CR (registry/repo:tag)
+  instrumentationImages:
+    python: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-python:0.59b0
+    dotnet: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-dotnet:1.12.0
+    go: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.23.0
+    nodejs: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-nodejs:0.67.0
+    java: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.22.0
   # -- Toleration labels (falls back to global.tolerations)
   tolerations: []
   # -- Node labels (falls back to global.nodeSelector)
