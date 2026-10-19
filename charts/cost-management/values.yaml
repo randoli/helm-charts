@@ -11,8 +11,8 @@ opencost:
       image:
         registry: docker.io
         repository: randoli/opencost
-        # OpenCost fork v1.121.3: GCP pricing via Workload Identity / default credentials (customer key -> WI -> Randoli key).
-        tag: "1.121.3"
+        # OpenCost fork v1.121.4 RC: GCP pricing logs show the auth source and identity (customer key -> CLOUD_PROVIDER_API_KEY -> Google default credentials).
+        tag: "1.121.4-rc.1"
         pullPolicy: IfNotPresent
 
       # Prometheus query/subquery resolution -> PROMETHEUS_QUERY_RESOLUTION_SECONDS.
