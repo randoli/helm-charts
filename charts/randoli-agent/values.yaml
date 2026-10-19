@@ -153,12 +153,12 @@ agent:
     resources:
       limits:
         cpu: 1
-        memory: 4Gi
+        memory: 6Gi
       requests:
         cpu: 150m
-        memory: 4Gi
+        memory: 6Gi
     flightEngine:
-      memoryLimit: 4GB
+      memoryLimit: 6GB
       threads: 2
       tempDirectorySize: 5GB
 
