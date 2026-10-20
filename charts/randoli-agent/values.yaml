@@ -246,7 +246,7 @@ tproxy:
   image:
     registry: docker.io
     repository: randoli/telemetry-proxy
-    tag: "1.6.0-rc.1"
+    tag: "1.6.0-rc.2"
     pullPolicy: Always
 
   # CORS_ALLOW_ORIGIN override. Empty (default) takes the origin from CONSOLE_URL
