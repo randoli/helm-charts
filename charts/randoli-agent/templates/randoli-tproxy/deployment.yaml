@@ -59,8 +59,17 @@ spec:
           {{- end }}
           imagePullPolicy: {{ .Values.tproxy.image.pullPolicy }}
           ports:
-            - containerPort: 8080
+            - name: http
+              containerPort: 8080
               protocol: TCP
+          livenessProbe:
+            httpGet:
+              path:  /healthz
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
           env:
             - name: CLUSTER_ID
               valueFrom:
