@@ -33,7 +33,9 @@ spec:
   affinity:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  image: {{ .Values.otelCollector.image }}
+  {{- with .Values.otelCollector.image }}
+  image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}:{{ .tag }}"
+  {{- end }}
   upgradeStrategy: automatic
   mode: statefulset
   podAnnotations:

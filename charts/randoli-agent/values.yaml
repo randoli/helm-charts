@@ -301,8 +301,14 @@ tproxy:
 # Operator and target-allocator feature toggles live under observability.otel.
 # ============================================================================
 otelCollector:
-  # -- Image of the Randoli OTel Collector (registry/repo:tag)
-  image: docker.io/randoli/otelcol:1.3.2
+  # -- Image of the Randoli OTel Collector. Kept as a map (not a
+  # "registry/repo:tag" string): kubescape-operator has a map at the same
+  # otelCollector.image path, and a string here makes Helm print a
+  # "cannot overwrite table with non table" coalesce warning.
+  image:
+    registry: docker.io
+    repository: randoli/otelcol
+    tag: "1.3.2"
   # -- Auto-instrumentation images used by the Instrumentation CR (registry/repo:tag)
   instrumentationImages:
     python: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-python:0.59b0
