@@ -1,0 +1,25 @@
+{{/*
+Binds the Prometheus server ServiceAccount to OpenShift's
+cluster-monitoring-view ClusterRole so the /federate endpoint (which
+authorizes via SubjectAccessReview) accepts its token. Renders only when
+OpenShift host-metrics federation is on — see "prometheus.ocpFederation.*"
+in _helpers.tpl. The ClusterRole only exists on OpenShift, so
+vanilla-Kubernetes installs are unaffected.
+*/}}
+{{- if eq (include "prometheus.ocpFederation.enabled" .) "true" -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Namespace }}-{{ .Release.Name }}-prometheus-monitoring-view
+subjects:
+  # Mirrors the community chart's prometheus.serviceAccountName.server helper:
+  # serviceAccounts.server.name, else server.fullnameOverride, else the
+  # derived "<release>-prometheus-server".
+  - kind: ServiceAccount
+    name: {{ .Values.prometheus.serviceAccounts.server.name | default (.Values.prometheus.server.fullnameOverride | default (printf "%s-prometheus-server" .Release.Name)) }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-monitoring-view
+{{- end -}}

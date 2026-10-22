@@ -218,14 +218,6 @@ observability.traceConfig.storage.tempo.writeUrl when set (external Tempo).
 {{- end -}}
 {{- end -}}
 
-{{- define "telemetry-proxy-cors" -}}
-{{- if not (empty .Values.tproxy.cors)  -}}
-{{ .Values.tproxy.cors | quote}}
-{{- else -}}
-https://console.insights.randoli.io
-{{- end -}}
-{{- end -}}
-
 {{/*
 Loki deployment mode: singleBinary (charts/loki) or distributed (charts/loki-distributed).
 The two booleans below are mutually exclusive; the distributed branch wins when both are on.
@@ -270,6 +262,11 @@ when set, falling back to writeUrl for the single-binary external case.
 {{- end -}}
 {{- end -}}
 
+{{/*
+Legacy / fallback issuer URL for the tproxy. Installs whose agent secret has no
+KEYCLOAK_URL + KEYCLOAK_REALM_TPROXY keep using this; the tproxy prefers the
+URL + realm pair when both are present (see randoli-tproxy/deployment.yaml).
+*/}}
 {{- define "telemetry-proxy-keycloak-issuer" -}}
 {{- if not (empty .Values.tproxy.keycloakIssuer)  -}}
 {{ .Values.tproxy.keycloakIssuer }}
@@ -278,9 +275,28 @@ https://sso.randoli.io/auth/realms/sso
 {{- end -}}
 {{- end -}}
 
+{{/*
+Host-metrics provider. global.hostMetrics.provider is the standard location
+(The OpenShift federation scrape job is rendered inside the prometheus subchart)
+and overrides the legacy observability.hostMetrics.provider when set.
+
+For the "openshift-monitoring" provider the mechanism, tunables
+(global.hostMetrics.openshiftMonitoring.*) and RBAC live in the prometheus
+wrapper chart.
+
+Note: that chart always renders as a dependency of randoli-agent, i.e. in
+subchart values scope, where only global.* is visible — never the parent's
+observability.* values. Its copy of the predicate is therefore duplicated
+there deliberately; keep the two in sync.
+*/}}
+{{- define "hostmetrics.provider" -}}
+{{- $global := dig "hostMetrics" "provider" "" (.Values.global | default dict) -}}
+{{- $local := dig "hostMetrics" "provider" "" (.Values.observability | default dict) -}}
+{{- $global | default ($local | default "node-exporter") -}}
+{{- end -}}
+
 {{- define "enable.otel-host-metrics" -}}
-{{- $hm := .Values.observability.hostMetrics | default dict }}
-{{- if and .Values.tags.observability (eq ($hm.provider | default "node-exporter") "otel-host-metrics") -}}
+{{- if and .Values.tags.observability (eq (include "hostmetrics.provider" .) "otel-host-metrics") -}}
 true
 {{- else -}}
 false

@@ -42,6 +42,13 @@ jobs:
       - name: Render both platform modes
         run: |
           helm template charts/randoli-agent > /tmp/vanilla.yaml
-          helm template charts/randoli-agent --set global.openshift.enabled=true > /tmp/openshift.yaml
+          # OpenShift mode requires an explicit host-metrics strategy (the
+          # platform node-exporter already owns host port 9100, so the chart
+          # fails the render if the bundled one runs with hostNetwork: true).
+          # hostNetwork=false is the "keep the bundled DaemonSet" option.
+          helm template charts/randoli-agent \
+            --set global.openshift.enabled=true \
+            --set prometheus.prometheus.prometheus-node-exporter.hostNetwork=false \
+            > /tmp/openshift.yaml
           ! grep -Eq 'fsGroup: 1001([^0-9]|$)' /tmp/openshift.yaml
           grep -Eq 'fsGroup: 1001([^0-9]|$)' /tmp/vanilla.yaml

@@ -29,6 +29,27 @@ global:
     # init container skips its group-1001 chown.
     enabled: false
 
+  # Standard location for the host-metrics provider; overrides
+  # observability.hostMetrics.provider when set. Options:
+  #   "node-exporter"        — (default) prometheus-community node-exporter DaemonSet.
+  #   "otel-host-metrics"    — OTel Collector DaemonSet with the hostmetrics receiver.
+  #   "openshift-monitoring" — OpenShift only: no per-node workload at all; the
+  #                            bundled Prometheus federates the node_* series the
+  #                            platform monitoring stack already collects.
+  # "openshift-monitoring" MUST be set here (not at
+  # observability.hostMetrics.provider): The reason to have this in the global section
+  # is that this comfig must be accessible to the prometheus subchart that renders the federation scrape job.
+  hostMetrics:
+    provider: ""
+    # Tunables for the "openshift-monitoring" provider
+    # the defaults live in charts/prometheus/templates/_helpers.tpl, "prometheus.ocpFederation.*"):
+    # openshiftMonitoring:
+    #   target: prometheus-k8s.openshift-monitoring.svc:9091
+    #   serverName: prometheus-k8s.openshift-monitoring.svc  # override together with target
+    #   scrapeInterval: 30s
+    #   scrapeTimeout: 25s
+    #   match: '{__name__=~"node_.+"}'
+
   # global Prometheus config
   prometheus:
     # Prometheus will not be automatically installed when this flag is false.
@@ -118,6 +139,9 @@ agent:
       repository: datacatering/duckdb
       tag: "v1.5.1"
       pullPolicy: IfNotPresent
+    # Image (registry/repo:tag or repo@sha256:digest) of the bootstrap Job that
+    # creates the DB secret. Needs bash + kubectl.
+    bootstrapImage: docker.io/alpine/k8s@sha256:7aa52956f4bfa7e95bd9a6ee59674748033e2f192df3ccf8487086b1c390974b
     # PVC (templates/pvc.yaml) mounted at /persistence by the DB pod
     storage:
       pvSize: 10Gi
@@ -129,12 +153,12 @@ agent:
     resources:
       limits:
         cpu: 1
-        memory: 4Gi
+        memory: 6Gi
       requests:
         cpu: 150m
-        memory: 4Gi
+        memory: 6Gi
     flightEngine:
-      memoryLimit: 4GB
+      memoryLimit: 6GB
       threads: 2
       tempDirectorySize: 5GB
 
@@ -222,17 +246,19 @@ tproxy:
   image:
     registry: docker.io
     repository: randoli/telemetry-proxy
-    tag: "1.5.0"
+    tag: "1.6.0"
     pullPolicy: Always
 
-  # CORS_ALLOW_ORIGIN. Empty falls back to the default Randoli console origins
-  # (https://telemetry-app.randoli.io,https://console.insights.randoli.io).
-  # Set to "*" to allow any origin, or to a comma-separated list to allow
-  # specific origins.
+  # CORS_ALLOW_ORIGIN override. Empty (default) takes the origin from CONSOLE_URL
+  # in the agent secret. Set to "*" to allow any origin, or to a comma-separated
+  # list of origins; a non-empty value takes precedence over the secret.
   cors: ""
 
-  # KEYCLOAK_ISSUER_URL. Empty falls back to
-  # https://sso.randoli.io/auth/realms/sso
+  # KEYCLOAK_ISSUER_URL. Explicit override: when set, the secret's
+  # KEYCLOAK_URL / KEYCLOAK_REALM_TPROXY are not passed to the tproxy.
+  # Empty falls back to https://sso.randoli.io/auth/realms/sso, used only when
+  # the agent secret has no KEYCLOAK_URL + KEYCLOAK_REALM_TPROXY (the tproxy
+  # prefers that pair: <KEYCLOAK_URL>/realms/<KEYCLOAK_REALM_TPROXY>).
   keycloakIssuer: ""
 
   # Proxy mode
@@ -275,6 +301,21 @@ tproxy:
 # Operator and target-allocator feature toggles live under observability.otel.
 # ============================================================================
 otelCollector:
+  # -- Image of the Randoli OTel Collector. Kept as a map (not a
+  # "registry/repo:tag" string): kubescape-operator has a map at the same
+  # otelCollector.image path, and a string here makes Helm print a
+  # "cannot overwrite table with non table" coalesce warning.
+  image:
+    registry: docker.io
+    repository: randoli/otelcol
+    tag: "1.3.2"
+  # -- Auto-instrumentation images used by the Instrumentation CR (registry/repo:tag)
+  instrumentationImages:
+    python: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-python:0.59b0
+    dotnet: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-dotnet:1.12.0
+    go: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.23.0
+    nodejs: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-nodejs:0.67.0
+    java: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.22.0
   # -- Toleration labels (falls back to global.tolerations)
   tolerations: []
   # -- Node labels (falls back to global.nodeSelector)
@@ -376,8 +417,14 @@ observability:
     includeNamespaces: []
     excludeNamespaces: []
 
+    # Enable support for multiline log entries, such as stack traces, panics, and similar errors.
+    # Disable if multiline log processing is not required and the standard log pipeline is preferred.
     multilineLogs:
       enabled: true
+
+    # Enable Randoli custom tags to include additional context from multiline log entries,
+    # such as stack trace and panic details. Requires multilineLogs to be enabled.
+    # Disable if Randoli custom tags are not required.
     randoliTags:
       enabled: true
 
@@ -513,8 +560,13 @@ observability:
     # provider options:
     #   "node-exporter"     (default) keeps the prometheus-community node-exporter DaemonSet.
     #   "otel-host-metrics" disables it and deploys an OTel Collector DaemonSet instead.
-    # IMPORTANT: when switching to "otel-host-metrics" you must also set:
-    #   prometheus.prometheus-node-exporter.enabled: false
+    #   "openshift-monitoring" (OpenShift only) reuses the platform monitoring
+    #     stack's node-exporter instead of running one here — set it via
+    #     global.hostMetrics.provider (see there), not here.
+    # global.hostMetrics.provider overrides this value when set.
+    # IMPORTANT: when switching to any provider other than "node-exporter" you
+    # must also set:
+    #   prometheus.prometheus.prometheus-node-exporter.enabled: false
     provider: "node-exporter"
 
     # OTel host-metrics collector config. Only used when the provider is "otel-host-metrics".
@@ -687,7 +739,8 @@ opentelemetry-operator:
 
 prometheus:
   prometheus:
-    # Set to false when using observability.hostMetrics.provider: otel-host-metrics
+    # Set to false when using any host-metrics provider other than
+    # "node-exporter" (otel-host-metrics / openshift-monitoring).
     prometheus-node-exporter:
       enabled: true
     server:

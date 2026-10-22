@@ -26,6 +26,20 @@ prometheus:
     # Set server.tolerations / server.nodeSelector / server.affinity explicitly.
     # imagePullSecrets must be set at the top-level imagePullSecrets value.
 
+    # OpenShift service CA bundle, used to verify the platform Prometheus
+    # certificate when host-metrics federation is on
+    # The configMap is auto-injected into every namespace on OpenShift and 
+    # is marked optional, so this mount is a harmless no-op on vanilla Kubernetes.
+    extraVolumes:
+      - name: ocp-service-ca
+        configMap:
+          name: openshift-service-ca.crt
+          optional: true
+    extraVolumeMounts:
+      - name: ocp-service-ca
+        mountPath: /etc/prometheus/extra-volumes/ocp-service-ca
+        readOnly: true
+
   serverFiles:
     prometheus.yml:
       otlp:
@@ -315,6 +329,10 @@ prometheus:
 
   # Adds opencost and network-cost-metrics scrape jobs.
   # The helper functions are defined in templates/_helpers.tpl and resolved via tpl.
+  # When OpenShift host-metrics federation is on
+  # ("prometheus.ocpFederation.enabled"), a third job federating the platform
+  # monitoring stack's node_* series is appended — see
+  # "prometheus.ocpFederation.scrapeJob" in templates/_helpers.tpl.
   extraScrapeConfigs: |
     - job_name: 'opencost'
       scrape_interval: 1m
@@ -328,6 +346,9 @@ prometheus:
       metrics_path: "/metrics"
       static_configs:
         - targets: ['{{ include "prometheus.networkCostMetrics.url" . }}']
+    {{- if eq (include "prometheus.ocpFederation.enabled" .) "true" }}
+    {{- include "prometheus.ocpFederation.scrapeJob" . | nindent 0 }}
+    {{- end }}
 
   prometheus-pushgateway:
     enabled: false

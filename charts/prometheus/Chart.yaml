@@ -2,7 +2,7 @@ apiVersion: v2
 name: prometheus
 description: Randoli wrapper chart for Prometheus (v26.0.1)
 type: application
-version: 26.0.1
+version: 26.0.2
 appVersion: "v3.0.1"
 dependencies:
   - name: prometheus
