@@ -156,11 +156,22 @@ agent:
         memory: 4Gi
       requests:
         cpu: 150m
-        memory: 4Gi
+        memory: 2Gi
     flightEngine:
       memoryLimit: 3GB
       threads: 2
       tempDirectorySize: 5GB
+
+    # Merged over resources / flightEngine above when security scanning is
+    # enabled (tags.security=true): kubescape scan results live in this DB.
+    securityOverrides:
+      resources:
+        limits:
+          memory: 6Gi
+        requests:
+          memory: 3Gi
+      flightEngine:
+        memoryLimit: 5GB
 
     # Co-locate the agent pod with the DB pod: adds a required podAffinity on
     # the agent StatefulSet (topologyKey kubernetes.io/hostname) so FlightSQL
