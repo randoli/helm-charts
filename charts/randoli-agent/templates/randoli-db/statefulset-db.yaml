@@ -9,6 +9,14 @@ are copied from the agent container image, then executed with the DuckDB
 image against /persistence/agent.db.
 */ -}}
 {{- $dbCredsSecretName := printf "%s-db" (include "randoli-agent.fullname" .) -}}
+{{- /* Security scanning stores its results in this DB, so it gets more memory when enabled */ -}}
+{{- $dbResources := deepCopy .Values.agent.db.resources -}}
+{{- $flightEngine := deepCopy .Values.agent.db.flightEngine -}}
+{{- if eq (include "enable.security" .) "true" -}}
+{{- $overrides := .Values.agent.db.securityOverrides | default dict -}}
+{{- $dbResources = mergeOverwrite $dbResources (deepCopy ($overrides.resources | default dict)) -}}
+{{- $flightEngine = mergeOverwrite $flightEngine (deepCopy ($overrides.flightEngine | default dict)) -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -243,15 +251,15 @@ spec:
             value: "randoli_db_test"
           - name: INIT_SQL_COMMANDS
             value: |
-              PRAGMA memory_limit={{ .Values.agent.db.flightEngine.memoryLimit | squote }};
-              PRAGMA threads={{ .Values.agent.db.flightEngine.threads }};
-              PRAGMA max_temp_directory_size={{ .Values.agent.db.flightEngine.tempDirectorySize | squote }};
+              PRAGMA memory_limit={{ $flightEngine.memoryLimit | squote }};
+              PRAGMA threads={{ $flightEngine.threads }};
+              PRAGMA max_temp_directory_size={{ $flightEngine.tempDirectorySize | squote }};
               PRAGMA preserve_insertion_order=false;
               CREATE SCHEMA IF NOT EXISTS insights_agent;
               PRAGMA schema='insights_agent';
               PRAGMA search_path='insights_agent';
           resources:
-            {{- toYaml .Values.agent.db.resources | nindent 12 }}
+            {{- toYaml $dbResources | nindent 12 }}
       {{- if .Values.global.openshift.enabled }}
       # Let the SCC assign fsGroup from the namespace's supplemental-groups
       # range — an explicit fsGroup (1001) is rejected on OpenShift, where
