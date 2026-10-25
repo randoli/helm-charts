@@ -61,7 +61,7 @@ charts/
 ├── cost-management/         # Wraps opencost/opencost@1.42.0
 │   ├── templates/configmap-disabled-metrics.yaml  # Creates randoli-cost-metrics-config ConfigMap
 │   └── templates/configmap-network-metrics.yaml   # randoli-network-cost-metrics-config (sidecar metrics URL)
-├── security-scans/          # Wraps kubescape/kubescape-operator@1.40.1
+├── security-scans/          # Wraps kubescape/kubescape-operator@1.40.5
 ├── logs/                    # Wraps kaasops/vector-operator@0.0.40
 └── network/                 # Wraps netobserv/netobserv-operator@1.8.2
 ```
