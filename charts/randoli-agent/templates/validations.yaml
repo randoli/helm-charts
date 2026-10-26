@@ -3,6 +3,15 @@ Pre-render validation. Emits no manifests on success — only halts the install
 with a useful error when the configuration is inconsistent.
 */ -}}
 
+{{- /*
+Metrics backend mutual exclusion. Prometheus and VictoriaMetrics are separate
+subcharts gated by independent boolean conditions, so bundling both at once is
+invalid — enable exactly one (or neither, for an external/managed store).
+*/ -}}
+{{- if and .Values.global.prometheus.install (.Values.global.victoriaMetrics).install -}}
+{{- fail "\n\nPrometheus and VictoriaMetrics cannot both be bundled — they are two metrics backends and can't be installed and used together.\nEnable exactly one:\n  - Prometheus (default):      --set global.prometheus.install=true  --set global.victoriaMetrics.install=false\n  - VictoriaMetrics:           --set global.prometheus.install=false --set global.victoriaMetrics.install=true\n  - External/managed store:    --set global.prometheus.install=false --set global.victoriaMetrics.install=false  (and set global.prometheus.url)\n" -}}
+{{- end -}}
+
 {{- if eq (include "enable.security" .) "true" -}}
 {{- $ksOp := index .Values.securityScans "kubescape-operator" | default dict -}}
 {{- $ksNs := $ksOp.ksNamespace | default "" -}}

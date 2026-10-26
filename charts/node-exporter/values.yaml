@@ -1,0 +1,19 @@
+# Values passed through to the upstream prometheus-community/prometheus-node-exporter chart.
+# Full upstream value reference:
+# https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus-node-exporter/values.yaml
+#
+# Node exporter exposes per-node hardware/OS metrics. It is scraped by the
+# bundled metrics store (Prometheus or VictoriaMetrics) via the
+# `randoli.prometheus.io/scrape` annotation on its Service. This chart is
+# shared by both metrics backends — see the umbrella chart's
+# observability.nodeExporter toggle.
+prometheus-node-exporter:
+  fullnameOverride: "randoli-obs-prometheus-node-exporter"
+
+  # Randoli's scrape configs only keep targets annotated with
+  # randoli.prometheus.io/scrape; overriding service.annotations here
+  # replaces the upstream default (prometheus.io/scrape: "true") so that a
+  # non-Randoli Prometheus does not also scrape this exporter.
+  service:
+    annotations:
+      randoli.prometheus.io/scrape: "true"

@@ -40,11 +40,53 @@ Create the name of the service account to use
 randoli-agent
 {{- end -}}
 
+{{/*
+Metrics store READ endpoint (PromQL). Prometheus and VictoriaMetrics serve the
+same /api/v1/query path, so every consumer (agent, tproxy, netobserv
+flow-collector, OpenCost) uses this unchanged.
+Precedence: bundled Prometheus → bundled VictoriaMetrics → external prometheus.url.
+
+Only global values are used so subcharts can render it through `tpl`
+(costManagement OpenCost endpoint, sreAgent).
+*/}}
 {{- define "prometheus-server-endpoint" -}}
   {{- if .Values.global.prometheus.install -}}
     {{- printf "http://randoli-obs-prometheus.%s.svc:80" .Release.Namespace -}}
+  {{- else if (.Values.global.victoriaMetrics).install -}}
+    {{- printf "http://randoli-obs-victoria-metrics.%s.svc:8428" .Release.Namespace -}}
   {{- else if .Values.global.prometheus.url -}}
     {{- tpl .Values.global.prometheus.url . -}}
+  {{- end -}}
+{{- end -}}
+
+{{/*
+Metrics store OTLP WRITE endpoint (OTel Collector otlphttp exporter, which
+appends /v1/metrics). The ingest path differs by backend:
+  Prometheus       → <endpoint>/api/v1/otlp   (→ /api/v1/otlp/v1/metrics)
+  VictoriaMetrics  → <endpoint>/opentelemetry (→ /opentelemetry/v1/metrics)
+VictoriaMetrics answers HTTP 400 on the Prometheus path and every metric is
+dropped. For an external VictoriaMetrics set global.victoriaMetrics.external=true.
+*/}}
+{{- define "metrics-otlp-endpoint" -}}
+  {{- $base := include "prometheus-server-endpoint" . | trim -}}
+  {{- $vm := .Values.global.victoriaMetrics | default dict -}}
+  {{- if and (not .Values.global.prometheus.install) (or $vm.install $vm.external) -}}
+    {{- printf "%s/opentelemetry" $base -}}
+  {{- else -}}
+    {{- printf "%s/api/v1/otlp" $base -}}
+  {{- end -}}
+{{- end -}}
+
+{{/*
+True when a metrics store is bundled (Prometheus OR VictoriaMetrics). Drives the
+agent's PROMETHEUS_INSTALL flag, which is about whether a store is shipped with
+the agent — not specifically Prometheus.
+*/}}
+{{- define "metrics.install" -}}
+  {{- if or .Values.global.prometheus.install (.Values.global.victoriaMetrics).install -}}
+true
+  {{- else -}}
+false
   {{- end -}}
 {{- end -}}
 

@@ -1,0 +1,32 @@
+{{/*
+The upstream victoria-metrics-single ClusterRole grants nodes and nodes/metrics
+but not nodes/proxy, while the kubernetes-nodes and kubernetes-nodes-cadvisor
+jobs scrape through /api/v1/nodes/<node>/proxy/metrics[/cadvisor]. Without this
+the kubelet/cadvisor targets return 403 and there are no container_* metrics.
+The upstream chart has no extra-rules value, so grant it with a separate role
+bound to the same service account.
+*/}}
+{{- $server := (index .Values "victoria-metrics-single").server -}}
+{{- $name := $server.fullnameOverride -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $name }}-nodes-proxy
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes/proxy
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $name }}-nodes-proxy
+subjects:
+  - kind: ServiceAccount
+    name: {{ $name }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ $name }}-nodes-proxy
+  apiGroup: rbac.authorization.k8s.io

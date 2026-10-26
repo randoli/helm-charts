@@ -1,0 +1,65 @@
+# Values passed through to the upstream victoria-metrics/victoria-metrics-alert chart.
+# Full upstream value reference:
+# https://github.com/VictoriaMetrics/helm-charts/blob/master/charts/victoria-metrics-alert/values.yaml
+#
+# This wrapper provides alerting for the VictoriaMetrics backend. It deploys:
+#   - vmalert      — evaluates alert rules against vmsingle and forwards firing
+#                    alerts to the bundled Alertmanager.
+#   - Alertmanager — bundled by the upstream chart and exposed as the Service
+#                    "randoli-obs-alerts" on port 9093, matching the agent's
+#                    PROMETHEUS_ALERTMANAGER_URL (so the same value works for both
+#                    metrics backends). When alertmanager.enabled is true, vmalert's
+#                    --notifier.url auto-targets it.
+#
+# It installs only when the VictoriaMetrics backend is selected
+# (global.victoriaMetrics.install=true).
+victoria-metrics-alert:
+  server:
+    fullnameOverride: "randoli-obs-vmalert"
+
+    # vmalert reads metrics from vmsingle (PromQL/MetricsQL). vmalert and vmsingle
+    # run in the same namespace, so the short Service name resolves without the
+    # namespace suffix.
+    datasource:
+      url: "http://randoli-obs-victoria-metrics:8428"
+
+    # Alert rules. Empty by default — extend with your own groups, e.g.:
+    #   victoria-metrics-alert.victoria-metrics-alert.server.config.alerts.groups:
+    #     - name: example
+    #       rules:
+    #         - alert: HighRequestLatency
+    #           expr: ...
+    # Or point server.configMap at an existing ConfigMap holding the rules.
+    config:
+      alerts:
+        groups: []
+
+  # Bundled Alertmanager, exposed as randoli-obs-alerts:9093.
+  alertmanager:
+    enabled: true
+    fullnameOverride: "randoli-obs-alerts"
+    # Mirrors the default route shipped with the Prometheus backend's
+    # Alertmanager. Override receivers/route for Slack or email notifications;
+    # the Randoli notification templates are mounted at /randoli/templates.
+    config:
+      global:
+        resolve_timeout: 5m
+      templates:
+        - /randoli/templates/*.tmpl
+      route:
+        group_wait: 10s
+        group_interval: 5m
+        receiver: default-receiver
+        repeat_interval: 3h
+      receivers:
+        - name: default-receiver
+    # Mount Randoli alert notification templates (email + slack), created by
+    # templates/randoli-alerts-template-cm.yaml in this wrapper.
+    extraVolumeMounts:
+      - name: randoli-alert-templates
+        mountPath: /randoli/templates
+        readOnly: true
+    extraVolumes:
+      - name: randoli-alert-templates
+        configMap:
+          name: randoli-alert-templates

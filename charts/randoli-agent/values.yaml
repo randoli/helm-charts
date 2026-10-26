@@ -65,6 +65,15 @@ global:
     tlsCertConfigmapName: ""
     tlsCertConfigmapKey: ""
 
+  # VictoriaMetrics (vmsingle) as the metrics backend instead of Prometheus.
+  # Mutually exclusive with prometheus.install (validated at render time).
+  victoriaMetrics:
+    install: false
+    # Set true when global.prometheus.url points at an EXTERNAL VictoriaMetrics:
+    # the OTel Collector then exports OTLP to /opentelemetry instead of the
+    # Prometheus-only /api/v1/otlp path.
+    external: false
+
   # Alert manager config
   alerts:
     slack:
@@ -853,6 +862,14 @@ tempoDistributed:
           # Enables the query-frontend's built-in MCP endpoint
           mcp_server:
             enabled: true
+    # Repeated from charts/tempo-distributed/values.yaml on purpose: when this
+    # chart is itself a dependency (e.g. the infra-cluster-* Argo wrapper charts),
+    # Helm evaluates the deeply nested `minio.enabled` condition without the
+    # wrapper's default and the upstream default (true) wins. That shipped a
+    # bundled MinIO whose quay.io/minio 2022 images no longer pull, hanging Argo
+    # on its post-install hook jobs. Setting it here fixes the nested case too.
+    minio:
+      enabled: false
 
 vectorOperator:
   vector-operator:

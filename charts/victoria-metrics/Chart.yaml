@@ -1,0 +1,10 @@
+apiVersion: v2
+name: victoria-metrics
+description: Randoli wrapper chart for VictoriaMetrics Single (v1.145.0)
+type: application
+version: 0.40.1
+appVersion: "v1.145.0"
+dependencies:
+  - name: victoria-metrics-single
+    version: 0.40.1
+    repository: https://victoriametrics.github.io/helm-charts/

@@ -1,0 +1,25 @@
+{{ define "randoli.slack.title" -}}
+[{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertName }}{{ if .CommonLabels.deployment }} in {{ .CommonLabels.deployment }}{{ else if .CommonLabels.node }} on {{ .CommonLabels.node }}{{ end }}{{ with .CommonLabels.cluster }} ({{ . }}){{ end }}
+{{- end }}
+
+{{ define "randoli.slack.text" -}}
+{{- with .CommonLabels.cluster }}
+*Cluster:* {{ . }}
+{{- end }}
+{{- with .CommonLabels.namespace }}
+*Namespace:* {{ . }}
+{{- end }}
+{{- with .CommonLabels.deployment }}
+*Deployment:* {{ . }}
+{{- end }}
+{{- with .CommonLabels.node }}
+*Node:* {{ . }}
+{{- end }}
+{{- with .CommonAnnotations.description }}
+*Description:* {{ . }}
+{{- end }}
+{{- end }}
+
+{{ define "randoli.slack.footer" }}
+{{ with .CommonAnnotations.occurredAt }}Occurred At {{ . }}{{ end }}
+{{ end }}
