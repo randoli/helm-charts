@@ -48,9 +48,20 @@ spec:
           "source_send_latency_seconds"
         ], .name)
   sinks:
+    {{- if (.Values.global.victoriaMetrics).install }}
+    # VictoriaMetrics: push directly via Prometheus remote write
+    metrics_victoria_metrics_remote_write:
+      type: prometheus_remote_write
+      inputs:
+        - metric_filter
+      endpoint: {{ include "prometheus-server-endpoint" . }}/api/v1/write
+      healthcheck:
+        enabled: false
+    {{- else }}
     metrics_prometheus_exporter:
       type: prometheus_exporter
       inputs:
         - metric_filter
       address: 0.0.0.0:9598
+    {{- end }}
 {{- end }}
