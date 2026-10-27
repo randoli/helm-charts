@@ -67,3 +67,14 @@ victoria-metrics-single:
     # Scheduling — global.* values are NOT automatically propagated here.
     # Set server.tolerations / server.nodeSelector / server.affinity explicitly.
     # imagePullSecrets must be set under server.imagePullSecrets.
+
+    # OpenShift service CA for OpenShift federation; optional, so a no-op elsewhere.
+    extraVolumes:
+      - name: ocp-service-ca
+        configMap:
+          name: openshift-service-ca.crt
+          optional: true
+    extraVolumeMounts:
+      - name: ocp-service-ca
+        mountPath: /etc/victoria-metrics/extra-volumes/ocp-service-ca
+        readOnly: true

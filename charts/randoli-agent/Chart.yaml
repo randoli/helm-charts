@@ -41,7 +41,7 @@ dependencies:
   # standalone copies supply them when VictoriaMetrics is the backend instead.
   - name: node-exporter
     version: 4.42.0
-    condition: global.victoriaMetrics.install
+    condition: node-exporter.enabled,global.victoriaMetrics.install
   - name: kube-state-metrics
     version: 5.27.0
     condition: global.victoriaMetrics.install

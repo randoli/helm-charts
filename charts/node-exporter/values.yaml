@@ -5,8 +5,7 @@
 # Node exporter exposes per-node hardware/OS metrics. It is scraped by the
 # bundled metrics store (Prometheus or VictoriaMetrics) via the
 # `randoli.prometheus.io/scrape` annotation on its Service. This chart is
-# shared by both metrics backends — see the umbrella chart's
-# observability.nodeExporter toggle.
+# used by the VictoriaMetrics backend; disable with node-exporter.enabled=false.
 prometheus-node-exporter:
   fullnameOverride: "randoli-obs-prometheus-node-exporter"
 

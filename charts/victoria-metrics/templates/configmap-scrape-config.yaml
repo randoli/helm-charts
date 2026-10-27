@@ -259,3 +259,4 @@ data:
         metrics_path: "/metrics"
         static_configs:
           - targets: ['{{ include "victoria-metrics.networkCostMetrics.url" . }}']
+      {{- include "victoria-metrics.ocpFederation.scrapeJob" . | nindent 6 }}

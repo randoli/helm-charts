@@ -319,17 +319,17 @@ https://sso.randoli.io/auth/realms/sso
 
 {{/*
 Host-metrics provider. global.hostMetrics.provider is the standard location
-(The OpenShift federation scrape job is rendered inside the prometheus subchart)
-and overrides the legacy observability.hostMetrics.provider when set.
+(The OpenShift federation scrape job is rendered inside the metrics-backend
+subchart) and overrides the legacy observability.hostMetrics.provider when set.
 
 For the "openshift-monitoring" provider the mechanism, tunables
-(global.hostMetrics.openshiftMonitoring.*) and RBAC live in the prometheus
-wrapper chart.
+(global.hostMetrics.openshiftMonitoring.*) and RBAC live in the prometheus and
+victoria-metrics wrapper charts.
 
-Note: that chart always renders as a dependency of randoli-agent, i.e. in
+Note: those charts always render as dependencies of randoli-agent, i.e. in
 subchart values scope, where only global.* is visible — never the parent's
-observability.* values. Its copy of the predicate is therefore duplicated
-there deliberately; keep the two in sync.
+observability.* values. Their copies of the predicate are therefore duplicated
+there deliberately; keep them in sync.
 */}}
 {{- define "hostmetrics.provider" -}}
 {{- $global := dig "hostMetrics" "provider" "" (.Values.global | default dict) -}}
