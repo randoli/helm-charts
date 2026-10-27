@@ -5,6 +5,27 @@
 # ============================================================================
 global:
   imagePullSecrets: []
+  # PostgreSQL used by the agent, tproxy and the SRE agent. Lives under
+  # global so the sreAgent subchart sees the same settings.
+  db:
+    # Name of the secret with the role passwords (keys: postgres-password,
+    # agent-password, sre-agent-password, tproxy-password). Created by the
+    # chart's db-bootstrap hook when missing.
+    secretName: randoli-agent-db
+    # Use an existing PostgreSQL server instead of the in-chart randoli-db
+    # StatefulSet. The server must have the database below and the roles
+    # agent (owner of the database), sre_agent and tproxy; the agent's
+    # migrations create the schemas and grant the other roles access.
+    # PostgreSQL 16+ is required.
+    external:
+      enabled: false
+      host: ""
+      port: 5432
+      database: randoli
+      # libpq sslmode: disable, require, verify-ca, verify-full
+      sslmode: require
+      # Secret with keys agent-password, sre-agent-password, tproxy-password
+      existingSecret: ""
   networkCostMetrics:
     image:
       registry: docker.io
@@ -24,9 +45,8 @@ global:
     mcpUrl:
   openshift:
     # Set to true when installing on OpenShift. Effects: the agent and
-    # randoli-fsqld pods omit the explicit fsGroup (1001) so the SCC assigns
-    # one from the namespace's supplemental-groups range, and the DB migration
-    # init container skips its group-1001 chown.
+    # randoli-db pods omit the explicit UID/fsGroup so the SCC assigns them
+    # from the namespace's ranges.
     enabled: false
 
   # Standard location for the host-metrics provider; overrides
@@ -107,7 +127,7 @@ agent:
   image:
     registry: docker.io
     repository: randoli/insights-agent
-    tag: ""
+    tag: "0.0.0-rc.pg-migration-v1"
     digest: ""
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -123,61 +143,43 @@ agent:
       cpu: 150m
       memory: 2.5Gi
 
-  # Agent DB Config — runs in its own StatefulSet/Service (randoli-fsqld),
-  # shared by the agent, tproxy and the SRE agent.
+  # Agent DB — a PostgreSQL server in its own StatefulSet/Service
+  # (randoli-db), shared by the agent, tproxy and the SRE agent. Not deployed
+  # when global.db.external.enabled is set.
   db:
-    # GizmoSQL (FlightSQL over DuckDB) server image
+    # PostgreSQL server image (also used by the agent's wait-for-db init container)
     image:
       registry: docker.io
-      repository: gizmodata/gizmosql
-      tag: "v1.19.2"
-      pullPolicy: IfNotPresent
-    # Image for the migrate-db init container that runs schema migrations.
-    # The migration scripts themselves are copied from the agent image.
-    migrateImage:
-      registry: docker.io
-      repository: datacatering/duckdb
-      tag: "v1.5.1"
+      repository: library/postgres
+      tag: "17.6"
       pullPolicy: IfNotPresent
     # Image (registry/repo:tag or repo@sha256:digest) of the bootstrap Job that
     # creates the DB secret. Needs bash + kubectl.
     bootstrapImage: docker.io/alpine/k8s@sha256:7aa52956f4bfa7e95bd9a6ee59674748033e2f192df3ccf8487086b1c390974b
-    # PVC (templates/pvc.yaml) mounted at /persistence by the DB pod
+    # Data volume (volumeClaimTemplate data-randoli-db-0)
     storage:
       pvSize: 10Gi
-    # Set to a migration version number to migrate the agent DB to that exact
-    # version on the next pod start, reverting migrations above it if needed
-    # (the files of reverted migrations must be present in the agent image).
-    # Empty (default) migrates up to the latest available version.
-    migrateTargetVersion: ""
+      # Empty falls back to agent.storageClassName, then the cluster default.
+      storageClassName:
     resources:
       limits:
         cpu: 1
-        memory: 4Gi
+        memory: 2Gi
       requests:
         cpu: 150m
-        memory: 2Gi
-    flightEngine:
-      memoryLimit: 3GB
-      threads: 2
-      tempDirectorySize: 5GB
-
-    # Merged over resources / flightEngine above when security scanning is
-    # enabled (tags.security=true): kubescape scan results live in this DB.
-    securityOverrides:
-      resources:
-        limits:
-          memory: 6Gi
-        requests:
-          memory: 3Gi
-      flightEngine:
-        memoryLimit: 5GB
-
-    # Co-locate the agent pod with the DB pod: adds a required podAffinity on
-    # the agent StatefulSet (topologyKey kubernetes.io/hostname) so FlightSQL
-    # traffic stays node-local. The agent pod then only schedules once the DB
-    # pod is placed. Set to false to schedule them independently.
-    colocateAgent: true
+        memory: 1Gi
+    # Server settings, passed as `postgres -c key=value`. Size sharedBuffers
+    # to ~25% and effectiveCacheSize to ~50-75% of the memory limit.
+    postgres:
+      maxConnections: 200
+      sharedBuffers: 512MB
+      effectiveCacheSize: 1GB
+      workMem: 8MB
+      maintenanceWorkMem: 128MB
+      # Size of the memory-backed /dev/shm (parallel query workers)
+      shmSize: 256Mi
+      # Additional server settings, e.g. {log_min_duration_statement: 1000}
+      extraConfig: {}
 
     # Scheduling for the DB pod. When empty, falls back to the agent-level
     # value, then to the global one (agent.db.* → agent.* → global.*).
@@ -218,9 +220,9 @@ agent:
   securityContext:
     fsGroup: 1001
 
-  # StorageClass for the agent DB's PVC (templates/pvc.yaml, mounted by the
-  # randoli-fsqld StatefulSet). Leave empty to use the cluster's default
-  # StorageClass.
+  # StorageClass for the agent DB's data volume (randoli-db StatefulSet),
+  # unless agent.db.storage.storageClassName is set. Leave empty to use the
+  # cluster's default StorageClass.
   storageClassName:
 
   # -- Toleration labels for pod assignment (falls back to global.tolerations when empty)
@@ -228,8 +230,6 @@ agent:
   # -- Node labels for pod assignment (falls back to global.nodeSelector wnen empty)
   nodeSelector: {}
   # -- Affinity settings for pod assignment (falls back to global.affinity when empty).
-  # Merged with the built-in DB co-location podAffinity (agent.db.colocateAgent);
-  # setting podAffinity here replaces that rule.
   affinity: {}
   # -- Assign custom TopologySpreadConstraints rules
   topologySpreadConstraints: []
@@ -257,7 +257,7 @@ tproxy:
   image:
     registry: docker.io
     repository: randoli/telemetry-proxy
-    tag: "1.6.0"
+    tag: "0.0.0-rc.pg-migration-v1"
     pullPolicy: Always
 
   # CORS_ALLOW_ORIGIN override. Empty (default) takes the origin from CONSOLE_URL
@@ -350,6 +350,9 @@ otelCollector:
 # The subchart also inherits global.tolerations / global.nodeSelector.
 # ============================================================================
 sreAgent:
+  image:
+    # TODO: Change this in the SRE Agent Helm chart once the functionality is confirmed
+    tag: "pg-mig-v2"
   analysis:
     # -- Namespaces the SRE agent may analyze (comma-separated). Required when enabled.
     enabledNamespaces: ""
@@ -371,11 +374,15 @@ sreAgent:
   # Data plane config for the SRE agent (same template-string mechanism).
   dataPlane:
     agentCallbackUrl: '{{ include "agent-callback-url" . }}'
-    flightSqlUrl: '{{ include "agent-flightsql-url" . }}'
+    # PostgreSQL connection (rendered from global.db.*; see templates/_helpers.tpl)
+    dbHost: '{{ include "agent-db-host" . }}'
+    dbPort: '{{ include "agent-db-port" . }}'
+    dbName: '{{ include "agent-db-name" . }}'
+    dbSslMode: '{{ include "agent-db-sslmode" . }}'
+    databaseSecretName: '{{ include "agent-db-secret-name" . }}'
     # OpenCost MCP endpoint (bundled OpenCost Service's mcp-server port, or
     # global.opencost.mcpUrl when set).
     opencostUrl: '{{ include "opencost-mcp-url" . }}'
-    databaseSecretName: randoli-agent-db
 
   # ------------------------------------------------------------------------
   # MCP servers wired into the SRE agent. Passed through to the sreAgent

@@ -76,15 +76,92 @@ context of the referenced subchart.
 {{- end -}}
 
 {{/*
-DNS host of the randoli-fsqld Service (FlightSQL endpoint), without the port.
-The service name is hardcoded so this is safe to render from subchart contexts as well.
+PostgreSQL connection settings shared by the agent, tproxy and the SRE agent.
+
+They read only global.db.* (and .Release.*), so they render the same from
+this chart and from subchart contexts (sreAgent.dataPlane.* template strings).
+With global.db.external.enabled the in-chart randoli-db StatefulSet is not
+rendered and these point at the external server instead.
 */}}
-{{- define "agent-db-host" -}}
-{{- printf "randoli-fsqld.%s.svc" .Release.Namespace -}}
+{{- define "agent-db-external" -}}
+{{- $db := ((.Values.global).db) | default dict -}}
+{{- $ext := $db.external | default dict -}}
+{{- if $ext.enabled -}}true{{- end -}}
 {{- end -}}
 
-{{- define "agent-flightsql-url" -}}
-{{- printf "grpc+tcp://randoli-fsqld.%s.svc:31337" .Release.Namespace -}}
+{{/* DNS host of the database, without the port. */}}
+{{- define "agent-db-host" -}}
+{{- if include "agent-db-external" . -}}
+{{- required "global.db.external.host is required when global.db.external.enabled=true" .Values.global.db.external.host -}}
+{{- else -}}
+{{- printf "randoli-db.%s.svc" .Release.Namespace -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "agent-db-port" -}}
+{{- if include "agent-db-external" . -}}
+{{- .Values.global.db.external.port | default 5432 -}}
+{{- else -}}
+5432
+{{- end -}}
+{{- end -}}
+
+{{- define "agent-db-name" -}}
+{{- if include "agent-db-external" . -}}
+{{- .Values.global.db.external.database | default "randoli" -}}
+{{- else -}}
+randoli
+{{- end -}}
+{{- end -}}
+
+{{- define "agent-db-sslmode" -}}
+{{- if include "agent-db-external" . -}}
+{{- .Values.global.db.external.sslmode | default "require" -}}
+{{- else -}}
+disable
+{{- end -}}
+{{- end -}}
+
+{{/*
+Secret holding the per-role passwords (keys: agent-password,
+sre-agent-password, tproxy-password; plus postgres-password for the in-chart
+server). The in-chart one is created by the db-bootstrap hook Job.
+*/}}
+{{- define "agent-db-secret-name" -}}
+{{- $db := ((.Values.global).db) | default dict -}}
+{{- $ext := $db.external | default dict -}}
+{{- if and $ext.enabled $ext.existingSecret -}}
+{{- $ext.existingSecret -}}
+{{- else -}}
+{{- $db.secretName | default "randoli-agent-db" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+DB_* env for a container connecting with the given role.
+Usage: include "agent-db-env" (dict "ctx" . "user" "agent" "passwordKey" "agent-password")
+*/}}
+{{- define "agent-db-env" -}}
+- name: DB_HOST
+  value: {{ include "agent-db-host" .ctx | quote }}
+- name: DB_PORT
+  value: {{ include "agent-db-port" .ctx | quote }}
+- name: DB_NAME
+  value: {{ include "agent-db-name" .ctx | quote }}
+- name: DB_SSLMODE
+  value: {{ include "agent-db-sslmode" .ctx | quote }}
+- name: DB_USER
+  value: {{ .user | quote }}
+- name: DB_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "agent-db-secret-name" .ctx }}
+      key: {{ .passwordKey }}
+{{- end -}}
+
+{{/* Image reference for {registry, repository, tag} image values. */}}
+{{- define "randoli-agent.image" -}}
+{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}:{{ .tag }}
 {{- end -}}
 
 {{/*

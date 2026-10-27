@@ -44,3 +44,15 @@ Host-metrics provider checks.
 {{- if and $ocpEnabled $promInstall (eq $provider "node-exporter") $neEnabled $neHostNetwork -}}
 {{- fail "\n\nOn OpenShift the platform node-exporter already owns host port 9100, so the bundled node-exporter DaemonSet cannot schedule with hostNetwork: true.\n\nFix (either):\n  1. Keep the DaemonSet without host networking:\n       prometheus.prometheus.prometheus-node-exporter.hostNetwork=false\n  2. Reuse the platform monitoring stack instead (no per-node pods):\n       global.hostMetrics.provider=openshift-monitoring\n       prometheus.prometheus.prometheus-node-exporter.enabled=false\n\n" -}}
 {{- end -}}
+
+{{/*
+External PostgreSQL checks.
+*/}}
+{{- if include "agent-db-external" . -}}
+{{- if empty .Values.global.db.external.host -}}
+{{- fail "\n\nglobal.db.external.enabled=true requires global.db.external.host.\n\n" -}}
+{{- end -}}
+{{- if empty .Values.global.db.external.existingSecret -}}
+{{- fail "\n\nglobal.db.external.enabled=true requires global.db.external.existingSecret (keys: agent-password, sre-agent-password, tproxy-password).\n\n" -}}
+{{- end -}}
+{{- end -}}
