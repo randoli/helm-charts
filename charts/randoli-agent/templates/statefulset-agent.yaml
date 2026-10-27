@@ -1,7 +1,7 @@
 {{- /*
 Randoli agent deployment using a statefulset
 */ -}}
-{{- $dbCredsSecretName := printf "%s-db" (include "randoli-agent.fullname" .) -}}
+{{- $dbEnv := include "agent-db-env" (dict "ctx" . "user" "agent" "passwordKey" "agent-password") -}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -77,23 +77,59 @@ spec:
           {{- toYaml .Values.agent.extraVolumes | nindent 8}}
         {{- end }}
 
+      initContainers:
+        # Block until the database accepts connections.
+        - name: wait-for-db
+          image: {{ include "randoli-agent.image" .Values.agent.db.image | quote }}
+          imagePullPolicy: {{ .Values.agent.db.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "Waiting for the database at $DB_HOST:$DB_PORT..."
+              until pg_isready -h "$DB_HOST" -p "$DB_PORT" -q; do
+                sleep 2
+              done
+          env:
+            {{- $dbEnv | nindent 12 }}
+          {{- with .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+        # Apply the agent's embedded schema migrations (advisory-locked).
+        - name: migrate
+          {{- with .Values.agent.image }}
+          image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{ .digest }}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.agent.image.pullPolicy }}
+          command: ["/app/cluster-agent", "migrate"]
+          env:
+            {{- $dbEnv | nindent 12 }}
+          {{- with .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+
       containers:
         - name: randoli-agent
           {{- with .Values.agent.image }}
           image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{ .digest }}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
           {{- end }}
           imagePullPolicy: {{ .Values.agent.image.pullPolicy }}
-          args:
-            - |
-              echo "Waiting for the FlightSQL server to be ready..."
-              while ! nc -z {{ include "agent-db-host" . }} 31337; do
-                sleep 1
-              done
-              echo "Starting agent..."
-              exec /app/cluster-agent
-          command:
-            - /bin/sh
-            - -c
+          command: ["/app/cluster-agent"]
           envFrom:
             - secretRef:
                 name: {{ .Values.global.secrets.config }}
@@ -123,16 +159,7 @@ spec:
               {{- toYaml .Values.agent.extraVolumeMounts | nindent 12 }}
             {{- end }}
           env:
-            - name: FLIGHT_SQL_USER
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $dbCredsSecretName }}
-                  key: username
-            - name: FLIGHT_SQL_PASS
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $dbCredsSecretName }}
-                  key: password
+            {{- $dbEnv | nindent 12 }}
           {{- if or .Values.agent.extraEnv .Values.global.prometheus.secretName }}
             {{- if and .Values.global.prometheus.secretName .Values.global.prometheus.usernameKey }}
             - name: PROMETHEUS_USERNAME
@@ -184,29 +211,10 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- /*
-      Schedule the agent in the same node where the flightSQL server is running.
-      this setup merges global, agent and db colocate affinity configs
-      */ -}}
-      {{- $dbCoLocateAffinity := dict "podAffinity" 
-        (dict "requiredDuringSchedulingIgnoredDuringExecution" (list (dict "labelSelector"
-          (dict "matchLabels" (dict 
-            "app.kubernetes.io/name" (include "randoli-agent.name" .) 
-            "app.kubernetes.io/instance" .Release.Name 
-            "app.kubernetes.io/component" "randoli-fsqld")) 
-            "topologyKey" "kubernetes.io/hostname")))
-      -}}
-      
-      {{- $userAffinity := coalesce .Values.agent.affinity .Values.global.affinity | default dict -}}
-      {{- $affinity := $userAffinity -}}
-      {{- if .Values.agent.db.colocateAgent -}}
-      {{- $affinity = mergeOverwrite (deepCopy $dbCoLocateAffinity) $userAffinity -}}
-      {{- end -}}
-      {{- if $affinity }}
+      {{- with coalesce .Values.agent.affinity .Values.global.affinity }}
       affinity:
-        {{- toYaml $affinity | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
-
       {{- with .Values.agent.topologySpreadConstraints }}
       topologySpreadConstraints: {{- toYaml . | nindent 8 }}
       {{- end }}

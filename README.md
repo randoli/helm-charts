@@ -285,7 +285,7 @@ Notes:
 - An empty StorageClass value means "use the cluster's default StorageClass". Use a StorageClass with `reclaimPolicy: Retain` if you want PVs to survive PVC deletion.
 ## Persistent storage retention
 
-The charts deliberately **do not delete PersistentVolumeClaims** for the randoli-agent, Loki, Tempo (single-binary and distributed-mode ingester), or Prometheus on `helm uninstall`. Their PVCs (and the underlying PVs) survive uninstall so data is not lost by accident.
+The charts deliberately **do not delete PersistentVolumeClaims** for the agent database (`data-randoli-db-0`), Loki, Tempo (single-binary and distributed-mode ingester), or Prometheus on `helm uninstall`. Their PVCs (and the underlying PVs) survive uninstall so data is not lost by accident.
 
 If you no longer need the data, delete the PVCs manually after uninstall:
 
@@ -299,6 +299,31 @@ Whether the underlying PV is then deleted or retained depends on the `reclaimPol
 Note: because the PVCs are kept (`helm.sh/resource-policy: keep` / `persistentVolumeClaimRetentionPolicy: Retain`), reinstalling into the same namespace will fail with "object already exists" unless you adopt the existing PVCs — use `helm install --take-ownership` (Helm 3.10+) or delete the orphaned PVCs first.
 
 ## Upgrading
+
+### Agent database: GizmoSQL/DuckDB → PostgreSQL
+
+Starting with this release the agent database is PostgreSQL (StatefulSet and
+Service `randoli-db`, volume `data-randoli-db-0`), replacing the GizmoSQL/DuckDB
+server `randoli-fsqld`. The agent, tproxy and the SRE agent connect to it with
+their own roles (`agent`, `tproxy`, `sre_agent`); the passwords are generated
+into the `randoli-agent-db` secret by the chart's pre-install/pre-upgrade hook.
+The agent pod applies the schema migrations in its `migrate` init container.
+
+To use a PostgreSQL server you manage (16+), set `global.db.external.enabled=true`
+with `global.db.external.host`, `.sslmode` and `.existingSecret` (keys
+`agent-password`, `sre-agent-password`, `tproxy-password`). Create the database
+(`randoli`, owned by `agent`) and the three login roles beforehand.
+
+**Upgrading an install that ran the GizmoSQL/DuckDB-based chart:** data in the
+old database is not carried over. Uninstall the release and install this version
+fresh (the agent re-discovers the cluster and rebuilds its state). The old
+DuckDB volume is kept by Helm (`helm.sh/resource-policy: keep`); delete it once
+it is no longer needed:
+
+```
+kubectl -n randoli-agents delete pvc randoli-agent
+```
+
 
 ### Updating CRDs
 

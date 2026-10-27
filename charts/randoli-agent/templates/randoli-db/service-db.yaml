@@ -1,23 +1,25 @@
 {{- /*
-Service fronting the randoli-fsqld StatefulSet. All FlightSQL consumers
-(agent, tproxy, SRE agent) reach the DB through this stable ClusterIP.
+Service fronting the randoli-db (PostgreSQL) StatefulSet. All DB clients
+(agent, tproxy, SRE agent) reach the database through this stable ClusterIP.
 */ -}}
+{{- if not (include "agent-db-external" .) }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: randoli-fsqld
+  name: randoli-db
   namespace: {{ include "randoli-agent.namespace" . }}
   labels:
-    app.kubernetes.io/component: randoli-fsqld
+    app.kubernetes.io/component: randoli-db
     {{- include "labels" . | nindent 4 }}
 spec:
   ports:
-    - name: gizmosql
+    - name: postgres
       protocol: TCP
-      port: 31337
-      targetPort: 31337
+      port: 5432
+      targetPort: postgres
   selector:
     app.kubernetes.io/name: {{ include "randoli-agent.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: randoli-fsqld
+    app.kubernetes.io/component: randoli-db
   type: ClusterIP
+{{- end }}

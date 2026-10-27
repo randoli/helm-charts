@@ -61,7 +61,6 @@ data:
   {{- end }}
 
   POPULATE_RES_INDEX_FROM_DB: ''
-  FLIGHT_SQL_HOST: {{ include "agent-db-host" . }}:31337
   RANDOLI_AGENT_HTTP_ENDPOINT: 'http://randoli-agent.{{ include "randoli-agent.namespace" . }}:8080'
   ENABLE_SUPERVISOR_AGENT_REPORTS: '{{ .Values.observability.sreAgent.enableReports }}'
 
