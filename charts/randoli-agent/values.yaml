@@ -54,15 +54,16 @@ global:
   #   "node-exporter"        — (default) prometheus-community node-exporter DaemonSet.
   #   "otel-host-metrics"    — OTel Collector DaemonSet with the hostmetrics receiver.
   #   "openshift-monitoring" — OpenShift only: no per-node workload at all; the
-  #                            bundled Prometheus federates the node_* series the
-  #                            platform monitoring stack already collects.
+  #                            bundled Prometheus or VictoriaMetrics federates the
+  #                            node_* series the platform monitoring stack already
+  #                            collects.
   # "openshift-monitoring" MUST be set here (not at
   # observability.hostMetrics.provider): The reason to have this in the global section
-  # is that this comfig must be accessible to the prometheus subchart that renders the federation scrape job.
+  # is that this config must be accessible to the prometheus / victoria-metrics subchart that renders the federation scrape job.
   hostMetrics:
     provider: ""
     # Tunables for the "openshift-monitoring" provider
-    # the defaults live in charts/prometheus/templates/_helpers.tpl, "prometheus.ocpFederation.*"):
+    # the defaults live in charts/{prometheus,victoria-metrics}/templates/_helpers.tpl):
     # openshiftMonitoring:
     #   target: prometheus-k8s.openshift-monitoring.svc:9091
     #   serverName: prometheus-k8s.openshift-monitoring.svc  # override together with target
@@ -84,6 +85,15 @@ global:
     tlsInsecureSkipVerify: true
     tlsCertConfigmapName: ""
     tlsCertConfigmapKey: ""
+
+  # VictoriaMetrics (vmsingle) as the metrics backend instead of Prometheus.
+  # Mutually exclusive with prometheus.install (validated at render time).
+  victoriaMetrics:
+    install: false
+    # Set true when global.prometheus.url points at an EXTERNAL VictoriaMetrics:
+    # the OTel Collector then exports OTLP to /opentelemetry instead of the
+    # Prometheus-only /api/v1/otlp path.
+    external: false
 
   # Alert manager config
   alerts:
@@ -583,8 +593,9 @@ observability:
     #     global.hostMetrics.provider (see there), not here.
     # global.hostMetrics.provider overrides this value when set.
     # IMPORTANT: when switching to any provider other than "node-exporter" you
-    # must also set:
-    #   prometheus.prometheus.prometheus-node-exporter.enabled: false
+    # must also disable the bundled node-exporter of the selected backend:
+    #   Prometheus:      prometheus.prometheus.prometheus-node-exporter.enabled: false
+    #   VictoriaMetrics: node-exporter.enabled: false
     provider: "node-exporter"
 
     # OTel host-metrics collector config. Only used when the provider is "otel-host-metrics".
@@ -860,6 +871,14 @@ tempoDistributed:
           # Enables the query-frontend's built-in MCP endpoint
           mcp_server:
             enabled: true
+    # Repeated from charts/tempo-distributed/values.yaml on purpose: when this
+    # chart is itself a dependency (e.g. the infra-cluster-* Argo wrapper charts),
+    # Helm evaluates the deeply nested `minio.enabled` condition without the
+    # wrapper's default and the upstream default (true) wins. That shipped a
+    # bundled MinIO whose quay.io/minio 2022 images no longer pull, hanging Argo
+    # on its post-install hook jobs. Setting it here fixes the nested case too.
+    minio:
+      enabled: false
 
 vectorOperator:
   vector-operator:
