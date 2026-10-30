@@ -1,0 +1,12 @@
+{{- /* Same name/key as the Prometheus backend; upstream skips its own since alertmanager.configMap is set. */ -}}
+{{- $am := index .Values "victoria-metrics-alert" "alertmanager" }}
+{{- if and $am.enabled $am.configMap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $am.configMap }}
+  namespace: {{ .Release.Namespace }}
+data:
+  alertmanager.yml: |
+{{ toYaml $am.config | indent 4 }}
+{{- end }}

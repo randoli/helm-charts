@@ -38,6 +38,27 @@ victoria-metrics-alert:
   alertmanager:
     enabled: true
     fullnameOverride: "randoli-obs-alerts"
+    # Same ConfigMap name/key as the Prometheus backend (the agent updates
+    # "randoli-obs-alerts"). Rendered by templates/alertmanager-cm.yaml.
+    configMap: "randoli-obs-alerts"
+    extraArgs:
+      config.file: /config/alertmanager.yml
+    # Match the Prometheus backend's Alertmanager: same image, a StatefulSet
+    # with a PVC so silences/notification log survive restarts, and non-root.
+    image:
+      registry: quay.io
+      repository: prometheus/alertmanager
+      tag: v0.27.0
+    mode: statefulSet
+    persistentVolume:
+      enabled: true
+      size: 50Mi
+    podSecurityContext:
+      enabled: true
+      fsGroup: 65534
+      runAsGroup: 65534
+      runAsNonRoot: true
+      runAsUser: 65534
     # Mirrors the default route shipped with the Prometheus backend's
     # Alertmanager. Override receivers/route for Slack or email notifications;
     # the Randoli notification templates are mounted at /randoli/templates.
@@ -63,3 +84,15 @@ victoria-metrics-alert:
       - name: randoli-alert-templates
         configMap:
           name: randoli-alert-templates
+    # Reload Alertmanager whenever the agent rewrites the ConfigMap (same
+    # sidecar as the Prometheus backend's configmapReload).
+    extraContainers:
+      - name: config-reloader
+        image: quay.io/prometheus-operator/prometheus-config-reloader:v0.66.0
+        args:
+          - --watched-dir=/config
+          - --reload-url=http://127.0.0.1:9093/-/reload
+        volumeMounts:
+          - name: config
+            mountPath: /config
+            readOnly: true
