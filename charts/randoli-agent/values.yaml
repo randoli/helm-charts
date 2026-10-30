@@ -267,7 +267,7 @@ tproxy:
   image:
     registry: docker.io
     repository: randoli/telemetry-proxy
-    tag: "0.0.0-rc.pg-migration-v1"
+    tag: "1.7.0-rc.2"
     pullPolicy: Always
 
   # CORS_ALLOW_ORIGIN override. Empty (default) takes the origin from CONSOLE_URL
