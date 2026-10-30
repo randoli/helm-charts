@@ -137,7 +137,7 @@ agent:
   image:
     registry: docker.io
     repository: randoli/insights-agent
-    tag: "0.0.0-rc.pg-migration-v1"
+    tag: ""
     digest: ""
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -360,9 +360,6 @@ otelCollector:
 # The subchart also inherits global.tolerations / global.nodeSelector.
 # ============================================================================
 sreAgent:
-  image:
-    # TODO: Change this in the SRE Agent Helm chart once the functionality is confirmed
-    tag: "pg-mig-v2"
   analysis:
     # -- Namespaces the SRE agent may analyze (comma-separated). Required when enabled.
     enabledNamespaces: ""
