@@ -17,6 +17,21 @@ The Randoli email/slack notification templates (`files/randoli/`) are published
 as the `randoli-alert-templates` ConfigMap (`templates/randoli-alerts-template-cm.yaml`)
 and mounted into Alertmanager at `/randoli/templates`.
 
+Alertmanager setup:
+
+- **Config:** ConfigMap `randoli-obs-alerts`, key `alertmanager.yml`. The chart
+  only seeds a `default-receiver`; the agent then owns it. `helm upgrade` keeps
+  the live value.
+- **Reload:** a `config-reloader` sidecar reloads on config or template changes.
+- **Storage:** 50Mi PVC `randoli-obs-alerts`, so silences and the notification
+  log survive restarts.
+
+**Switching from Prometheus:** the Prometheus StatefulSet `randoli-obs-alerts` is
+replaced by this Deployment, and `helm upgrade` keeps the agent's config (ArgoCD
+needs `ignoreDifferences` on `/data/alertmanager.yml` with
+`RespectIgnoreDifferences=true`). Afterwards, delete the leftover PVC
+`storage-randoli-obs-alerts-0`; with ArgoCD, sync with pruning.
+
 This chart installs only when the VictoriaMetrics backend is selected
 (`global.victoriaMetrics.install=true`).
 
@@ -32,7 +47,7 @@ path from the umbrella chart:
 | `...server.configMap` | `""` | Existing ConfigMap with rules (alternative to inline groups) |
 | `...alertmanager.enabled` | `true` | Deploy the bundled Alertmanager |
 | `...alertmanager.fullnameOverride` | `randoli-obs-alerts` | Alertmanager Service name (keep it — the agent targets this) |
-| `...alertmanager.config.route` / `receivers` | default-receiver | Notification routing (set Slack/email here) |
+| `...alertmanager.config.route` / `receivers` | default-receiver | Initial config only; the agent manages it after install |
 | `...alertmanager.config.templates` | `/randoli/templates/*.tmpl` | Notification templates glob |
 
 See the [upstream values](https://github.com/VictoriaMetrics/helm-charts/blob/master/charts/victoria-metrics-alert/values.yaml)
@@ -57,6 +72,6 @@ victoria-metrics-alert:
 
 ### Configuring notifications
 
-Point a receiver at Slack/email and route to it. The mounted Randoli templates
-can be referenced from the receiver config (e.g. Slack `text`/`title` using
-`{{ template "randoli.slack" . }}`).
+Slack/email receivers are managed by the agent from the control plane, not chart
+values. Its config references the mounted Randoli templates (e.g.
+`{{ template "randoli.slack.text" . }}`).

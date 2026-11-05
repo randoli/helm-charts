@@ -1,0 +1,19 @@
+{{- /* Same name/key as the Prometheus backend; upstream skips its own since alertmanager.configMap is set.
+The agent owns alertmanager.yml after install, so upgrades keep the live value (lookup is empty under helm template / ArgoCD). */ -}}
+{{- $am := index .Values "victoria-metrics-alert" "alertmanager" }}
+{{- if and $am.enabled $am.configMap }}
+{{- $existing := lookup "v1" "ConfigMap" .Release.Namespace $am.configMap }}
+{{- $live := index ($existing.data | default dict) "alertmanager.yml" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $am.configMap }}
+  namespace: {{ .Release.Namespace }}
+data:
+  alertmanager.yml: |
+{{- if $live }}
+{{ $live | indent 4 }}
+{{- else }}
+{{ toYaml $am.config | indent 4 }}
+{{- end }}
+{{- end }}
