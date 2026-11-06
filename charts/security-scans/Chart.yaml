@@ -1,10 +1,10 @@
 apiVersion: v2
 name: security-scans
-description: Randoli wrapper chart for the Kubescape Operator (v1.40.1)
+description: Randoli wrapper chart for the Kubescape Operator (v1.40.5)
 type: application
-version: 1.40.1
-appVersion: "1.40.1"
+version: 1.40.5
+appVersion: "1.40.5"
 dependencies:
   - name: kubescape-operator
-    version: 1.40.1
+    version: 1.40.5
     repository: https://kubescape.github.io/helm-charts/

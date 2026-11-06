@@ -1,4 +1,3 @@
-{{- $dbCredsSecretName := printf "%s-db" (include "randoli-agent.fullname" .) -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -100,16 +99,7 @@ spec:
                   key: CONSOLE_URL
                   optional: true
             {{- end }}
-            - name: FLIGHT_SQL_USER
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $dbCredsSecretName }}
-                  key: username
-            - name: FLIGHT_SQL_PASS
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $dbCredsSecretName }}
-                  key: password
+            {{- include "agent-db-env" (dict "ctx" . "user" "tproxy" "passwordKey" "tproxy-password") | nindent 12 }}
           envFrom:
             - configMapRef:
                 name: randoli-tproxy

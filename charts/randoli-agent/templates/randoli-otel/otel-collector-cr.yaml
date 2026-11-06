@@ -171,7 +171,7 @@ spec:
         tls:
           insecure: true
       otlphttp:
-        endpoint: "{{ include "prometheus-server-endpoint" . }}/api/v1/otlp"
+        endpoint: "{{ include "metrics-otlp-endpoint" . }}"
       otlphttp/loki:
         endpoint: "{{ include "logs-loki-url" . }}/otlp"
       debug:

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: randoli-network-cost-metrics-config
+  namespace: {{ include "randoli-agent.namespace" . }}
+  labels:
+    {{- include "labels" . | nindent 4 }}
+data:
+  PROMETHEUS_URL: {{ include "prometheus-server-endpoint" . | quote }}

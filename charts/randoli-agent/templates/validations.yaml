@@ -3,6 +3,15 @@ Pre-render validation. Emits no manifests on success — only halts the install
 with a useful error when the configuration is inconsistent.
 */ -}}
 
+{{- /*
+Metrics backend mutual exclusion. Prometheus and VictoriaMetrics are separate
+subcharts gated by independent boolean conditions, so bundling both at once is
+invalid — enable exactly one (or neither, for an external/managed store).
+*/ -}}
+{{- if and .Values.global.prometheus.install (.Values.global.victoriaMetrics).install -}}
+{{- fail "\n\nPrometheus and VictoriaMetrics cannot both be bundled — they are two metrics backends and can't be installed and used together.\nEnable exactly one:\n  - Prometheus (default):      --set global.prometheus.install=true  --set global.victoriaMetrics.install=false\n  - VictoriaMetrics:           --set global.prometheus.install=false --set global.victoriaMetrics.install=true\n  - External/managed store:    --set global.prometheus.install=false --set global.victoriaMetrics.install=false  (and set global.prometheus.url)\n" -}}
+{{- end -}}
+
 {{- if eq (include "enable.security" .) "true" -}}
 {{- $ksOp := index .Values.securityScans "kubescape-operator" | default dict -}}
 {{- $ksNs := $ksOp.ksNamespace | default "" -}}
@@ -18,9 +27,30 @@ Host-metrics provider checks.
 {{- $g := .Values.global | default dict -}}
 {{- $ocpEnabled := dig "openshift" "enabled" false $g -}}
 {{- $promInstall := dig "prometheus" "install" true $g -}}
-{{- $ne := dig "prometheus" "prometheus-node-exporter" dict (.Values.prometheus | default dict) -}}
-{{- $neEnabled := dig "enabled" true $ne -}}
-{{- $neHostNetwork := dig "hostNetwork" true $ne -}}
+{{- $vmInstall := dig "victoriaMetrics" "install" false $g -}}
+{{- /* $ne* describe the node-exporter bundled by the selected backend. */ -}}
+{{- $promNe := dig "prometheus" "prometheus-node-exporter" dict (.Values.prometheus | default dict) -}}
+{{- $vmNeValues := index .Values "node-exporter" | default dict -}}
+{{- $vmNe := dig "prometheus-node-exporter" dict $vmNeValues -}}
+{{- $neEnabled := false -}}
+{{- $neHostNetwork := false -}}
+{{- $neDisableFlag := "" -}}
+{{- $neHostNetworkFlag := "" -}}
+{{- if $promInstall -}}
+{{- $neEnabled = dig "enabled" true $promNe -}}
+{{- $neHostNetwork = dig "hostNetwork" true $promNe -}}
+{{- $neDisableFlag = "prometheus.prometheus.prometheus-node-exporter.enabled=false" -}}
+{{- $neHostNetworkFlag = "prometheus.prometheus.prometheus-node-exporter.hostNetwork=false" -}}
+{{- else if $vmInstall -}}
+{{- $neEnabled = dig "enabled" true $vmNeValues -}}
+{{- $neHostNetwork = dig "hostNetwork" true $vmNe -}}
+{{- $neDisableFlag = "node-exporter.enabled=false" -}}
+{{- $neHostNetworkFlag = "node-exporter.prometheus-node-exporter.hostNetwork=false" -}}
+{{- end -}}
+
+{{- if and $promInstall (dig "enabled" false $vmNeValues) -}}
+{{- fail "\n\nnode-exporter.enabled=true installs the standalone node-exporter used by the VictoriaMetrics backend, but Prometheus is the selected backend and already bundles one.\n\nFix: unset node-exporter.enabled (configure the Prometheus copy via prometheus.prometheus.prometheus-node-exporter.*).\n\n" -}}
+{{- end -}}
 
 {{- if not (has $provider (list "node-exporter" "otel-host-metrics" "openshift-monitoring")) -}}
 {{- fail (printf "\n\nInvalid host-metrics provider %q. Valid values: \"node-exporter\", \"otel-host-metrics\", \"openshift-monitoring\".\n\n" $provider) -}}
@@ -28,19 +58,31 @@ Host-metrics provider checks.
 
 {{- if eq $provider "openshift-monitoring" -}}
 {{- if empty (dig "hostMetrics" "provider" "" $g) -}}
-{{- fail "\n\nobservability.hostMetrics.provider=openshift-monitoring has no effect: the federation scrape job is rendered inside the prometheus subchart, which only sees global.* values.\n\nFix: set it at the canonical location instead:\n  global.hostMetrics.provider=openshift-monitoring\n\n" -}}
+{{- fail "\n\nobservability.hostMetrics.provider=openshift-monitoring has no effect: the federation scrape job is rendered inside the prometheus / victoria-metrics subchart, which only sees global.* values.\n\nFix: set it at the canonical location instead:\n  global.hostMetrics.provider=openshift-monitoring\n\n" -}}
 {{- end -}}
 {{- if not $ocpEnabled -}}
 {{- fail "\n\nglobal.hostMetrics.provider=openshift-monitoring is only supported on OpenShift (it federates node metrics from the platform monitoring stack).\n\nFix: also set global.openshift.enabled=true, or choose a different host-metrics provider.\n\n" -}}
 {{- end -}}
-{{- if not $promInstall -}}
-{{- fail "\n\nglobal.hostMetrics.provider=openshift-monitoring requires the bundled Prometheus (the federation scrape job runs in it).\n\nFix: set global.prometheus.install=true, or choose a different host-metrics provider.\n\n" -}}
+{{- if not (or $promInstall $vmInstall) -}}
+{{- fail "\n\nglobal.hostMetrics.provider=openshift-monitoring requires a bundled metrics backend (the federation scrape job runs in it).\n\nFix: set global.prometheus.install=true or global.victoriaMetrics.install=true, or choose a different host-metrics provider.\n\n" -}}
 {{- end -}}
 {{- if $neEnabled -}}
-{{- fail "\n\nglobal.hostMetrics.provider=openshift-monitoring replaces the bundled node-exporter DaemonSet.\n\nFix: also set:\n  prometheus.prometheus.prometheus-node-exporter.enabled=false\n\n" -}}
+{{- fail (printf "\n\nglobal.hostMetrics.provider=openshift-monitoring replaces the bundled node-exporter DaemonSet.\n\nFix: also set:\n  %s\n\n" $neDisableFlag) -}}
 {{- end -}}
 {{- end -}}
 
-{{- if and $ocpEnabled $promInstall (eq $provider "node-exporter") $neEnabled $neHostNetwork -}}
-{{- fail "\n\nOn OpenShift the platform node-exporter already owns host port 9100, so the bundled node-exporter DaemonSet cannot schedule with hostNetwork: true.\n\nFix (either):\n  1. Keep the DaemonSet without host networking:\n       prometheus.prometheus.prometheus-node-exporter.hostNetwork=false\n  2. Reuse the platform monitoring stack instead (no per-node pods):\n       global.hostMetrics.provider=openshift-monitoring\n       prometheus.prometheus.prometheus-node-exporter.enabled=false\n\n" -}}
+{{- if and $ocpEnabled (eq $provider "node-exporter") $neEnabled $neHostNetwork -}}
+{{- fail (printf "\n\nOn OpenShift the platform node-exporter already owns host port 9100, so the bundled node-exporter DaemonSet cannot schedule with hostNetwork: true.\n\nFix (either):\n  1. Keep the DaemonSet without host networking:\n       %s\n  2. Reuse the platform monitoring stack instead (no per-node pods):\n       global.hostMetrics.provider=openshift-monitoring\n       %s\n\n" $neHostNetworkFlag $neDisableFlag) -}}
+{{- end -}}
+
+{{/*
+External PostgreSQL checks.
+*/}}
+{{- if include "agent-db-external" . -}}
+{{- if empty .Values.global.db.external.host -}}
+{{- fail "\n\nglobal.db.external.enabled=true requires global.db.external.host.\n\n" -}}
+{{- end -}}
+{{- if empty .Values.global.db.external.existingSecret -}}
+{{- fail "\n\nglobal.db.external.enabled=true requires global.db.external.existingSecret (keys: agent-password, sre-agent-password, tproxy-password).\n\n" -}}
+{{- end -}}
 {{- end -}}

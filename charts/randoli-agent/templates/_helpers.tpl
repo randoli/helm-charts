@@ -40,11 +40,53 @@ Create the name of the service account to use
 randoli-agent
 {{- end -}}
 
+{{/*
+Metrics store READ endpoint (PromQL). Prometheus and VictoriaMetrics serve the
+same /api/v1/query path, so every consumer (agent, tproxy, netobserv
+flow-collector, OpenCost) uses this unchanged.
+Precedence: bundled Prometheus → bundled VictoriaMetrics → external prometheus.url.
+
+Only global values are used so subcharts can render it through `tpl`
+(costManagement OpenCost endpoint, sreAgent).
+*/}}
 {{- define "prometheus-server-endpoint" -}}
   {{- if .Values.global.prometheus.install -}}
     {{- printf "http://randoli-obs-prometheus.%s.svc:80" .Release.Namespace -}}
+  {{- else if (.Values.global.victoriaMetrics).install -}}
+    {{- printf "http://randoli-obs-victoria-metrics.%s.svc:8428" .Release.Namespace -}}
   {{- else if .Values.global.prometheus.url -}}
     {{- tpl .Values.global.prometheus.url . -}}
+  {{- end -}}
+{{- end -}}
+
+{{/*
+Metrics store OTLP WRITE endpoint (OTel Collector otlphttp exporter, which
+appends /v1/metrics). The ingest path differs by backend:
+  Prometheus       → <endpoint>/api/v1/otlp   (→ /api/v1/otlp/v1/metrics)
+  VictoriaMetrics  → <endpoint>/opentelemetry (→ /opentelemetry/v1/metrics)
+VictoriaMetrics answers HTTP 400 on the Prometheus path and every metric is
+dropped. For an external VictoriaMetrics set global.victoriaMetrics.external=true.
+*/}}
+{{- define "metrics-otlp-endpoint" -}}
+  {{- $base := include "prometheus-server-endpoint" . | trim -}}
+  {{- $vm := .Values.global.victoriaMetrics | default dict -}}
+  {{- if and (not .Values.global.prometheus.install) (or $vm.install $vm.external) -}}
+    {{- printf "%s/opentelemetry" $base -}}
+  {{- else -}}
+    {{- printf "%s/api/v1/otlp" $base -}}
+  {{- end -}}
+{{- end -}}
+
+{{/*
+True when a metrics store is bundled (Prometheus OR VictoriaMetrics). Drives the
+agent's PROMETHEUS_INSTALL flag, which is about whether a store is shipped with
+the agent — not specifically Prometheus.
+*/}}
+{{- define "metrics.install" -}}
+  {{- if or .Values.global.prometheus.install (.Values.global.victoriaMetrics).install -}}
+true
+  {{- else -}}
+false
   {{- end -}}
 {{- end -}}
 
@@ -76,15 +118,92 @@ context of the referenced subchart.
 {{- end -}}
 
 {{/*
-DNS host of the randoli-fsqld Service (FlightSQL endpoint), without the port.
-The service name is hardcoded so this is safe to render from subchart contexts as well.
+PostgreSQL connection settings shared by the agent, tproxy and the SRE agent.
+
+They read only global.db.* (and .Release.*), so they render the same from
+this chart and from subchart contexts (sreAgent.dataPlane.* template strings).
+With global.db.external.enabled the in-chart randoli-db StatefulSet is not
+rendered and these point at the external server instead.
 */}}
-{{- define "agent-db-host" -}}
-{{- printf "randoli-fsqld.%s.svc" .Release.Namespace -}}
+{{- define "agent-db-external" -}}
+{{- $db := ((.Values.global).db) | default dict -}}
+{{- $ext := $db.external | default dict -}}
+{{- if $ext.enabled -}}true{{- end -}}
 {{- end -}}
 
-{{- define "agent-flightsql-url" -}}
-{{- printf "grpc+tcp://randoli-fsqld.%s.svc:31337" .Release.Namespace -}}
+{{/* DNS host of the database, without the port. */}}
+{{- define "agent-db-host" -}}
+{{- if include "agent-db-external" . -}}
+{{- required "global.db.external.host is required when global.db.external.enabled=true" .Values.global.db.external.host -}}
+{{- else -}}
+{{- printf "randoli-db.%s.svc" .Release.Namespace -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "agent-db-port" -}}
+{{- if include "agent-db-external" . -}}
+{{- .Values.global.db.external.port | default 5432 -}}
+{{- else -}}
+5432
+{{- end -}}
+{{- end -}}
+
+{{- define "agent-db-name" -}}
+{{- if include "agent-db-external" . -}}
+{{- .Values.global.db.external.database | default "randoli" -}}
+{{- else -}}
+randoli
+{{- end -}}
+{{- end -}}
+
+{{- define "agent-db-sslmode" -}}
+{{- if include "agent-db-external" . -}}
+{{- .Values.global.db.external.sslmode | default "require" -}}
+{{- else -}}
+disable
+{{- end -}}
+{{- end -}}
+
+{{/*
+Secret holding the per-role passwords (keys: agent-password,
+sre-agent-password, tproxy-password; plus postgres-password for the in-chart
+server). The in-chart one is created by the db-bootstrap hook Job.
+*/}}
+{{- define "agent-db-secret-name" -}}
+{{- $db := ((.Values.global).db) | default dict -}}
+{{- $ext := $db.external | default dict -}}
+{{- if and $ext.enabled $ext.existingSecret -}}
+{{- $ext.existingSecret -}}
+{{- else -}}
+{{- $db.secretName | default "randoli-agent-db" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+DB_* env for a container connecting with the given role.
+Usage: include "agent-db-env" (dict "ctx" . "user" "agent" "passwordKey" "agent-password")
+*/}}
+{{- define "agent-db-env" -}}
+- name: DB_HOST
+  value: {{ include "agent-db-host" .ctx | quote }}
+- name: DB_PORT
+  value: {{ include "agent-db-port" .ctx | quote }}
+- name: DB_NAME
+  value: {{ include "agent-db-name" .ctx | quote }}
+- name: DB_SSLMODE
+  value: {{ include "agent-db-sslmode" .ctx | quote }}
+- name: DB_USER
+  value: {{ .user | quote }}
+- name: DB_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "agent-db-secret-name" .ctx }}
+      key: {{ .passwordKey }}
+{{- end -}}
+
+{{/* Image reference for {registry, repository, tag} image values. */}}
+{{- define "randoli-agent.image" -}}
+{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}:{{ .tag }}
 {{- end -}}
 
 {{/*
@@ -277,17 +396,17 @@ https://sso.randoli.io/auth/realms/sso
 
 {{/*
 Host-metrics provider. global.hostMetrics.provider is the standard location
-(The OpenShift federation scrape job is rendered inside the prometheus subchart)
-and overrides the legacy observability.hostMetrics.provider when set.
+(The OpenShift federation scrape job is rendered inside the metrics-backend
+subchart) and overrides the legacy observability.hostMetrics.provider when set.
 
 For the "openshift-monitoring" provider the mechanism, tunables
-(global.hostMetrics.openshiftMonitoring.*) and RBAC live in the prometheus
-wrapper chart.
+(global.hostMetrics.openshiftMonitoring.*) and RBAC live in the prometheus and
+victoria-metrics wrapper charts.
 
-Note: that chart always renders as a dependency of randoli-agent, i.e. in
+Note: those charts always render as dependencies of randoli-agent, i.e. in
 subchart values scope, where only global.* is visible — never the parent's
-observability.* values. Its copy of the predicate is therefore duplicated
-there deliberately; keep the two in sync.
+observability.* values. Their copies of the predicate are therefore duplicated
+there deliberately; keep them in sync.
 */}}
 {{- define "hostmetrics.provider" -}}
 {{- $global := dig "hostMetrics" "provider" "" (.Values.global | default dict) -}}

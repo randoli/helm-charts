@@ -9,6 +9,22 @@ kubescape-operator:
 
   clusterName: "cluster"
 
+  # Default posture frameworks used when a scan has no explicit targetNames
+  # (scheduled scan with empty scanV1, startup scan, exception-triggered rescan).
+  # Empty (default) = scan all frameworks. Names are case-insensitive.
+  # Available frameworks (kubescape/regolibrary):
+  #   General:    AllControls, security, NSA, MITRE, SOC2, ISM,
+  #               ArmoBest, DevOpsBest, WorkloadScan, ClusterScan
+  #   CIS:        cis-v1.10.0, cis-v1.12.0              (generic Kubernetes)
+  #               cis-eks-t1.7.0, cis-eks-t1.8.0        (EKS)
+  #               cis-aks-t1.2.0, cis-aks-t1.8.0        (AKS)
+  #               cis-gke-v1.9.0                        (GKE)
+  # Note: "security" is scanned in addition when operator.triggerSecurityFramework
+  # is true (upstream default).
+  # Override at install time, e.g.:
+  #   --set 'securityScans.kubescape-operator.defaultFrameworks={nsa,mitre,cis-v1.10.0}'
+  defaultFrameworks: []
+
   # safe-to-evict: these Deployments use emptyDir volumes (scan results,
   # grype DB cache, tmp dirs — all regenerable), which otherwise block
   # cluster-autoscaler scale-down and node decommission. Opt in to eviction.
@@ -32,7 +48,7 @@ kubescape-operator:
       cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
     image:
       repository: quay.io/kubescape/kubevuln
-      tag: v0.3.441
+      tag: v0.3.566
       pullPolicy: IfNotPresent
 
   storage:
