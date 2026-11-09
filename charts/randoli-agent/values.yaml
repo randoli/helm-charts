@@ -148,10 +148,10 @@ agent:
   resources:
     limits:
       cpu: 1
-      memory: 2.5Gi
+      memory: 2Gi
     requests:
       cpu: 150m
-      memory: 2.5Gi
+      memory: 1Gi
 
   # Agent DB — a PostgreSQL server in its own StatefulSet/Service
   # (randoli-db), shared by the agent, tproxy and the SRE agent. Not deployed
