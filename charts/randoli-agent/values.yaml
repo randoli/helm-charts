@@ -387,9 +387,16 @@ sreAgent:
     dbName: '{{ include "agent-db-name" . }}'
     dbSslMode: '{{ include "agent-db-sslmode" . }}'
     databaseSecretName: '{{ include "agent-db-secret-name" . }}'
+    # DATAPLANE_URL comes from the agent secret (global.secrets.config).
+    urlSecretName: '{{ .Values.global.secrets.config }}'
     # OpenCost MCP endpoint (bundled OpenCost Service's mcp-server port, or
     # global.opencost.mcpUrl when set).
     opencostUrl: '{{ include "opencost-mcp-url" . }}'
+
+  # Organisation id (ORGANIZATION_ID) comes from the agent secret; follow
+  # global.secrets.config so a renamed secret is picked up.
+  recommendationService:
+    orgIdSecretName: '{{ .Values.global.secrets.config }}'
 
   # ------------------------------------------------------------------------
   # MCP servers wired into the SRE agent. Passed through to the sreAgent
