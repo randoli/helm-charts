@@ -1,0 +1,37 @@
+{{- /*
+First-boot initialisation of the in-chart PostgreSQL server. The official
+image runs /docker-entrypoint-initdb.d/* only when PGDATA is empty.
+
+Creates the per-client roles with passwords from the db secret and the
+`randoli` database owned by the agent role. Schemas, tables and grants are
+owned by the agent's migrations (`cluster-agent migrate`), not this script.
+*/ -}}
+{{- if not (include "agent-db-external" .) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: randoli-db-init
+  namespace: {{ include "randoli-agent.namespace" . }}
+  labels:
+    app.kubernetes.io/component: randoli-db
+    {{- include "labels" . | nindent 4 }}
+data:
+  10-randoli-roles.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    # psql variables (:'name') quote the passwords as SQL literals.
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres \
+      -v agent_password="$RANDOLI_AGENT_PASSWORD" \
+      -v sre_agent_password="$RANDOLI_SRE_AGENT_PASSWORD" \
+      -v tproxy_password="$RANDOLI_TPROXY_PASSWORD" <<-'EOSQL'
+    	CREATE ROLE agent LOGIN PASSWORD :'agent_password';
+    	CREATE ROLE sre_agent LOGIN PASSWORD :'sre_agent_password';
+    	CREATE ROLE tproxy LOGIN PASSWORD :'tproxy_password';
+    	CREATE DATABASE randoli OWNER agent;
+    	REVOKE ALL ON DATABASE randoli FROM PUBLIC;
+    	GRANT CONNECT ON DATABASE randoli TO agent, sre_agent, tproxy;
+    	REVOKE CONNECT ON DATABASE postgres FROM PUBLIC;
+    	ALTER DATABASE randoli SET timezone TO 'UTC';
+    EOSQL
+    echo "randoli roles and database created"
+{{- end }}
