@@ -401,6 +401,13 @@ sreAgent:
   recommendationService:
     orgIdSecretName: '{{ .Values.global.secrets.config }}'
 
+  # Keycloak settings (KEYCLOAK_*) and the client certificate the SRE agent
+  # presents to Keycloak come from the agent secrets; follow global.secrets.*
+  # so renamed secrets are picked up.
+  keycloak:
+    secretName: '{{ .Values.global.secrets.config }}'
+    certSecretName: '{{ .Values.global.secrets.cert }}'
+
   # ------------------------------------------------------------------------
   # MCP servers wired into the SRE agent. Passed through to the sreAgent
   # subchart, which renders the server Deployments/Services/RBAC and the
