@@ -11,8 +11,8 @@ opencost:
       image:
         registry: docker.io
         repository: randoli/opencost
-        # OpenCost fork v1.121.4: GCP pricing logs show the auth source and identity (customer key -> CLOUD_PROVIDER_API_KEY -> Google default credentials).
-        tag: "1.121.4"
+        # OpenCost fork v1.121.5: adds Claude Sonnet 5.5 / Haiku 5.5 Bedrock pricing (previously fell back to the $3/$15 default).
+        tag: "1.121.5"
         pullPolicy: IfNotPresent
 
       # Prometheus query/subquery resolution -> PROMETHEUS_QUERY_RESOLUTION_SECONDS.
